@@ -107,23 +107,6 @@ For figures compsed of several sub-figures, the \texttt{caption} and \texttt{sub
     \label{fig:subfig}
 \end{figure}
 
-You can make nice graphs directly from data files using \texttt{gnuplot}, for an example, see \cref{fig:examplegnuplot}.
-
-\begin{figure}[htbp]
-  \centering
-    \begin{gnuplot}[terminal=epslatex,terminaloptions={size 8cm,6cm color}]
-        set xlabel "age" 
-        set ylabel "IQ" 
-        set key autotitle columnhead
-        set title "age vs IQ"
-        set yrange [0:160]
-        set datafile separator ","
-        plot "csvtables/ageiq.csv" using 1:2 with boxes 
-    \end{gnuplot}
-  \caption[An example of Integrated Graph]{This is a gnuplot graph read from a file. Also this figure has a long caption in order to demonstrate how that is typeset.}
-  \label{fig:examplegnuplot}
-\end{figure}
-
 \section{Tables}
 
 Tables are placed in the \texttt{table} environment. An example is given in \cref{tab:example1}. Like figures, tables float freely around in the document in accordance with standard \LaTeX{} behaviour. The table caption should be placed \emph{above} the table. If the caption consists of a single sentence fragment (incomplete sentence), it should not be punctuated.

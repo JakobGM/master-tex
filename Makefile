@@ -23,6 +23,5 @@ thesis.pdf: $(SRCS)
 
 clean:
 	-rm \
-		thesis-gnuplottex* \
-		thesis.{gnuploterrors,aux,bbl,bcf,blg,lof,log,lol,lot,out,pdf,run.xml,toc}
+		thesis.{aux,bbl,bcf,blg,lof,log,lol,lot,out,pdf,run.xml,toc}
 .PHONY: clean
