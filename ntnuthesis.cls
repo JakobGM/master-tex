@@ -5,6 +5,9 @@
 %% Partly merged, partly based on, and partly a simplification of
 %% various previous thesis templates by Simon McCallum, Ivar Farup,
 %% Kjetil Ørbekk an others, by CoPCSE@NTNU.
+%%
+%% Further edited by Jakob Gerhard Martinussen for the purposes of
+%% writing a master's thesis in applied mathematics.
 
 %% IDENTIFICATION
 
@@ -32,36 +35,13 @@
     }
 }
 
-% British
 \newif\ifcapitalize
-\DeclareOption{british}{
-    \capitalizetrue
-    \def\papername{Paper}
-    \newcommand{\NTNU}{{N}orwegian {U}niversity of {S}cience and {T}echnology}
-    \newcommand{\NTNUTrondheim}{{NTNU} in {T}rondheim}
-    \newcommand{\NTNUGjoevik}{{NTNU} in {G}j\o{}vik}
-    \newcommand{\NTNUAalesund}{{NTNU} in {\AA}lesund}
-    \AtBeginDocument{
-        \renewcommand{\lstlistingname}{Code listing}
-        \renewcommand{\lstlistlistingname}{Code Listings}
-        \crefname{listing}{Code listing}{Code listings}
-        \crefname{paper}{Paper}{Papers}
-        \addto\captionsbritish{
-            \renewcommand{\contentsname}{Contents}
-            \renewcommand{\listfigurename}{Figures}
-            \renewcommand{\listtablename}{Tables}
-        }
-    }
-}
-
 % American
 \DeclareOption{american}{
     \capitalizetrue
     \def\papername{Paper}
     \newcommand{\NTNU}{{N}orwegian {U}niversity of {S}cience and {T}echnology}
     \newcommand{\NTNUTrondheim}{{NTNU} in {T}rondheim}
-    \newcommand{\NTNUGjoevik}{{NTNU} in {G}j\o{}vik}
-    \newcommand{\NTNUAalesund}{{NTNU} in {\AA}lesund}
     \AtBeginDocument{
         \renewcommand{\lstlistingname}{Code listing}
         \renewcommand{\lstlistlistingname}{Code Listings}
@@ -71,53 +51,6 @@
             \renewcommand{\contentsname}{Contents}
             \renewcommand{\listfigurename}{Figures}
             \renewcommand{\listtablename}{Tables}
-        }
-    }
-}
-
-% Bokmål
-\DeclareOption{norsk}{
-    \capitalizefalse
-    \def\papername{Artikkel}
-    \newcommand{\NTNU}{{N}orges teknisk-naturvitenskapelige universitet}
-    \newcommand{\NTNUTrondheim}{{NTNU} i {T}rondheim}
-    \newcommand{\NTNUGjoevik}{{NTNU} i {G}j\o{}vik}
-    \newcommand{\NTNUAalesund}{{NTNU} i {\AA}lesund}
-    \AtBeginDocument{
-        \renewcommand{\lstlistingname}{Kodeliste}
-        \renewcommand{\lstlistlistingname}{Kodelister}
-        \crefname{listing}{kodeliste}{kodelister}
-        \crefname{equation}{ligning}{ligninger}
-        \crefname{appendix}{vedlegg}{vedlegg}
-        \crefname{paper}{artikkel}{artikler}
-        \addto\captionsnorsk{
-            \renewcommand{\appendixname}{Vedlegg}
-        }
-    }
-}
-
-% Nynorsk
-\DeclareOption{nynorsk}{
-    \capitalizefalse
-    \def\papername{Artikkel}
-    \newcommand{\NTNU}{{N}oregs teknisk-naturvitskaplege universitet}
-    \newcommand{\NTNUTrondheim}{{NTNU} i {T}rondheim}
-    \newcommand{\NTNUGjoevik}{{NTNU} i {G}j\o{}vik}
-    \newcommand{\NTNUAalesund}{{NTNU} i {\AA}lesund}
-    \AtBeginDocument{
-        \renewcommand{\lstlistingname}{Kodeliste}
-        \renewcommand{\lstlistlistingname}{Kodelister}
-        \crefname{listing}{kodeliste}{kodelister}
-        \crefname{equation}{likning}{likningar}
-        \crefname{table}{tabell}{tabellar}
-        \crefname{figure}{figur}{figurar}
-        \crefname{section}{avsnitt}{avsnitt}
-        \crefname{chapter}{kapittel}{kapittel}
-        \crefname{appendix}{vedlegg}{vedlegg}
-        \crefname{paper}{artikkel}{artiklar}
-        \renewcommand{\appendixname}{Vedlegg}
-        \addto\captionsnynorsk{
-            \renewcommand{\appendixname}{Vedlegg}
         }
     }
 }
