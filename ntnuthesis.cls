@@ -204,21 +204,6 @@
 % Dotted line and tighter vertical spacing for chapters in the table of contents
 \def\l@chapter#1#2{\@dottedtocline{1}{0em}{1.5em}{\bf #1}{\bf #2}}
 
-% Support for included papers (for compiled PhD theses)
-\newcounter{paper}
-\setcounter{paper}{0}
-\def\thepaper{\Roman{paper}}
-\newenvironment{paper}[2]
-{
-    \refstepcounter{paper}
-    \def\include@papername{#1}
-    \chapter*{\papername~\thepaper}
-    \label[paper]{#2}
-}{
-    \cleardoublepage
-    \includepdf[pages=-]{\include@papername}
-}
-
 % Allow for two versions of title and authors – full and short
 \def\title#1{\def\@title{#1}\def\@shorttitle{#1}}
 \def\shorttitle#1{\def\@shorttitle{#1}}
