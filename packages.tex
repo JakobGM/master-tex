@@ -1,42 +1,40 @@
-\usepackage[utf8]{inputenc}             % for special characters in input
-\usepackage[T1]{fontenc}                % modern font encoding
-\usepackage[charter]{mathdesign}        % main font with math support
-\usepackage[scaled=.88]{berasans}       % sans serif font
-\usepackage[scaled=.82]{DejaVuSansMono} % monospace font (for code)
+% Add support for UTF-8 character set for those engines that do not support it natively.
+\usepackage[utf8]{inputenc}
 
-\usepackage{listings}                   % code listings
+% Handle multi-glyph characters in the output PDF correctly
+\usepackage[T1]{fontenc}
+
+% Main font with math support
+\usepackage[charter]{mathdesign}
+% Sans serif font
+\usepackage[scaled=.88]{berasans}
+% Monospace font (for code)
+\usepackage[scaled=.82]{DejaVuSansMono}
+
+% Verbatim source code environment (code listing)
+\usepackage{listings}
 % Formatting of code listings
-\lstset{
+\lstset{%
     frame=single,
     basicstyle=\fontsize{9}{10}\ttfamily,
     keywordstyle=\color{thesisblue}\bfseries,
     stringstyle=\color{thesisred},
     commentstyle=\color{thesisgreen},
     identifierstyle=\color{black},
-    numberstyle=\fontsize{7}{8}\selectfont,
-    literate=
-        {á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
-        {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1
-        {à}{{\`a}}1 {è}{{\`e}}1 {ì}{{\`i}}1 {ò}{{\`o}}1 {ù}{{\`u}}1
-        {À}{{\`A}}1 {È}{{\'E}}1 {Ì}{{\`I}}1 {Ò}{{\`O}}1 {Ù}{{\`U}}1
-        {ä}{{\"a}}1 {ë}{{\"e}}1 {ï}{{\"i}}1 {ö}{{\"o}}1 {ü}{{\"u}}1
-        {Ä}{{\"A}}1 {Ë}{{\"E}}1 {Ï}{{\"I}}1 {Ö}{{\"O}}1 {Ü}{{\"U}}1
-        {â}{{\^a}}1 {ê}{{\^e}}1 {î}{{\^i}}1 {ô}{{\^o}}1 {û}{{\^u}}1
-        {Â}{{\^A}}1 {Ê}{{\^E}}1 {Î}{{\^I}}1 {Ô}{{\^O}}1 {Û}{{\^U}}1
-        {Ã}{{\~A}}1 {ã}{{\~a}}1 {Õ}{{\~O}}1 {õ}{{\~o}}1
-        {œ}{{\oe}}1 {Œ}{{\OE}}1 {æ}{{\ae}}1 {Æ}{{\AE}}1 {ß}{{\ss}}1
-        {ű}{{\H{u}}}1 {Ű}{{\H{U}}}1 {ő}{{\H{o}}}1 {Ő}{{\H{O}}}1
-        {ç}{{\c c}}1 {Ç}{{\c C}}1 {ø}{{\o}}1 {å}{{\r a}}1 {Å}{{\r A}}1
-        {€}{{\euro}}1 {£}{{\pounds}}1 {«}{{\guillemotleft}}1
-        {»}{{\guillemotright}}1 {ñ}{{\~n}}1 {Ñ}{{\~N}}1 {¿}{{?`}}1
+    numberstyle=\fontsize{7}{8}\selectfont
 }
-\usepackage{babel}                      % language specifics
 
-\usepackage{geometry}                   % page layout
+% Consistent language in different packages, such as double quotes with \enquote and
+% American-style hyphenation.
+\usepackage[american]{babel}
+
+% Page layout
+\usepackage{geometry}                   
 % Page geometry and spacing (same for even and odd pages)
 \geometry{left=4cm, right=4cm, top=4cm, bottom=4.5cm}
 
-\usepackage{enumitem}                   % customising list appearance
+% Custom list formatting, such as noitemsep and label
+\usepackage{enumitem}
 % Itemize and enumerate: tighter and with other symbols
 \setlist[enumerate]{itemsep=0mm, topsep=5pt, partopsep=0mm, parsep=0mm}
 \setlist[enumerate,1]{label=\arabic*., ref=\arabic*}
@@ -47,27 +45,44 @@
 \setlist[itemize,2]{label=$\circ$}
 \setlist[itemize,3]{label=$-$}
 
+% For inserting images into figures
 \usepackage{graphicx}                   % including figures
-\usepackage{amsmath}                    % advanced math typesetting
-\usepackage[                            % subfigures with captions within figures
-    font=small,                             % and customisation of captions
+\graphicspath{{./img/}}
+
+% Common math environments such as \begin{align}, and much, much more.
+% Docs: http://texdoc.net/texmf-dist/doc/latex/amsmath/amsldoc.pdf
+\usepackage{amsmath}
+
+% Sub-figures with captions within figures and customisation of captions
+\usepackage[
+    font=small,
     labelfont=bf,
     margin=\parindent
 ]{caption}                    
-\usepackage[                           % and subfigures with captions within figures
+% Sub-figures with captions within figures
+\usepackage[
     font=small,
     labelfont=bf,
     margin=\parindent
 ]{subcaption}
 
-\usepackage{xcolor}                     % selecting text color
+% Allows definition of colors using \definecolor{}{}{}
+\usepackage{xcolor}
 % Colour palette
-\definecolor{thesisblue}{rgb}{.15, .15, .6}
-\definecolor{thesisred}{rgb}{.4, .05, .15}
-\definecolor{thesisgreen}{rgb}{.2, .3, .2}
+\definecolor{thesisblue}{rgb}{0.15, 0.15, 0.6}
+\definecolor{thesisred}{rgb}{0.4, 0.05, 0.15}
+\definecolor{thesisgreen}{rgb}{0.2, 0.3, 0.2}
 
-\usepackage{emptypage}                  % empty pages should be blank
-\usepackage{csquotes}                   % recommended for biblatex
+% Empty pages should be blank
+\usepackage{emptypage}
+
+% Recommended for BibLaTeX
+% Correctly formatted quotation marks with \enquote{text}
+\usepackage{csquotes}                   
+
+% Sitation management.
+% Docs: http://ctan.uib.no/macros/latex/contrib/biblatex/doc/biblatex.pdf
+% Tutorial: https://www.overleaf.com/learn/latex/Articles/Getting_started_with_BibLaTeX
 \usepackage[
     backend=biber,
     style=ieee,
@@ -78,16 +93,21 @@
     citestyle=numeric-comp,
     sorting=none,
     dashed=false
-]{biblatex}                             % for bibliography
+]{biblatex}
 % Make \fullcite show all authors irrespectively of maxcitenames
 \preto\fullcite{\AtNextCite{\defcounter{maxnames}{99}}}
 
-\usepackage{csvsimple}                  % tables from csv files
-\usepackage{booktabs}                   % better formatting of tables
+% Tables from csv files
+\usepackage{csvsimple}
 
-\usepackage{hyperref}                   % interactive cross references
+% Nicer formatting of tables with \toprule, \midrule, and \bottomrule
+\usepackage{booktabs}
+
+% Interactive cross references
+\usepackage{hyperref}
+
 % Settings for hyperref: setting all the links black for best printing. They will still be clickable in the PDF
-\hypersetup{
+\hypersetup{%
     colorlinks=true,     
     linkcolor=black,    % internal links (change box color with linkbordercolor)
     citecolor=black,    % links to bibliography
@@ -95,7 +115,8 @@
     urlcolor=black      % external links
 }
 
+% Automatic cross references
 \usepackage[
     capitalize,
     noabbrev
-]{cleveref}                             % automatic cross references
+]{cleveref}

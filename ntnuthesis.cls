@@ -1,24 +1,8 @@
-%% ntnuthesis.cls - a LaTeX class for theses at NTNU
-%%
-%% CC-BY CoPCSE@NTNU, 2019
-%%
-%% Partly merged, partly based on, and partly a simplification of
-%% various previous thesis templates by Simon McCallum, Ivar Farup,
-%% Kjetil Ørbekk an others, by CoPCSE@NTNU.
-%%
-%% Further edited by Jakob Gerhard Martinussen for the purposes of
-%% writing a master's thesis in applied mathematics.
-
-%% IDENTIFICATION
-
 \xdef\ntnuthesisdate{2019/07/18}
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesClass{ntnuthesis}
- [\ntnuthesisdate\space
-   CC-BY CoPCSE at NTNU 2019]
+\ProvidesClass{ntnuthesis}[]
 
 %% CLASS FILE LOADING
-
 \LoadClass[a4paper,11pt,openright,twoside]{report}
 
 % Add unnumbered chapters to table of contents and headings
