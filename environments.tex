@@ -1,0 +1,7 @@
+% Custom algorithm environment
+\newcounter{algorithm}
+\renewcommand*{\thealgorithm}{Algorithm \arabic{algorithm}}
+\newcommand*{\systemautorefname}{algorithm}
+\newenvironment{algorithm}[2]
+{\refstepcounter{algorithm}\vspace{0.5em}\begin{minipage}{\textwidth}\begin{framed}\label{#2}\textbf{\thealgorithm:}\vspace{0.75em} \texttt{#1}\begin{enumerate}[label=\textbf{\arabic*},leftmargin=0.5cm]}
+  {\end{enumerate}\end{framed}\end{minipage}\vspace{0.5em}}

@@ -1,0 +1,26 @@
+\begin{algorithm}{Surface interpolation}{alg:surface-interpolation}
+\item Construct arrays with temporary placeholder values:
+  \begin{itemize}[label=--,leftmargin=0cm]
+    \item Normal vector array $N$ of size $H \times W \times 3$ filled with $0$.
+    \item Interpolated elevation array $Z$ of size $H \times W \times 1$ filled with $-\infty$.
+  \end{itemize}
+\item Construct polygon collection $\mathcal{P}$ for given tile extents using R-Tree index.
+  Convert polygons to pixel coordinate system.
+\item For polygon $P_p = [r_{p0}, r_{p1}, \dots, r_{pn_p}]$ with a single exterior ring, $r_{p0}$, and $n_p$ interior rings, $[r_{p1}, \ldots, r_{pn_p}]$, in polygon collection $\mathcal{P}$.
+  \begin{enumerate}[leftmargin=0.5em,label=\textbf{\textcolor{gray}{\alph*}}]
+      % \item The linear ring $r_{pj} = [(x_{pj0}, y_{pj0}, z_{ij0}), \dots, (x_{pjn_{ij}}, y_{ijn_{pj}}, z_{ijn_{pj}})]$.
+    \item Construct $M \times 3$ design matrix $X$ populated with pixel coordinates of all \textit{unique} xy-vertices $(1, x_{pij}, y_{pij})$.
+        Secondly, construct $M \times 1$ response vector $\vec{y}$ populated with the respective $z_{pij}$ coordinates.
+    \item Solve linear regression problem $\vec{\beta}_p = {\left(\beta_0, \beta_x, \beta_y\right)}^T = {\left(X^T X\right)}^{-1} X^T \vec{y}$
+    \item Construct polygon surface normal vector $\vec{n}_p$,
+      \begin{equation*}
+        \vec{n}_p \assign {\left(\beta_x^2 + \beta_y^2 + 1\right)}^{-1/2} \cdot {\left(-\beta_x, -\beta_y, 1\right)}^T,
+      \end{equation*}
+      where $||\vec{n}_p||_2 = 1$ by construction.
+    \item For each pixel coordinate $(i, j)$ contained by the polygon $P_p$ projected onto the 2-dimensional pixel index plane:
+      \begin{itemize}[leftmargin=0.5em]
+        \item $h \assign \beta_0 + \beta_x j + \beta_y i$. If $h < Z_ij$, continue loop, else\dots
+        \item $Z_{ij} \assign h$ and $\left(N_{ijx}, N_{ijy}, N_{ijz}\right) \assign \vec{n}_p$.
+      \end{itemize}
+    \end{enumerate}
+\end{algorithm}
