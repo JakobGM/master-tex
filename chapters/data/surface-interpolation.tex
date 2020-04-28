@@ -1,4 +1,4 @@
-\begin{algorithm}{Surface interpolation}{alg:surface-interpolation}
+\begin{algorithm}{Surface interpolation}{alg:surface-interpolation}{Tile bounding box $B(\vec{c}, w, h)$,\\Raster dimensions $H \times W$,\\R-Tree indexed polygon collection.}
 \item Construct arrays with temporary placeholder values:
   \begin{itemize}[label=--,leftmargin=0cm]
     \item Normal vector array $N$ of size $H \times W \times 3$ filled with $0$.
@@ -7,7 +7,7 @@
 \item Construct polygon collection $\mathcal{P}$ for given tile extents using R-Tree index.
   Convert polygons to pixel coordinate system.
 \item For polygon $P_p = [r_{p0}, r_{p1}, \dots, r_{pn_p}]$ with a single exterior ring, $r_{p0}$, and $n_p$ interior rings, $[r_{p1}, \ldots, r_{pn_p}]$, in polygon collection $\mathcal{P}$.
-  \begin{enumerate}[leftmargin=0.5em,label=\textbf{\textcolor{gray}{\alph*}}]
+  \begin{enumerate}[leftmargin=0.5em,label=\textbf{\alph*}]
       % \item The linear ring $r_{pj} = [(x_{pj0}, y_{pj0}, z_{ij0}), \dots, (x_{pjn_{ij}}, y_{ijn_{pj}}, z_{ijn_{pj}})]$.
     \item Construct $M \times 3$ design matrix $X$ populated with pixel coordinates of all \textit{unique} xy-vertices $(1, x_{pij}, y_{pij})$.
         Secondly, construct $M \times 1$ response vector $\vec{y}$ populated with the respective $z_{pij}$ coordinates.
