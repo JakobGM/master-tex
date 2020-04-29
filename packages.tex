@@ -47,7 +47,7 @@
 
 % For inserting images into figures
 \usepackage{graphicx}                   % including figures
-\graphicspath{{./img/}}
+\graphicspath{{./img/}{./tikz/}}
 
 % Common math environments such as \begin{align}, and much, much more.
 % Docs: http://texdoc.net/texmf-dist/doc/latex/amsmath/amsldoc.pdf
@@ -122,3 +122,15 @@
 
 % Used by our custom "algorithm" environment
 \usepackage{framed}
+
+% Create figures with semantic code
+\usepackage{tikz}
+% Allow calculations within curly brackets in tikz figures
+\usetikzlibrary{calc, math}
+% Adds the braces decoration for showing distances in tikz figures
+\usetikzlibrary{decorations.pathreplacing}
+% For drawing matrices, useful for masking demonstration
+\usetikzlibrary{matrix}
+% Include .tikz images with \includegraphics, supporting proper scaling
+% https://ctan.uib.no/graphics/pgf/contrib/tikzscale/tikzscale.pdf
+\usepackage{tikzscale}
