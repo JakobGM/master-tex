@@ -1,3 +1,52 @@
+Let $r_{p,i}$ denote a linear ring belonging to a polygon denoted as $P_p$.
+The symbol $p$ denotes the \textit{polygon index}, while $i$ denotes the \textit{ring index}.
+A ring index of 1 indicates an \textit{exterior ring}, while a ring index of greater than one represents an interior ring.
+The polygon $P_p$ can therefore be represented as a sequence of $|P_p|$ linear rings,
+%
+\begin{equation*}
+P_p = \{ r_{p,1}, \dots, r_{p, |P_p|}\}
+\end{equation*}
+%
+Linear rings are represented as ordered sequences of $(x, y, z)$ coordinate tuples, assuming that the associated polygon is three-dimensional.
+The linear ring can therefore be denoted as
+%
+\begin{equation*}
+  r_{p,i}
+  =
+  \{
+    (x_{p,i,1}, y_{p,i,1}, z_{p,i,1}),
+    \dots,
+    (x_{p,i,|r_{p, i}|}, y_{p,i,|r_{p, i}|}, z_{p,i,|r_{p, i}|}),
+    (x_{p,i,1}, y_{p,i,1}, z_{p,i,1})
+  \},
+\end{equation*}
+%
+where the first and last coordinate tuple are identical in order to close the ring.
+
+\begin{itemize}
+  \item An indexed polygon collection $\mathcal{P}$ containing $|\mathcal{P}|$ polygons:
+    \[\mathcal{P} = \{P_1, P_2, \dots, P_{|\mathcal{P}|}\}\]
+  \item A given polygon, $P_p \in \mathcal{P}$, of index $p$ is represented by a single exterior ring, denoted as $r_{p,0}$, and $|P_p| - 1$ interior hulls, $\{r_{p,1}, \dots, r_{p,|P_p| - 1}\}$.
+    \[P_p = \{ r_{p,0}, \dots, r_{p, |P_p|}\}\]
+  \item A given linear ring, $r_{p,i}$, is represented by a sequence $|r_{p,i}| + 1$ $xyz$ coordinate tuples,
+\end{itemize}
+
+\begin{equation*}
+  X_p
+  =
+  \begin{bmatrix}
+    1 & x_{p,0,0} & y_{p,0,0} \\
+    1 & x_{p,0,1} & y_{p,0,1} \\
+    \vdots & \vdots & \vdots \\
+    1 & x_{p,0,|r_{p0}|} & y_{p,0,|r_{p0}|} \\
+    1 & x_{p,1,0} & y_{p,1,0} \\
+    1 & x_{p,1,1} & y_{p,1,1} \\
+    \vdots & \vdots & \vdots \\
+    1 & x_{p,|P_p|,|r_{p}|} & y_{p,1,1} \\
+  \end{bmatrix}
+\end{equation*}
+
+
 \begin{figure}
   \centering
   \includegraphics[width=\linewidth]{interpolation-concepts}
