@@ -1,0 +1,36 @@
+\tdplotsetmaincoords{70}{120}
+\begin{tikzpicture}[scale=2, tdplot_main_coords,axis/.style={->,dashed},thick]
+
+% -- remove these 3 lines if no axis is preferred
+\draw[axis] (3, 0, 0) -- (-4, 0, 0) node [right] {$y$};
+\draw[axis] (0, 0, 0) -- (0, 5, 0) node [above] {$x$};
+\draw[axis] (0, 0, 0) -- (0, 0, 4) node [above] {$z$};
+
+\coordinate  (d1) at (-2,0,3){};
+\coordinate  (d2) at (2,0,3){};
+\coordinate  (d3) at (2,4,2){};
+\coordinate  (d4) at (-2,4,2){};
+
+\coordinate  (b1) at (-2,0,0){};
+\coordinate  (b2) at (2,0,0){};
+\coordinate  (b3) at (2,4,0){};
+\coordinate  (b4) at (-2,4,0){};
+
+% fill gray color with opacity
+\fill[red!80,opacity=0.1] (d1) -- (d2) -- (d3)-- (d4)--cycle;
+\fill[blue!80,opacity=0.1] (b1) -- (b2) -- (b3)-- (b4)--cycle;
+% draw frames
+\draw []       (d1)--(d2)--(d3)--(d4)--(d1);
+\draw []       (b1)--(b2)--(b3)--(b4)--(b1);
+\foreach \i in {1,2,...,4}
+    {
+      % --- labels for 3D vertices
+      \draw[fill=black] (d\i) circle (0.1em) node[above right] {$(x_{\i}, y_{\i}, z_{\i})$};
+      % --- labels for 3D vertices
+      \draw[fill=black] (b\i) circle (0.1em) node[below right] {$(x_{\i}, y_{\i})$};
+      % --- Arrows showing projection
+      \draw[thin,gray,->] (d\i) -- (b\i);
+    }
+
+\draw[orange,thick,->] (2, 2, 2.5) -- node[right] {$\pi_{\mathrm{2D}}$} (2, 2, 0);
+\end{tikzpicture}

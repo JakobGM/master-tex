@@ -1,7 +1,7 @@
 Let $r_{p,i}$ denote a linear ring belonging to a polygon denoted as $P_p$.
 The symbol $p$ denotes the \textit{polygon index}, while $i$ denotes the \textit{ring index}.
 A ring index of 1 indicates an \textit{exterior ring}, while a ring index of greater than one represents an interior ring.
-The polygon $P_p$ can therefore be represented as a sequence of $|P_p|$ linear rings,
+The polygon $P_p$ can therefore be represented as a sequence of $|P_p| \geq 1$ linear rings,
 %
 \begin{equation*}
 P_p = \{ r_{p,1}, \dots, r_{p, |P_p|}\}
@@ -22,28 +22,126 @@ The linear ring can therefore be denoted as
 \end{equation*}
 %
 where the first and last coordinate tuple are identical in order to close the ring.
-
-\begin{itemize}
-  \item An indexed polygon collection $\mathcal{P}$ containing $|\mathcal{P}|$ polygons:
-    \[\mathcal{P} = \{P_1, P_2, \dots, P_{|\mathcal{P}|}\}\]
-  \item A given polygon, $P_p \in \mathcal{P}$, of index $p$ is represented by a single exterior ring, denoted as $r_{p,0}$, and $|P_p| - 1$ interior hulls, $\{r_{p,1}, \dots, r_{p,|P_p| - 1}\}$.
-    \[P_p = \{ r_{p,0}, \dots, r_{p, |P_p|}\}\]
-  \item A given linear ring, $r_{p,i}$, is represented by a sequence $|r_{p,i}| + 1$ $xyz$ coordinate tuples,
-\end{itemize}
-
+Now assume that the polygon collection at hand contains three-dimensional polygons which are all approximately planar.
+Any $(x, y, z)$ vertex must therefore satisfy the following relationship:
+%
+\begin{equation*}
+  z = \beta_{p,0} + \beta_{p,x} x + \beta_{p,y} y + \varepsilon
+\end{equation*}
+%
+Where $\varepsilon$ is error term due to measurement errors or other type of random data errors.
+The distribution of $\varepsilon$ must be investigated further for our dataset, but for the moment assume the error to be normally distributed with zero mean and some unknown variance $\sigma^2$, i.e. $\varepsilon \sim \mathcal{N}(0, \sigma^2)$.
+%
+The task is now to determine the coefficient vector $\vec{\beta}_p = {[\beta_{p,0}, \beta_{p,x}, \beta_{p,y}]}^T$ which describes the planar polygon surface.
+We construct a design matrix $X_p$ consisting of all $(x, y)$ vertex coordinate tuples of the given polygon $P_p$:
+%
 \begin{equation*}
   X_p
   =
   \begin{bmatrix}
-    1 & x_{p,0,0} & y_{p,0,0} \\
-    1 & x_{p,0,1} & y_{p,0,1} \\
-    \vdots & \vdots & \vdots \\
-    1 & x_{p,0,|r_{p0}|} & y_{p,0,|r_{p0}|} \\
-    1 & x_{p,1,0} & y_{p,1,0} \\
     1 & x_{p,1,1} & y_{p,1,1} \\
+    1 & x_{p,1,2} & y_{p,1,2} \\
     \vdots & \vdots & \vdots \\
-    1 & x_{p,|P_p|,|r_{p}|} & y_{p,1,1} \\
+    1 & x_{p,1,|r_{p,1}|} & y_{p,1,|r_{p,1}|} \\
+    1 & x_{p,2,1} & y_{p,2,1} \\
+    1 & x_{p,2,2} & y_{p,2,2} \\
+    \vdots & \vdots & \vdots \\
+    1 & x_{p,|P_p|,|r_{|P_p|}|} & y_{p,|P_p|,|r_{|P_p|}|} \\
+  \end{bmatrix}.
+\end{equation*}
+%
+Likewise, a response vector $\vec{z}_p$ is constructed consisting of the respective elevation values associated with the $(x, y)$ tuples:
+%
+\begin{equation*}
+  \vec{z}_p
+  =
+  \begin{bmatrix}
+     z_{p,1,1} \\
+     z_{p,1,2} \\
+     \vdots \\
+     z_{p,1,|r_{p,1}|} \\
+     z_{p,2,1} \\
+     z_{p,2,2} \\
+     \vdots \\
+     z_{p,|P_p|,|r_{|P_p|}|} \\
   \end{bmatrix}
+\end{equation*}
+%
+Again, by assuming $\varepsilon \sim \mathcal{N}(0, \sigma^2)$ we construct an ordinary least squares estimator $\widehat{\vec{\beta}}_p $ for $\vec{\beta}_p$:
+%
+\begin{equation*}
+  \widehat{\vec{\beta}}_p
+  =
+  {\left[
+    \widehat{\beta}_{p,0},
+    \widehat{\beta}_{p,x},
+    \widehat{\beta}_{p,y}
+  \right]}^T
+  =
+  \left( X_p^T X_p \right)^{-1} X_p^T \vec{z}_p
+\end{equation*}
+%
+Interpolated elevation values for arbitrary $(x, y)$ coordinate tuples can now be constructed:
+%
+\begin{equation*}
+  \widehat{z} = \widehat{\beta}_{p,0} + \widehat{\beta}_{p,x} x + \widehat{\beta}_{p,y} y
+\end{equation*}
+%
+Or as an alternative formulation, a linear predictor $\widehat{f}_z$ parametrized according to $\widehat{\vec{\beta}}_p$ can be constructed:
+%
+\begin{equation*}
+  \widehat{f}_z\left(x, y; \widehat{\vec{\beta}}_p\right)
+  =
+    \widehat{\beta}_{p,0}
+    + \widehat{\beta}_{p,x} x
+    + \widehat{\beta}_{p,y} y
+  =
+  \widehat{z}
+\end{equation*}
+%
+Now define the coefficient vector set $\mathcal{B}(x, y)$ which contains all coefficient vectors to polygons that contain the coordinate $(x, y)$ when projected into the $xy$-plane.
+More formally,
+%
+\begin{equation*}
+  \mathcal{B}(x, y) = \left\{
+    \vec{\beta}_p
+    \mid
+    (x, y) \in \pi_{\mathrm{2D}}(P_p)
+  \right\},
+\end{equation*}
+%
+where $\pi_{\mathrm{2D}}$ is the projection of all polygon vertex coordinates into the $xy$-plane as illustrated in \cref{fig:2d-polygon-projection}.
+%
+\begin{figure}
+  \centering
+  \includegraphics[width=\linewidth]{2d-projection}
+  \caption{%
+    Projection of three-dimensional polygon onto $xy$-plane by $\pi_{\mathrm{2D}}$.
+  }{%
+    The three-dimensional polygon is shown in \textcolor{red}{red}, while the two-dimensional projection is shown in \textcolor{blue}{blue}.
+  }%
+  \label{fig:2d-polygon-projection}
+\end{figure}
+%
+\begin{equation*}
+  \vec{\beta}_m(x, y)
+  =
+  \argmax_{\vec{\beta} \in \mathcal{B}(x, y)}
+    \widehat{f}_z(x, y; \vec{\beta})
+\end{equation*}
+%
+\begin{equation*}
+  \vec{n}\left(\vec{\beta}\right)
+  =
+  \frac{%
+    1
+  }{%
+    \sqrt{\beta_x^2 + \beta_y^2 + 1}
+  }
+  \cdot
+  {\left[
+    -\beta_{x}, -\beta_{y}, 1
+  \right]}^T
 \end{equation*}
 
 
