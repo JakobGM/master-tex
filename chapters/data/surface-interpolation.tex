@@ -1,3 +1,63 @@
+We want to construct rasterized data tiles which geographic extent are specified by bounding boxes $B(\vec{c}, w, h)$.
+Specifically we construct square tiles of area $\SI{4096}{\meter\squared}$, i.e. $w = h = \SI{64}{\meter}$, which will contain \num{4} raster values per meter, or equivalently, \num{16} raster pixels values per meter squared.
+A specific bounding box $B(\vec{c}, \SI{64}{\meter}, \SI{64}{\meter})$ will therefore be represented by a set of $256 \times 256 \times C$ raster arrays consisting of $C$ channels.
+These raster arrays will represent different types of GIS data such as RGB aerial photography ($C = 3$), LiDAR elevation data ($C = 1$), or building footprint segmentation masks ($C = 1$).
+The idea is now to introduce two new raster array types constructed from three-dimensional surface polygons; a $256 \times 256 \times 3$ \textit{surface normal array} $N$ and a $256 \times 256 \times 1$ \textit{surface elevation array} $H$.
+The interpretation and construction of these arrays will be explained in this section.
+The dataset used in this thesis contains all roof surfaces in the Norwegian municipality of Trondheim.
+For now assume that this collection of polygons represents perfectly flat surfaces in three dimensions, all of which are mutually non-overlapping even when projected onto the $xy$-plane.
+%
+\begin{align*}
+  N_{i,j} &= \begin{cases}
+    \text{surface normal vector,} &\text{if surface exists at } (i, j).\\
+    \vec{0}, &\text{otherwise.}
+  \end{cases}
+  \\
+  Z_{i,j} &= \begin{cases}
+    \text{surface elevation at } $(i, j)$ &\text{if surface exists at } (i, j).\\
+    -\infty, &\text{otherwise.}
+  \end{cases}
+\end{align*}
+%
+In the case of overlapping polygons the choice of polygon to use in order to fill surface normal and elevation values at overlapped coordinates becomes ambiguous.
+In the case of polygons which are not perfectly flat, meaning that all vertices are \emph{not} situated perfectly on the same geometric plane, the interpolation of elevation values to the interior of the polygon becomes ambiguous as well.
+
+Our data set consists of a set of flat, planar, three-dimensional polygons.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\linewidth]{interpolation-concepts}
+  \caption{Three-dimensional surface raster values}{%
+    Illustration of interpolated altitude values, $Z_{ij}$, and respective surface normal vectors, $N_{ij}$.
+    Slice for $i = 1$ and $1 \leq j \leq 4$.
+  }
+\end{figure}
+
+\begin{align*}
+  N: i \times j \rightarrow \vec{n},
+  \hspace{2em} & \text{ where } \vec{n} \in \mathbb{R}^3, ||\vec{n}||_2 \in \{0, 1\},
+  \text{ and } i, j \in [0, 255].
+\end{align*}
+
+
+\begin{leftbar}
+  \begin{itemize}[nosep,leftmargin=*]
+    \item Determine geometric plane for all polygons in polygon collection.
+    \item For each tile bounding box\ldots
+    \begin{itemize}[nosep,leftmargin=0.5cm]
+      \item Determine the subset of polygons which intersects the tile bounding box.
+      \item Map polygon subset from geographic coordinate system to pixel coordinate system.
+      \item For each pixel in rasterized tile\ldots
+      \begin{itemize}[nosep,leftmargin=0.5cm]
+        \item Determine subset of polygons which intersects the pixel area.
+        \item If more than one polygon covers the given pixel coordinate, choose the polygon with the greatest elevation value at that given point.
+      \end{itemize}
+    \end{itemize}
+  \end{itemize}
+\end{leftbar}
+
+\subsubsection{Notation}
+
 Let $r_{p,i}$ denote a linear ring belonging to a polygon denoted as $P_p$.
 The symbol $p$ denotes the \textit{polygon index}, while $i$ denotes the \textit{ring index}.
 A ring index of 1 indicates an \textit{exterior ring}, while a ring index of greater than one represents an interior ring.
@@ -22,6 +82,32 @@ The linear ring can therefore be denoted as
 \end{equation*}
 %
 where the first and last coordinate tuple are identical in order to close the ring.
+
+\subsubsection{R-Tree index}
+
+Denote the indexed collection of three-dimensional polygons $\mathcal{P}$, and assume that the size of the collection is of size $|\mathcal{P}| \gg 1$, i.e. $\mathcal{P} = \{P_1, P_2, \dots, P_{|\mathcal{P}|} \}$.
+In our case the collection $\mathcal{P}$ consists of all roof surfaces in the municipality of Trondheim, Norway with $|\mathcal{P}| = \num{293336}$.
+We want construct a set of rasterized tiles defined over a respective set of bounding boxes $\mathcal{T} = \{B(\vec{c}_1, \SI{64}{\meter}, \SI{64}{\meter}), B(\vec{c}_2, \SI{64}{\meter}, \SI{64}{\meter}),\allowbreak \dots,\allowbreak B(\vec{c}_{|\mathcal{T}|}, \SI{64}{\meter}, \SI{64}{\meter}) \}$ based on the polygon collection $\mathcal{P}$.
+Denote the algorithmic procedure which construct rasterized tiles \texttt{ConstructTile}.
+Assume that we \texttt{ConstructTile} and that this procedure accepts a bounding box $B(\vec{c}, w, h)$ and a polygon collection $\mathcal{P}$ as inputs.
+The average time complexity of \texttt{ConstructTile} will most likely be at least linearly dependent of the polygon collection size $|\mathcal{P}|$.
+%
+\begin{equation*}
+  \mathcal{P} \cap B(\vec{c}, h, w)
+  =
+  \left\{
+    P \in \mathcal{P} \mid P \cap B(\vec{c}, h, w) \neq \varnothing
+  \right\}
+\end{equation*}
+%
+\begin{equation*}
+  \texttt{ConstructTile}(B(\vec{c}, h, w),~\mathcal{P})
+  \equiv
+  \texttt{ConstructTile}(B(\vec{c}, h, w),~\mathcal{P} \cap B(\vec{c}, h, w))
+\end{equation*}
+
+\subsubsection{Linear regression}
+
 Now assume that the polygon collection at hand contains three-dimensional polygons which are all approximately planar.
 Any $(x, y, z)$ vertex must therefore satisfy the following relationship:
 %
@@ -145,14 +231,6 @@ where $\pi_{\mathrm{2D}}$ is the projection of all polygon vertex coordinates in
 \end{equation*}
 
 
-\begin{figure}
-  \centering
-  \includegraphics[width=\linewidth]{interpolation-concepts}
-  \caption{Three-dimensional surface raster values}{%
-    Illustration of interpolated altitude values, $Z_{ij}$, and respective surface normal vectors, $N_{ij}$.
-    Slice for $i = 1$ and $1 \leq j \leq 4$.
-  }
-\end{figure}
 
 \begin{algorithm}{Surface interpolation}{alg:surface-interpolation}{Tile bounding box $B(\vec{c}, w, h)$,\\Raster dimensions $H \times W$,\\R-Tree indexed polygon collection.}
 \item Construct arrays with temporary placeholder values:

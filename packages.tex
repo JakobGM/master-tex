@@ -138,3 +138,10 @@
 % Include .tikz images with \includegraphics, supporting proper scaling
 % https://ctan.uib.no/graphics/pgf/contrib/tikzscale/tikzscale.pdf
 \usepackage{tikzscale}
+
+% Proper formatting of units by using \SI{value}{\unit}
+% We enable use of \giga\byte and other binary units
+\usepackage[binary-units=true]{siunitx}
+\DeclareSIUnit\pixel{px}
+\DeclareSIUnit\flops{FLOPS}
+\sisetup{range-phrase=~--~}
