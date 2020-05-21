@@ -1,3 +1,123 @@
+\begin{wrapfigure}[10]{r}{0.25\textwidth}
+  \vspace{-2em}
+  \begin{center}
+    \includegraphics[width=\linewidth]{3d-roof.tikz}
+  \end{center}
+  \caption{%
+    \\
+    Three-dimensional\\polygonal roof.
+  }%
+  \label{fig:gable-roof}
+\end{wrapfigure}
+
+The roof of a given building can be decomposed into a collection of entirely flat polygons.
+This is an accurate data decomposition in most cases, with the exception of conic shapes and other surfaces with continuous curvature which cannot be perfectly represented with a finite set of flat polygons.
+A \emph{gable roof}\footnote{\textit{Gable roof} -- A roof which consists of two flat roof surfaces which slope in opposite directions. The roof surfaces are connected along the highest, horizontal edge (ridge).}, for instance, can be considered as the set of two flat polygons which when combined accurately represents the roof in its entirety.
+Our intent is to construct a machine learning pipeline which is able to identify such three-dimensional roof surfaces from remote sensing data.
+
+Although a set of vectorized, flat polygons is often the most suitable data decomposition for roof data, it is \emph{not} an ideal representation for traditional machine vision data pipelines.
+Polygons can consist of an arbitrary number of linear rings, each with an arbitrary number of vertices, where the number depends on the complexity of the shape.
+Deep learning model architectures, on the other hand, are often restricted to training on and predicting observations of \emph{consistent} dimensionality.
+This is why machine vision architectures most often accept and/or emit spatial information in the form of \emph{rasters}, that is, numeric arrays with consistent dimensions.
+In order to reconcile this conflict we now pose the following question:
+%
+\begin{quotation}
+  \enquote{How can an arbitrarily sized set of three-dimensional polygons, all of arbitrary shape and orientation, be accurately represented in the form of a raster?}.
+\end{quotation}
+%
+We will refer to such a raster as a \textit{surface raster} in order to distinguish it from other remote sensing raster types such as aerial photography and LiDAR data.
+The ideal surface raster format would allow us to train on and predict roof surfaces in vectorized polygon form, all the while applying the tried and tested techniques from the machine vision literature which mainly concerns itself with rasters.
+The careful formulation and construction of this surface raster format is considered one of the most important problems to be solved in order to construct an efficient machine learning pipeline for predicting roof surfaces.
+The ideal surface raster format should be both \emph{representative} and \emph{targetable}, that is:
+\begin{description}[style=nextline]
+  \item[Representative]
+    \textit{Converting surface polygons to the surface raster format and then back again incurs negligible loss of information.}
+    \\
+    Let $V$ denote the domain consisting the surface polygons in vector form, and denote the surface raster domain as $R = \mathbb{R}^{H \times W \times C_R}$, where $C_R$ is the number of channels used by the surface raster format and $H$ and $W$ is the height and width of the surface raster respectively.
+    Now define a suitable distance metric $d: V \times V \rightarrow{R}$ which incorporates some notion of the difference in spatial location and orientation between two three-dimensional polygons.
+    A \textit{representative} surface raster format allows us to define a mapping from the vector domain to the surface raster domain, $m: V \rightarrow R$, for which there exists a pseudo-inverse $m^{\dagger}$ which minimizes $d(m^{\dagger}(m(P)), P)$ for some weighting over $P \in V$.
+  \item[Targetable] 
+    \textit{A raster format which is feasible as a modelling target for a machine vision architecture.}
+    \\
+    Assume $X$ to be a raster array containing $C_X$ channels representing remote sensing data over a given geographic region, i.e. $X \in \mathbb{R}^{H \times W \times C_X}$, and that $P$ denotes the collection of polygons located within the same geographic region.
+    We now want to construct a predictor, denoted as $\hat{f}$, which maps from the remote sensing raster data to the surface raster data representation:
+    \begin{equation*}
+      \hat{f}:
+        \mathbb{R}^{H \times W \times C_X}
+        \rightarrow
+        \mathbb{R}^{H \times W \times C_R}
+    \end{equation*}
+    Now assume $\hat{f}$ to be parametrized according to the parameter vector $\vec{\theta}$, and denote the parametrized prediction as $\hat{Y} \defeq \hat{f}(X; \vec{\theta})$.
+    The intention is that surface raster prediction $\hat{Y}$ generated from remote sensing data should be as similar to the polygon-constructed raster $Y \defeq m(P)$ as possible.
+    As with the distance metric $d$ defined previously, we define some suitable differentiable \textit{loss} function $\mathcal{L}: R \times R \rightarrow \mathbb{R}$ which incorporates some notion of difference between two surface rasters.
+    The predictor $\hat{f}$ can therefore be parametrized such that this loss function is minimized when evaluated on the predicted surface raster in conjunction with the ground truth surface raster $m(P)$:
+    \begin{align*}
+      \vec{\theta}_{\mathrm{opt}}
+      &=
+      \argmin_{\vec{\theta}}
+      \sum_{(\hat{Y}, Y)}
+      \mathcal{L}\left(
+        \hat{Y};
+        Y
+      \right)
+      \\
+      &=
+      \argmin_{\vec{\theta}}
+      \sum_{(X, P)}
+      \mathcal{L}\left(
+        \hat{f}(X; \vec{\theta});
+        m(P)
+      \right)
+    \end{align*}
+    Although it is the surface raster loss function we minimize, it is not what we \emph{really} are interested in.
+    The surface raster is in essence only an intermediate data format which is intended to be converted back into the vector domain by the pseuo-inverse $m^{\dagger}$.
+    The thought is that if we minimize the difference between $\hat{Y}$ and $Y$, we implicitly minimize the difference between $m^{\dagger}(\hat{Y})$ and $P$.
+    This assumes that $\mathcal{L}$ is a good loss surrogate for functional composition $d \circ m^{\dagger}$:
+    \begin{equation*}
+      d\left(
+        m^{\dagger}(m(P)),~
+        m^{\dagger}(\hat{f}(X; \vec{\theta}))
+      \right)
+      \approx
+      d\left(
+        P,~
+        m^{\dagger}(\hat{f}(X; \vec{\theta}))
+      \right)
+    \end{equation*}
+\end{description}
+
+A \emph{perfectly} representative raster format is a format which allows for a mapping which satisfies $m^{\dagger}(m(P)) \equiv P$ for all polygons $P \in V$.
+The polygons can be of arbitrary shape complexity which implies that the vector domain, $V$, is infinite-dimensional.
+It is therefore impossible to construct a raster which is both perfectly representative \emph{and} of finite size, that is $H, W, C_R < \infty$.
+From an information theory perspective we can conclude that $H \times W \times C_R$, the more representative the raster can be become.
+
+\begin{equation*}
+  \min_{m, C_R}~
+    \sum_{P \in V}
+    d\left(
+      m^{\dagger}(m(P), P)
+    \right)
+\end{equation*}
+
+These two considerations are in many ways diametrically opposed to each other.
+Unambiguous. Dense and non-sparse.
+A perfectly invertible mapping $m$ is impossible due to the dimensions, can not be lossless.
+Must be able to combine several polygons and still be invertible.
+Decomposition of polygon, and therefore the rasters.
+
+Such pipelines are often constructed to receive and emit \emph{raster} data during training and prediction, not \emph{vector} data.
+The problem is that the data available to us is in vector form, while the tools at our disposal thrives on raster data.
+We therefore pose the following question: \enquote{how can we accurately represent three-dimensional vectorized polygon in raster format}.
+
+\begin{figure}
+  \begin{center}
+    \includegraphics{invertible-rasterization.tikz}
+  \end{center}
+  \vspace{-1.5em}
+  \caption{Invertible rasterization}
+  \label{fig:invertible-rasterization}
+  \vspace{-1.5em}
+\end{figure}
 We want to construct rasterized data tiles which geographic extent are specified by bounding boxes $B(\vec{c}, w, h)$.
 Specifically we construct square tiles of area $\SI{4096}{\meter\squared}$, i.e. $w = h = \SI{64}{\meter}$, which will contain \num{4} raster values per meter, or equivalently, \num{16} raster pixels values per meter squared.
 A specific bounding box $B(\vec{c}, \SI{64}{\meter}, \SI{64}{\meter})$ will therefore be represented by a set of $256 \times 256 \times C$ raster arrays consisting of $C$ channels.
@@ -26,7 +146,7 @@ Our data set consists of a set of flat, planar, three-dimensional polygons.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\linewidth]{interpolation-concepts}
+  \includegraphics[width=\linewidth]{interpolation-concepts.tikz}
   \caption{Three-dimensional surface raster values}{%
     Illustration of interpolated altitude values, $Z_{ij}$, and respective surface normal vectors, $N_{ij}$.
     Slice for $i = 1$ and $1 \leq j \leq 4$.
@@ -200,7 +320,7 @@ where $\pi_{\mathrm{2D}}$ is the projection of all polygon vertex coordinates in
 %
 \begin{figure}
   \centering
-  \includegraphics[width=\linewidth]{2d-projection}
+  \includegraphics[width=\linewidth]{2d-projection.tikz}
   \caption{%
     Projection of three-dimensional polygon onto $xy$-plane by $\pi_{\mathrm{2D}}$.
   }{%

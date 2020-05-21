@@ -1,0 +1,44 @@
+\tdplotsetmaincoords{70}{120}
+\begin{tikzpicture}[scale=2, tdplot_main_coords,axis/.style={->,dashed},thick]
+
+% Red surface coordinates
+\coordinate  (d1) at (-1,0,2){};
+\coordinate  (d2) at (1,0,2){};
+\coordinate  (d3) at (1,2,1){};
+\coordinate  (d4) at (-1,2,1){};
+
+% Blue surface coordinates
+\coordinate  (b1) at (-1,0,2){};
+\coordinate  (b2) at (1,0,2){};
+\coordinate  (b3) at (1,-2,1){};
+\coordinate  (b4) at (-1,-2,1){};
+
+% Visible building beams down to ground
+\coordinate (b3b) at (1, -2, 0){};
+\coordinate (b2b) at (1, 0, 0){};
+\coordinate (d3b) at (1, 2, 0){};
+\coordinate (d4b) at (-1, 2, 0){};
+
+% Draw building beams
+\draw [] (b3) -- (b3b);
+\draw [] (b2) -- (b2b);
+\draw [] (d3) -- (d3b);
+\draw [] (d4) -- (d4b);
+
+% Draw bottom of building
+\draw [] (b3b) -- (b2b) -- (d3b) -- (d4b);
+
+% Fill surface colors
+\fill[red!80,opacity=0.1] (d1) -- (d2) -- (d3)-- (d4)--cycle;
+\fill[blue!80,opacity=0.1] (b1) -- (b2) -- (b3)-- (b4)--cycle;
+
+% draw surface frames
+\draw []       (d1)--(d2)--(d3)--(d4)--(d1);
+\draw []       (b1)--(b2)--(b3)--(b4)--(b1);
+
+% Annotate polygons
+\node[above] at (0, 1, 1.25) {$P_1$};
+\node[above](p2centroid) at (0, -1, 1.75) {$P_2$};
+\draw[] (p2centroid) -- (0, -1, 1.5);
+
+\end{tikzpicture}

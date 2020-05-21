@@ -135,6 +135,12 @@
 \usetikzlibrary{decorations.pathreplacing}
 % For drawing matrices, useful for masking demonstration
 \usetikzlibrary{matrix}
+% For bent arrows, amongst others
+\usetikzlibrary{arrows}
+% Use relative positioning in nodes and paths
+% Syntax: below=<optional length> of ...
+% https://tex.stackexchange.com/a/25685
+\usetikzlibrary{positioning}
 % Include .tikz images with \includegraphics, supporting proper scaling
 % https://ctan.uib.no/graphics/pgf/contrib/tikzscale/tikzscale.pdf
 \usepackage{tikzscale}
@@ -145,3 +151,9 @@
 \DeclareSIUnit\pixel{px}
 \DeclareSIUnit\flops{FLOPS}
 \sisetup{range-phrase=~--~}
+
+% Wrap text around figures
+\usepackage{wrapfig}
+
+% Defines the \vcentcolon symbol, used by the \defeq command
+\usepackage{mathtools}
