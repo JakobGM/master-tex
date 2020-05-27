@@ -108,7 +108,7 @@ Finally, assume that the remote sensing raster data, $X$, has all the same dimen
 The considerations of representativeness and targetability are in many ways diametrically opposed when constructing a suitable raster mapping.
 As an instructive example consider the choice of $C_R$, the number of raster channels used by the surface raster.
 Since the mapping $m$ maps from a infinite-dimensional space to a finite-dimensional one, it can be considered a compression method of sorts.
-The smaller the value of $C_R$, the greater the compression and its associated compression loss.
+The smaller the value of $C_R$, the greater the compression, and subsequently its associated compression loss.
 Thus the greater number of raster channels, the more representative the raster format can become.
 On the other hand, when $C_R$ grows large it is natural to assume that the increasing degree of freedom in the data format allows for many equivalently accurate representations of the same polygon collection.
 The raster format may also become more sparse as a result.
@@ -137,12 +137,133 @@ For a sufficiently representative raster mapping this should also imply that $\v
 This is the metric we really intend to minimize, but can only do so implicitly with a good surrogate loss function, and a raster format that is sufficiently representative and targetable.
 
 \subsection{The \enquote{surface normal} raster format}
+
+We want to construct raster arrays (tiles) which represent different types of GIS data.
+Each such raster tile represents GIS data corresponding to a specific geographic area, the extent of which is specified by a bounding box $B(\vec{c}, w, h)$.
+In our case we intend to construct square tiles with areas of $\SI{4096}{\meter\squared}$, i.e. having width and height $w = h = \SI{64}{\meter}$.
+All of the bounding boxes have centroids $\vec{c}$ such that they are situated within the Norwegian municipality of Trondheim.
+Denote the set of all these bounding boxes as $\mathcal{T}$:
+%
+\begin{align*}
+  \mathcal{T}
+  &=
+  \{
+    B(\vec{c}_1, \SI{64}{\meter}, \SI{64}{\meter}),
+    B(\vec{c}_2, \SI{64}{\meter}, \SI{64}{\meter}),
+    \dots
+    B(\vec{c}_{|\mathcal{T}|}, \SI{64}{\meter}, \SI{64}{\meter})
+  \}
+  \\
+  &=
+  \{
+    B_1,
+    B_2,
+    \dots,
+    B_{|\mathcal{T}|}
+  \}
+\end{align*}
+%
+Our bounding boxes are constructed from cadastral plots in Trondheim, totaling $|\mathcal{T}| = \numtiles$.
+We will restrict ourselves to constructing raster arrays of consistent resolution height $H = 256$ and resolution width $W = 256$.
+This results in $256^2$ \enquote{pixelized} GIS measurements per raster tile, or equivalently, \num{16} raster pixel values per meter squared.
+A specific bounding box $B(\vec{c}, \SI{64}{\meter}, \SI{64}{\meter})$ will therefore be represented by a set of $256 \times 256 \times C$ raster arrays consisting of $C$ channels.
+We have already described raster arrays representing different types of GIS data, such as RGB aerial photography ($C = 3$), LiDAR elevation data ($C = 1$), or building footprint segmentation masks ($C = 1$).
+The idea is now to construct an entirely new raster format which is able to represent a set of three-dimensional polygons:
+\begin{equation*}
+  \mathcal{P}
+  =
+  \{
+    P_1,
+    P_2,
+    \dots,
+    P_{|\mathcal{P}|}
+  \}.
+\end{equation*}
+In our case $\mathcal{P}$ consists of all roof surfaces in Trondheim, totaling $|\mathcal{P}| = \numsurfaces$.
+Our surface raster format, which we will refer to as the \enquote{surface normal} raster, is intended as a format which is both representative and targetable.
+We start by imposing two key assumptions on the polygons contained by $\mathcal{P}$.
+\begin{enumerate}
+  \item\label{itm:flat} All polygons $P \in \mathcal{P}$ are \textbf{perfectly planar}.
+    That is, for every polygon you can determine $\beta_0$, $\beta_x$, and $\beta_y$ such that $z = \beta_0 + \beta_x x + \beta_y y$ for \emph{all} vertices $(x, y, z)$ representing the given polygon.
+  \item\label{itm:non-overlapping} All polygons $P \in \mathcal{P}$ are \textbf{mutually non-overlapping} when projected into the $xy$-plane, the $xy$-plane being the sea level.
+\end{enumerate}
+These assumptions are in fact \emph{not} satisfied by the Trondheim roof surface polygon dataset, but these issues are rectifiable.
+Assumption \ref{itm:flat} is \textit{nearly} satisfied and can be solved by regression with negligible error.
+Assumption \ref{itm:non-overlapping} can be solved with a suitable \enquote{conflict resolution} method which determines which polygon should be considered at each pixel location.
+These two solutions will be described in more detail later, but for now it is easier to describe the surface normal raster with these assumptions in place.
+We will introduce one final assumption:
+\begin{enumerate}
+  \setcounter{enumi}{2}
+  \item \label{itm:simple} All polygons $P \in \mathcal{P}$ are \textbf{simple} polygons without any interior hulls, and are thus representable by a single exterior ring.
+   The exterior ring is represented as an ordered sequences of $(x, y, z)$ coordinate tuples, and will therefore be denoted as,
+    \begin{equation*}
+      P = [(x_1, y_1, z_1), (x_2, y_2, z_2), \dots, (x_{|P|}, y_{|P|}, z_{|P|}), (x_1, y_1, z_1)],
+    \end{equation*}
+    where $|P|$ denotes the number of \emph{unique} vertices, and where the first and last coordinate tuples are identical in order to close the ring.
+\end{enumerate}
+Assumption \ref{itm:simple} is solely introduced for notational simplicity.
+Keeping track of several linear rings for each polygon will substantially complicate all expressions that will follow.
+There is nothing preventing the surface normal raster format for being generalized to polygons with interior hulls, and our implementation does in fact take interior hulls into account when constructing the surface normal raster.
+
+Under the assumption of all polygons in $\mathcal{P}$ being perfectly planar we are able to decompose any polygon $P \in \mathcal{P}$ into two constituent sub-components: its \textit{two-dimensional projection} and its \textit{planar equation}.
+The first sub-component is the projection of the polygon into the $xy$-plane, $\pi_{\mathrm{2D}}(P)$, making the three-dimensional polygon two-dimensional instead.
+This simple projection is simply performed by truncating the $z$-component of each $(x, y, z)$-vertex in the polygon:
+\begin{align*}
+  \pi_{\mathrm{2D}}(P)
+  &=
+  \pi_{\mathrm{2D}}([(x_1, y_1, z_1), (x_2, y_2, z_2), \dots, (x_{|P|}, y_{|P|}, z_{|P|}), (x_1, y_1, z_1)])
+  \\
+  &=
+  [(x_1, y_1), (x_2, y_2), \dots, (x_{|P|}, y_{|P|}), (x_1, y_1)]).
+\end{align*}
+The projection mapping $\pi_{\mathrm{2D}}$ is also illustrated in \cref{fig:2d-polygon-projection}.
+\begin{figure}
+  \centering
+  \includegraphics[width=0.66\linewidth]{2d-projection.tikz}
+  \caption{%
+    Projection of three-dimensional polygon onto $xy$-plane by $\pi_{\mathrm{2D}}$.
+  }{%
+    The three-dimensional polygon is shown in \textcolor{red}{red}, while the two-dimensional projection is shown in \textcolor{blue}{blue}.
+  }%
+  \label{fig:2d-polygon-projection}
+\end{figure}
+
+The second sub-component is the parametric description of the plane on which \emph{all} vertices of the given polygon lies.
+Denote this mapping as $\vec{\beta}(P)$ and define it according to the following relationship:
+\begin{align*}
+  \vec{\beta}(P)
+  =
+  \begin{bmatrix}
+    \beta_0 \\
+    \beta_x \\
+    \beta_y \\
+  \end{bmatrix}
+  \text{ such that }
+  z = \beta_0 + \beta_x x + \beta_y y \text{ for all } (x, y, z) \in P
+\end{align*}
+The original three-dimensional polygon can be easily reconstructed in a lossless manner from the two sub-components, while still being a less redundant representation of the polygon.
+\begin{figure}
+  \centering
+  \includegraphics{3d-polygon-reconstruction.tikz}
+\end{figure}
+
+TODO: Lead over into rasterization of decomposition.
+\begin{figure}
+  \centering
+  \includegraphics{3d-polygon-decomposition.tikz}
+  \caption{TODO.}
+  \label{fig:3d-polygon-decomposition}
+\end{figure}
+
+We will now describe the construction of the \enquote{surface normal} raster format, a format intended as a sufficiently representative and targetable surface raster format for roof geometry inference.
+Our set of polygons represent roof surfaces in Trondheim, totaling $|\mathcal{P}| = \numsurfaces$.
+
+Our proposed surface raster format, which we will refer to as a \enquote{surface normal} raster, is based on two key assumptions of the polygons.
+
+
+
 Decomposition of polygon, and therefore the rasters.
 
-We want to construct rasterized data tiles which geographic extent are specified by bounding boxes $B(\vec{c}, w, h)$.
-Specifically we construct square tiles of area $\SI{4096}{\meter\squared}$, i.e. $w = h = \SI{64}{\meter}$, which will contain \num{4} raster values per meter, or equivalently, \num{16} raster pixels values per meter squared.
-A specific bounding box $B(\vec{c}, \SI{64}{\meter}, \SI{64}{\meter})$ will therefore be represented by a set of $256 \times 256 \times C$ raster arrays consisting of $C$ channels.
-These raster arrays will represent different types of GIS data such as RGB aerial photography ($C = 3$), LiDAR elevation data ($C = 1$), or building footprint segmentation masks ($C = 1$).
 The idea is now to introduce two new raster array types constructed from three-dimensional surface polygons; a $256 \times 256 \times 3$ \textit{surface normal array} $N$ and a $256 \times 256 \times 1$ \textit{surface elevation array} $H$.
 The interpretation and construction of these arrays will be explained in this section.
 The dataset used in this thesis contains all roof surfaces in the Norwegian municipality of Trondheim.
@@ -162,6 +283,7 @@ For now assume that this collection of polygons represents perfectly flat surfac
 %
 In the case of overlapping polygons the choice of polygon to use in order to fill surface normal and elevation values at overlapped coordinates becomes ambiguous.
 In the case of polygons which are not perfectly flat, meaning that all vertices are \emph{not} situated perfectly on the same geometric plane, the interpolation of elevation values to the interior of the polygon becomes ambiguous as well.
+
 
 Our data set consists of a set of flat, planar, three-dimensional polygons.
 
@@ -338,17 +460,6 @@ More formally,
 \end{equation*}
 %
 where $\pi_{\mathrm{2D}}$ is the projection of all polygon vertex coordinates into the $xy$-plane as illustrated in \cref{fig:2d-polygon-projection}.
-%
-\begin{figure}
-  \centering
-  \includegraphics[width=\linewidth]{2d-projection.tikz}
-  \caption{%
-    Projection of three-dimensional polygon onto $xy$-plane by $\pi_{\mathrm{2D}}$.
-  }{%
-    The three-dimensional polygon is shown in \textcolor{red}{red}, while the two-dimensional projection is shown in \textcolor{blue}{blue}.
-  }%
-  \label{fig:2d-polygon-projection}
-\end{figure}
 %
 \begin{equation*}
   \vec{\beta}_m(x, y)
