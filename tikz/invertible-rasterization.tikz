@@ -5,15 +5,15 @@
   \node[main node] (4) [right=2.5 of 1] {Raster domain};
 
   \path[every node/.style={font=\sffamily\small}]
-    (1) edge[bend left] node [above, text width=5em, align=center] {regression\\+\\interpolation} (4);
+    (1) edge[bend left] node [above, text width=8em, align=center] {regression\\+\\interpolation} (4);
 
   \path[every node/.style={font=\sffamily\small}]
-    (4) edge[bend left] node [below, align=center] {clustering\\+\\post-processing} (1);
+    (4) edge[bend left] node [below, text width=8em, align=center] {clustering\\+\\post-processing} (1);
 
   \node[right=1.5em of 1, font=\Large\sffamily] (center) {invertible};
 
   \node[font=\Large] (raster) [left=0.5 of 1, align=center, text width=10em, text=darkgray]
   {original raw GIS data\\\&\\processed final output};
-  \node[font=\Large] (raster) [right=0.5 of 4, align=center, text width=10em, text=darkgray]
+  \node[font=\Large] (raster) [right=0.5 of 4, align=center, text width=12em, text=darkgray]
     {CNN model\\training/prediction};
 \end{tikzpicture}
