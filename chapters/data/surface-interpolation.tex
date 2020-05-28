@@ -206,22 +206,22 @@ Keeping track of several linear rings for each polygon will substantially compli
 There is nothing preventing the surface normal raster format for being generalized to polygons with interior hulls, and our implementation does in fact take interior hulls into account when constructing the surface normal raster.
 
 Under the assumption of all polygons in $\mathcal{P}$ being perfectly planar we are able to decompose any polygon $P \in \mathcal{P}$ into two constituent sub-components: its \textit{two-dimensional projection} and its \textit{planar equation}.
-The first sub-component is the projection of the polygon into the $xy$-plane, $\pi_{\mathrm{2D}}(P)$, making the three-dimensional polygon two-dimensional instead.
+The first sub-component is the projection of the polygon into the $xy$-plane, $\project{P}$, making the three-dimensional polygon two-dimensional instead.
 This simple projection is simply performed by truncating the $z$-component of each $(x, y, z)$-vertex in the polygon:
 \begin{align*}
-  \pi_{\mathrm{2D}}(P)
+  \project{P}
   &=
-  \pi_{\mathrm{2D}}([(x_1, y_1, z_1), (x_2, y_2, z_2), \dots, (x_{|P|}, y_{|P|}, z_{|P|}), (x_1, y_1, z_1)])
+  \project{[(x_1, y_1, z_1), (x_2, y_2, z_2), \dots, (x_{|P|}, y_{|P|}, z_{|P|}), (x_1, y_1, z_1)]}
   \\
   &=
   [(x_1, y_1), (x_2, y_2), \dots, (x_{|P|}, y_{|P|}), (x_1, y_1)]).
 \end{align*}
-The projection mapping $\pi_{\mathrm{2D}}$ is also illustrated in \cref{fig:2d-polygon-projection}.
+The projection mapping $\project{P}$ is also illustrated in \cref{fig:2d-polygon-projection}.
 \begin{figure}
   \centering
   \includegraphics[width=0.66\linewidth]{2d-projection.tikz}
   \caption{%
-    Projection of three-dimensional polygon onto $xy$-plane by $\pi_{\mathrm{2D}}$.
+    Projection of three-dimensional polygon onto $xy$-plane by $\project{\cdot}$.
   }{%
     The three-dimensional polygon is shown in \textcolor{red}{red}, while the two-dimensional projection is shown in \textcolor{blue}{blue}.
   }%
@@ -241,12 +241,70 @@ Denote this mapping as $\vec{\beta}(P)$ and define it according to the following
   \text{ such that }
   z = \beta_0 + \beta_x x + \beta_y y \text{ for all } (x, y, z) \in P
 \end{align*}
-The original three-dimensional polygon can be easily reconstructed in a lossless manner from the two sub-components, while still being a less redundant representation of the polygon.
-\begin{figure}
+The original three-dimensional polygon can be easily reconstructed in a lossless manner from the two sub-components, as illustrated in \cref{fig:3d-polygon-reconstruction}, while still being a less redundant representation of the polygon.
+%
+\begin{figure}[H]
   \centering
   \includegraphics{3d-polygon-reconstruction.tikz}
+  \caption{%
+    The decomposition and reconstruction of a three-dimensional polygon.
+  }%
+  \label{fig:3d-polygon-reconstruction}
 \end{figure}
+\noindent
+Now the idea is to create two separate rasters, one which represents $\project{P}$ and one which represents $\vec{\beta}(P)$.
+The task of rasterizing $\project{P}$ is quite simple, it is a two-dimensional polygon which can be represented as a binary mask as explained earlier.
+\begin{align*}
+  S_{i,j} &= \begin{cases}
+    1, &\text{if there exists } P \in \mathcal{P} \text{ such that } \project{P} \text{ covers } \pixtogeo{i}{j}.\\
+    0, &\text{otherwise.}
+  \end{cases}
+\end{align*}
+Where we have defined $\pixtogeo{i}{j}$ as a function that maps array pixel coordinates $(i, j)$ to the respective coordinate in the UTM coordinate system in which the polygons $P \in \mathcal{P}$ are specified.
+When it comes to the rasterization of $\planar{P} = {[\beta_0, \beta_x, \beta_y]}^T$, we start by noticing that the \textit{normal vector} of the plane can be constructed from $\planar{P}$:
+\begin{equation*}
+  \planar{P}
+  =
+  \begin{bmatrix}
+    \beta_0\\
+    \beta_x\\
+    \beta_y\\
+  \end{bmatrix}
+  \iff
+  \vec{n}\left(\planar{P}\right)
+  =
+  \frac{1}{\sqrt{\beta_x^2 + \beta_y^2 + 1}}
+  \begin{bmatrix}
+    -\beta_x\\
+    -\beta_y\\
+    1
+  \end{bmatrix}
+\end{equation*}
+This relationship between the equation of the plane and the surface normal vector is illustrated in \cref{fig:3d-normal-vector}.
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.55\linewidth]{3d-normal-vector.tikz}
+  \caption{%
+    The relationship between the equation of the plane and the surface normal vector.
+  }{%
+    The plane is defined by $z = \beta_0 + \beta_x x + \beta_y y$.
+    The elements of the parameter vector $\vec{\beta}$ is shown in \textcolor{orange}{orange}, while the normal vector $\vec{n}$ is shown in \textcolor{blue}{blue}.
+  }%
+  \label{fig:3d-normal-vector}
+\end{figure}
+\noindent
+Given that we can easily determine $\planar{P}$ for any polygon, we now define the following raster format:
+\begin{align*}
+  N_{i,j} &= \begin{cases}
+    \vec{n}\left(\planar{P}\right), &\text{if $\project{P}$ covers } \pixtogeo{i}{j}.\\
+    \vec{0} \defeq {[0, 0, 0]}^T, &\text{otherwise.}
+  \end{cases}
+\end{align*}
+This is a raster format consisting of three raster channels as each pixel location $(i, j)$ represents a three-dimensional normal vector.
+It should now become apparent why we made assumption \ref{itm:non-overlapping} earlier, that is, all polygons $P \in \mathcal{P}$ should be mutually non-overlapping after being projected by $\project{\cdot}$.
+If more than one polygon covers the coordinate $\pixtogeo(i, j)$ the value for $N_{i,j}$ becomes ambiguous.
 
+\newpage
 TODO: Lead over into rasterization of decomposition.
 \begin{figure}
   \centering
@@ -455,11 +513,11 @@ More formally,
   \mathcal{B}(x, y) = \left\{
     \vec{\beta}_p
     \mid
-    (x, y) \in \pi_{\mathrm{2D}}(P_p)
+    (x, y) \in \project{P_p}
   \right\},
 \end{equation*}
 %
-where $\pi_{\mathrm{2D}}$ is the projection of all polygon vertex coordinates into the $xy$-plane as illustrated in \cref{fig:2d-polygon-projection}.
+where $\project{P_p}$ is the projection of all polygon vertex coordinates into the $xy$-plane as illustrated in \cref{fig:2d-polygon-projection}.
 %
 \begin{equation*}
   \vec{\beta}_m(x, y)

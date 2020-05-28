@@ -1,0 +1,23 @@
+\tdplotsetmaincoords{70}{300}
+\begin{tikzpicture}[tdplot_main_coords,axis/.style={->,dashed},thick]
+
+% -- remove these 3 lines if no axis is preferred
+\draw[axis] (0, 0, -0.5) -- (2, 0, -0.5) node [right] {$x$};
+\draw[axis] (0, 0, -0.5) -- (0, 2, -0.5) node [above] {$y$};
+\draw[axis] (0, 0, -0.5) -- (0, 0, 0.5) node [above] {$z$};
+
+\coordinate  (d1) at (0,0,0){};
+\coordinate  (d2) at (2,0,1){};
+\coordinate  (d3) at (2,2,2){};
+\coordinate  (d4) at (0,2,1){};
+
+\draw[blue, ->] (1, 1, 1) -- (0, 0, 2) node[right, yshift=2em] {$\vec{n} = \frac{1}{\sqrt{\beta_x^2 + \beta_y^2 + 1}} \begin{bmatrix}-\beta_x\\ -\beta_y\\ 1\end{bmatrix}$};
+\draw[fill=blue] (1, 1, 1) circle (0.05em);
+
+\draw[orange] (0, 0, 0) -- node[below] {1} (1, 0, 0) -- node[right] {$\beta_x$} (1, 0, 0.5) -- cycle;
+\draw[orange] (0, 0, 0) -- node[below] {1} (0, 1, 0) -- node[left] {$\beta_y$} (0, 1, 0.5) -- cycle;
+\draw[orange] (0, 0, -0.5) -- node[left] {$\beta_0$} (0, 0, 0);
+
+\fill[red!80,opacity=0.1] (d1) -- (d2) -- (d3)-- (d4)--cycle;
+\draw []       (d1)--(d2)--(d3)--(d4)--(d1);
+\end{tikzpicture}
