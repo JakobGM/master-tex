@@ -259,6 +259,7 @@ The task of rasterizing $\project{P}$ is quite simple, it is a two-dimensional p
     1, &\text{if there exists } P \in \mathcal{P} \text{ such that } \project{P} \text{ covers } \pixtogeo{i}{j}.\\
     0, &\text{otherwise.}
   \end{cases}
+  \tag{semantic segmentation raster}
 \end{align*}
 Where we have defined $\pixtogeo{i}{j}$ as a function that maps array pixel coordinates $(i, j)$ to the respective coordinate in the UTM coordinate system in which the polygons $P \in \mathcal{P}$ are specified.
 When it comes to the rasterization of $\planar{P} = {[\beta_0, \beta_x, \beta_y]}^T$, we start by noticing that the \textit{normal vector} of the plane can be constructed from $\planar{P}$:
@@ -288,7 +289,7 @@ This relationship between the equation of the plane and the surface normal vecto
     The relationship between the equation of the plane and the surface normal vector.
   }{%
     The plane is defined by $z = \beta_0 + \beta_x x + \beta_y y$.
-    The elements of the parameter vector $\vec{\beta}$ is shown in \textcolor{orange}{orange}, while the normal vector $\vec{n}$ is shown in \textcolor{blue}{blue}.
+    The elements of the parameter vector $\vec{\beta}$ are shown in \textcolor{orange}{orange}, while the normal vector $\vec{n}$ is shown in \textcolor{blue}{blue}.
   }%
   \label{fig:3d-normal-vector}
 \end{figure}
@@ -299,19 +300,61 @@ Given that we can easily determine $\planar{P}$ for any polygon, we now define t
     \vec{n}\left(\planar{P}\right), &\text{if $\project{P}$ covers } \pixtogeo{i}{j}.\\
     \vec{0} \defeq {[0, 0, 0]}^T, &\text{otherwise.}
   \end{cases}
+  \tag{surface normal raster}
 \end{align*}
 This is a raster format consisting of three raster channels as each pixel location $(i, j)$ represents a three-dimensional normal vector.
 It should now become apparent why we made assumption \ref{itm:non-overlapping} earlier, that is, all polygons $P \in \mathcal{P}$ should be mutually non-overlapping after being projected by $\project{\cdot}$.
-If more than one polygon covers the coordinate $\pixtogeo(i, j)$ the value for $N_{i,j}$ becomes ambiguous.
+If more than one polygon covers the coordinate $\pixtogeo{i}{j}$, then the value for $N_{i,j}$ becomes ambiguous.
+You may now ask why we rasterize $\mathcal{P}$ into both a surface normal raster, $N$, \emph{and} a semantic segmentation map, $S$, when $S$ can be directly inferred from N.
+That is, we can formulate $S$ in form of $N$ like this:
+\begin{equation*}
+  S_{i, j}
+  =
+  \begin{cases}
+    0, &\text{if } N_{i,j} = {\left[0, 0, 0\right]}^T.  \\
+    1, &\text{otherwise.}
+  \end{cases}
+\end{equation*}
+The reason is that this is a more targetable raster decomposition.
+We can now construct two relatively independent predictors, $\hat{f}_{\mathrm{seg}}(X; \vec{\theta}_{\mathrm{seg}})$ and $\hat{f}_{\mathrm{norm}}(X; \vec{\theta}_{norm})$, which when combined form the main predictor $\hat{f}$ like so:
+\begin{equation*}
+  \hat{f}\left(X; \vec{\theta}_{\mathrm{seg}}, \vec{\theta}_{\mathrm{norm}}\right)
+  =
+  \begin{cases}
+    \hat{f}_{\mathrm{norm}}\left(X; \vec{\theta}_{\mathrm{norm}}\right), &\text{if } \hat{f}_{\mathrm{seg}}\left(X; \vec{\theta}_{\mathrm{seg}}\right) \geq 0.5. \\
+    {\left[0, 0, 0\right]}^T, &\text{otherwise.}
+  \end{cases}
+\end{equation*}
+Now an optimal value for $\vec{\theta}_{\mathrm{seg}}$ can be found by training $\hat{f}_{\mathrm{seg}}$ on $S$ as the ground truth, using model architectures and loss functions from the semantic segmentation literature.
+A model architecture and loss function can be likewise be chosen for $\hat{f}_{\mathrm{norm}}$, entirely independent of the segmentation problem at hand.
+Such \enquote{separation of concerns} has been shown to be beneficial for several model architectures.
 
-\newpage
-TODO: Lead over into rasterization of decomposition.
+We can now rasterize any polygon $P \in \mathcal{P}$ into two separate raster formats, $S$ and $N$, as illustrated in \cref{fig:3d-polygon-decomposition}.
+When generalizing from a single three-dimensional polygon $P$ to a set of polygons $\mathcal{P}$, we can iteratively fill in the values for the same raster arrays $S$ and $N$.
+\begin{framed}
+  \noindent
+  \textbf{Proposed $\mathbf{m^{\dagger}}$} -- Partition semantic segmentation raster $S$ such that all partitions form contiguous pixel areas which share the same value of $N$.
+  Reconstruct $\beta_0$ by inferring from LiDAR input data.
+\end{framed}
+It should be noted that this is in fact a lossy decomposition, making the raster format not perfectly representative.
+The reason for this is that the parameter $\beta_0$ has been entirely discarded when we rasterize $\planar{P}$.
+This might cause some difficulties when mapping back from the raster domain, represented by $S$ and $N$, back to the original original polygon domain, represented by $\mathcal{P}$.
+The exact conditions under which the surface raster format becomes non-representative will be discussed in detail in \cref{chap:post-processing}, but for now suffice it to say that a pseudo-inverse mapping, $m^{\dagger}$, will be implemented along the following lines:
+It should be noted that the rasterization of $\mathcal{P}$ into a semantic segmentation raster and a surface normal raster is not a perfectly representative format.
+Specifically, issues may arise when there exists two polygons which share a common edge in the two-dimensional projected space, but do \emph{not} share the.
 \begin{figure}
   \centering
   \includegraphics{3d-polygon-decomposition.tikz}
-  \caption{TODO.}
+  \caption{The deconstruction of a three-dimensional polygon into two separate rasters formats.}
   \label{fig:3d-polygon-decomposition}
 \end{figure}
+
+\begin{enumerate}
+  \item There exists two polygons $P_1, P_2 \in \mathcal{P}$ such that $\project{P_1}$ and $\project{P_2}$ touch borders when rasterized.
+    That is, $P_1$ and $P_2$ form one single, contiguous area in the semantic segmentation map $S$.
+  \item $P_1$ and $P_2$ share values for $\beta_x$ and $\beta_y$, but \emph{not} $\beta_0$.
+    That is, the plane of $P_1$ and $P_2$ share the same \textit{orientation} in space, but not the same elevation.
+\end{enumerate}
 
 We will now describe the construction of the \enquote{surface normal} raster format, a format intended as a sufficiently representative and targetable surface raster format for roof geometry inference.
 Our set of polygons represent roof surfaces in Trondheim, totaling $|\mathcal{P}| = \numsurfaces$.

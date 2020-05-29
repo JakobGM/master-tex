@@ -3,16 +3,16 @@
   decomposition/.style={->,thick,draw=red!50},
   rasterization/.style={->,thick,draw=red!50},
   ]
-  \node[box](3d) at (0,0) {Three-dimensional polygon\\$[(x_1, y_1, z_1),~\dots]$};
-  \node[box, below=of 3d](2d) {Two-dimensional polygon\\$[(x_1, y_1),~\dots]$};
+  \node[box](3d) at (0,0) {Three-dimensional polygon, P\\$[(x_1, y_1, z_1),~\dots]$};
+  \node[box, below=1.5cm of 3d](2d) {Two-dimensional polygon\\$[(x_1, y_1),~\dots]$};
   \node[box,right=of 2d](planar) {Planar equation\\$z_i = \beta_0 + \beta_x x_i + \beta_y y_i$};
 
-  \draw[decomposition] (3d.south) to [out=270,in=90] (2d.north);
-  \draw[decomposition] (3d.south) to [out=270,in=90] (planar.north);
+  \draw[decomposition] (3d.south) to [out=270,in=90, edge node={node [sloped,below,darkgray] {$\project{P}$}}] (2d.north);
+  \draw[decomposition] (3d.south) to [out=270,in=90, edge node={node [sloped,above,darkgray] {$\planar{P}$}}] (planar.north);
 
   \node[box, below=of 2d](segmentation) {Segmentation mask, $S$\\$\mathbb{B}^{H \times W \times 1} = \{0, 1\}^{H \times W \times 1}$};
-  \draw[rasterization] (2d.south) to [out=270,in=90] (segmentation.north);
+  \draw[rasterization] (2d.south) to [out=270,in=90, edge node={node [mid right, darkgray] {$\texttt{rasterize}\left(\project{P}\right)$}}] (segmentation.north);
 
   \node[box, below=of planar](normals) {Surface normal raster, $N$\\$\frac{1}{\sqrt{\beta_x^2 + \beta_y^2 + 1}} \cdot {\left[-\beta_x, -\beta_y, 1\right]}^T$};
-  \draw[rasterization] (planar.south) to [out=270,in=90] (normals.north);
+  \draw[rasterization] (planar.south) to [out=270,in=90, edge node={node [mid right, darkgray] {$\texttt{rasterize}\left(\planar{P}\right)$}}] (normals.north);
 \end{tikzpicture}
