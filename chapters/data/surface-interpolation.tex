@@ -252,7 +252,7 @@ The original three-dimensional polygon can be easily reconstructed in a lossless
   \label{fig:3d-polygon-reconstruction}
 \end{figure}
 \noindent
-Now the idea is to create two separate rasters, one which represents $\project{P}$ and one which represents $\vec{\beta}(P)$.
+Now the idea is to create two separate rasters, one which represents $\project{P}$, and another one which represents $\vec{\beta}(P)$.
 The task of rasterizing $\project{P}$ is quite simple, it is a two-dimensional polygon which can be represented as a binary mask as explained earlier.
 \begin{align*}
   S_{i,j} &= \begin{cases}
@@ -262,7 +262,7 @@ The task of rasterizing $\project{P}$ is quite simple, it is a two-dimensional p
   \tag{semantic segmentation raster}
 \end{align*}
 Where we have defined $\pixtogeo{i}{j}$ as a function that maps array pixel coordinates $(i, j)$ to the respective coordinate in the UTM coordinate system in which the polygons $P \in \mathcal{P}$ are specified.
-When it comes to the rasterization of $\planar{P} = {[\beta_0, \beta_x, \beta_y]}^T$, we start by noticing that the \textit{normal vector} of the plane can be constructed from $\planar{P}$:
+When it comes to the rasterization of $\planar{P} = {[\beta_0, \beta_x, \beta_y]}^T$, we start by noticing that the \textit{normal vector} of the plane can be constructed from $\planar{P}$ in the following manner:
 \begin{equation*}
   \planar{P}
   =
@@ -281,7 +281,7 @@ When it comes to the rasterization of $\planar{P} = {[\beta_0, \beta_x, \beta_y]
     1
   \end{bmatrix}
 \end{equation*}
-This relationship between the equation of the plane and the surface normal vector is illustrated in \cref{fig:3d-normal-vector}.
+The relationship between the equation of the plane and the associated surface normal vector is illustrated in \cref{fig:3d-normal-vector}.
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.55\linewidth]{3d-normal-vector.tikz}
@@ -294,11 +294,19 @@ This relationship between the equation of the plane and the surface normal vecto
   \label{fig:3d-normal-vector}
 \end{figure}
 \noindent
+Denote this normal vector as $\vec{n} = {[n_x, n_y, n_z]}^T$, and by construction we can now ascertain that
+\begin{align*}
+  ||\vec{n}||_2 = \sqrt{n_x^2 + n_y^2 + n_z^2} &\equiv 1,
+  \\
+  n_z &\geq 0.
+\end{align*}
+With other words, the normal vector has been constructed such that it is of length 1 in the Euclidean norm, and that it \emph{always} points upwards.
+\noindent
 Given that we can easily determine $\planar{P}$ for any polygon, we now define the following raster format:
 \begin{align*}
   N_{i,j} &= \begin{cases}
     \vec{n}\left(\planar{P}\right), &\text{if $\project{P}$ covers } \pixtogeo{i}{j}.\\
-    \vec{0} \defeq {[0, 0, 0]}^T, &\text{otherwise.}
+    \vec{0} \defeq {[0, 0, 0]}^T, &\text{if no such } P \in \mathcal{P} \text{ exists.}
   \end{cases}
   \tag{surface normal raster}
 \end{align*}
@@ -306,7 +314,7 @@ This is a raster format consisting of three raster channels as each pixel locati
 It should now become apparent why we made assumption \ref{itm:non-overlapping} earlier, that is, all polygons $P \in \mathcal{P}$ should be mutually non-overlapping after being projected by $\project{\cdot}$.
 If more than one polygon covers the coordinate $\pixtogeo{i}{j}$, then the value for $N_{i,j}$ becomes ambiguous.
 You may now ask why we rasterize $\mathcal{P}$ into both a surface normal raster, $N$, \emph{and} a semantic segmentation map, $S$, when $S$ can be directly inferred from N.
-That is, we can formulate $S$ in form of $N$ like this:
+That is, we can formulate $S$ in form of $N$:
 \begin{equation*}
   S_{i, j}
   =
@@ -316,7 +324,7 @@ That is, we can formulate $S$ in form of $N$ like this:
   \end{cases}
 \end{equation*}
 The reason is that this is a more targetable raster decomposition.
-We can now construct two relatively independent predictors, $\hat{f}_{\mathrm{seg}}(X; \vec{\theta}_{\mathrm{seg}})$ and $\hat{f}_{\mathrm{norm}}(X; \vec{\theta}_{norm})$, which when combined form the main predictor $\hat{f}$ like so:
+We can now construct two relatively independent predictors, $\hat{f}_{\mathrm{seg}}(X; \vec{\theta}_{\mathrm{seg}})$ and $\hat{f}_{\mathrm{norm}}(X; \vec{\theta}_{norm})$, which when combined form a main predictor $\hat{f}$ according to:
 \begin{equation*}
   \hat{f}\left(X; \vec{\theta}_{\mathrm{seg}}, \vec{\theta}_{\mathrm{norm}}\right)
   =
@@ -326,128 +334,127 @@ We can now construct two relatively independent predictors, $\hat{f}_{\mathrm{se
   \end{cases}
 \end{equation*}
 Now an optimal value for $\vec{\theta}_{\mathrm{seg}}$ can be found by training $\hat{f}_{\mathrm{seg}}$ on $S$ as the ground truth, using model architectures and loss functions from the semantic segmentation literature.
-A model architecture and loss function can be likewise be chosen for $\hat{f}_{\mathrm{norm}}$, entirely independent of the segmentation problem at hand.
-Such \enquote{separation of concerns} has been shown to be beneficial for several model architectures.
+A model architecture and loss function can be likewise be chosen for $\hat{f}_{\mathrm{norm}}$ entirely independent of the segmentation problem at hand.
+The model architecture can for instance enforce $||\hat{f}_{\mathrm{norm}}||_2 \equiv 1$, and the respective loss function can utilize this restriction of the model output and ground truth.
+Such a \enquote{separation of concerns} has been shown to be beneficial for several model architectures.
 
 We can now rasterize any polygon $P \in \mathcal{P}$ into two separate raster formats, $S$ and $N$, as illustrated in \cref{fig:3d-polygon-decomposition}.
-When generalizing from a single three-dimensional polygon $P$ to a set of polygons $\mathcal{P}$, we can iteratively fill in the values for the same raster arrays $S$ and $N$.
-\begin{framed}
-  \noindent
-  \textbf{Proposed $\mathbf{m^{\dagger}}$} -- Partition semantic segmentation raster $S$ such that all partitions form contiguous pixel areas which share the same value of $N$.
-  Reconstruct $\beta_0$ by inferring from LiDAR input data.
-\end{framed}
-It should be noted that this is in fact a lossy decomposition, making the raster format not perfectly representative.
-The reason for this is that the parameter $\beta_0$ has been entirely discarded when we rasterize $\planar{P}$.
-This might cause some difficulties when mapping back from the raster domain, represented by $S$ and $N$, back to the original original polygon domain, represented by $\mathcal{P}$.
-The exact conditions under which the surface raster format becomes non-representative will be discussed in detail in \cref{chap:post-processing}, but for now suffice it to say that a pseudo-inverse mapping, $m^{\dagger}$, will be implemented along the following lines:
-It should be noted that the rasterization of $\mathcal{P}$ into a semantic segmentation raster and a surface normal raster is not a perfectly representative format.
-Specifically, issues may arise when there exists two polygons which share a common edge in the two-dimensional projected space, but do \emph{not} share the.
 \begin{figure}
   \centering
   \includegraphics{3d-polygon-decomposition.tikz}
   \caption{The deconstruction of a three-dimensional polygon into two separate rasters formats.}
   \label{fig:3d-polygon-decomposition}
 \end{figure}
-
+When generalizing from a single three-dimensional polygon $P$ to a set of polygons $\mathcal{P}$, we can iteratively fill in the values into a single pair of raster arrays, $S$ and $N$, since the polygons are mutually non-overlapping.
+In order to map from this raster domain, represented by $S$ and $N$, back to the original polygon domain, represented by $\mathcal{P}$, we propose the following inverse mapping, $m^{\dagger}$:
+\begin{framed}
+  \noindent
+  \textbf{Proposed $\mathbf{m^{\dagger}}$} -- Partition semantic segmentation raster $S$ such that all partitions form contiguous pixel areas which share the same value of $N$.
+  Reconstruct $\beta_0$ by inferring from LiDAR input data.
+\end{framed}
+\noindent
+It should be noted that this is in fact a lossy decomposition, making the raster format not perfectly representative.
+The reason for this is that the parameter $\beta_0$ has been entirely discarded when we rasterize $\planar{P}$.
+The exact conditions under which the surface raster format and associated inverse mapping becomes non-representative will be discussed in detail in \cref{chap:post-processing}.
+For now, suffice it to say that the following two conditions must be simultaneously satisfied.
 \begin{enumerate}
   \item There exists two polygons $P_1, P_2 \in \mathcal{P}$ such that $\project{P_1}$ and $\project{P_2}$ touch borders when rasterized.
     That is, $P_1$ and $P_2$ form one single, contiguous area in the semantic segmentation map $S$.
   \item $P_1$ and $P_2$ share values for $\beta_x$ and $\beta_y$, but \emph{not} $\beta_0$.
     That is, the plane of $P_1$ and $P_2$ share the same \textit{orientation} in space, but not the same elevation.
 \end{enumerate}
-
-We will now describe the construction of the \enquote{surface normal} raster format, a format intended as a sufficiently representative and targetable surface raster format for roof geometry inference.
-Our set of polygons represent roof surfaces in Trondheim, totaling $|\mathcal{P}| = \numsurfaces$.
-
-Our proposed surface raster format, which we will refer to as a \enquote{surface normal} raster, is based on two key assumptions of the polygons.
-
-
-
-Decomposition of polygon, and therefore the rasters.
-
-The idea is now to introduce two new raster array types constructed from three-dimensional surface polygons; a $256 \times 256 \times 3$ \textit{surface normal array} $N$ and a $256 \times 256 \times 1$ \textit{surface elevation array} $H$.
-The interpretation and construction of these arrays will be explained in this section.
-The dataset used in this thesis contains all roof surfaces in the Norwegian municipality of Trondheim.
-For now assume that this collection of polygons represents perfectly flat surfaces in three dimensions, all of which are mutually non-overlapping even when projected onto the $xy$-plane.
-%
+In order to correct for the lossy decomposition into $S$ and $N$, we must introduce a third raster format into the mix.
+Given that the pixel coordinate ${[i, j]}^T$ maps to the geographic coordinate $[x, y]^T$, i.e. $\pixtogeo{i}{j} = {[x, y]}^T$, then we define the \textit{surface elevation raster} as:
 \begin{align*}
-  N_{i,j} &= \begin{cases}
-    \text{surface normal vector,} &\text{if surface exists at } (i, j).\\
-    \vec{0}, &\text{otherwise.}
-  \end{cases}
-  \\
   Z_{i,j} &= \begin{cases}
-    \text{surface elevation at } $(i, j)$ &\text{if surface exists at } (i, j).\\
-    -\infty, &\text{otherwise.}
+    \begin{bmatrix}1, x, y\end{bmatrix} \planar{P}, &\text{if } \project{P} \text{ covers } \pixtogeo{i}{j}.\\
+    -\infty, &\text{if no such } P \in \mathcal{P} \text{ exists}.
   \end{cases}
+  \tag{surface elevation raster}
 \end{align*}
-%
-In the case of overlapping polygons the choice of polygon to use in order to fill surface normal and elevation values at overlapped coordinates becomes ambiguous.
-In the case of polygons which are not perfectly flat, meaning that all vertices are \emph{not} situated perfectly on the same geometric plane, the interpolation of elevation values to the interior of the polygon becomes ambiguous as well.
-
-
-Our data set consists of a set of flat, planar, three-dimensional polygons.
-
+This \textit{surface elevation} raster array enables us to define a perfectly representative raster format and associated reverse mapping.
+The three surface raster formats presented so far are all illustrated in \cref{fig:interpolation-concepts}.
 \begin{figure}
   \centering
   \includegraphics[width=\linewidth]{interpolation-concepts.tikz}
   \caption{Three-dimensional surface raster values}{%
-    Illustration of interpolated altitude values, $Z_{ij}$, and respective surface normal vectors, $N_{ij}$.
-    Slice for $i = 1$ and $1 \leq j \leq 4$.
-  }
+    Illustration surface elevation values, $Z_{i,j}$, surface normal array values, $N_{i,j}$, and segmentation mask, $S_{i,j}$.
+    Slice for $i = 1$ and $1 \leq j \leq 5$.
+  }%
+  \label{fig:interpolation-concepts}
 \end{figure}
 
-\begin{align*}
-  N: i \times j \rightarrow \vec{n},
-  \hspace{2em} & \text{ where } \vec{n} \in \mathbb{R}^3, ||\vec{n}||_2 \in \{0, 1\},
-  \text{ and } i, j \in [0, 255].
-\end{align*}
-
-
+We will describe how to construct these three raster arrays from a practical implementation perspective in the following subsections.
+A conceptual summary of the implementation goes as follows:
 \begin{leftbar}
+  \noindent
+  Given a set of two-dimensional bounding boxes $\mathcal{T}$ and a set of three-dimensional polygons $\mathcal{P}$:
   \begin{itemize}[nosep,leftmargin=*]
-    \item Determine geometric plane for all polygons in polygon collection.
-    \item For each tile bounding box\ldots
+    \item Construct R-tree index for polygon collection $\mathcal{P}$.
+    \item Calculate and memoize $\planar{P}$ for all $P \in \mathcal{P}$.
+    \item For each bounding box $B \in \mathcal{T}$\ldots
     \begin{itemize}[nosep,leftmargin=0.5cm]
-      \item Determine the subset of polygons which intersects the tile bounding box.
-      \item Map polygon subset from geographic coordinate system to pixel coordinate system.
-      \item For each pixel in rasterized tile\ldots
+      \item Determine the subset of polygons $\mathcal{P}_B \subset \mathcal{P}$ which is at least partially covered by the bounding box $B$.
+        The aforementioned R-tree index is used in order to substantially speed up this filtering.
+      \item Map all coordinates of all $P \in \mathcal{P}_B$ to the pixel coordinate system $\left[0, 255\right] \times \left[0, 255\right]$.
+      \item For each pixel $(i, j)$ in rasterized tile\ldots
       \begin{itemize}[nosep,leftmargin=0.5cm]
-        \item Determine subset of polygons which intersects the pixel area.
-        \item If more than one polygon covers the given pixel coordinate, choose the polygon with the greatest elevation value at that given point.
+        \item Determine subset of polygons $\mathcal{P}_{\mathrm{cover}} \subset \mathcal{P}_B$ which covers the area represented by the pixel $(i, j)$.
+          If $|\mathcal{P}_{\mathrm{cover}}| = 0$, set $Z_{i,j} = -\infty$, $N_{i, j} = {[0, 0, 0]}^T$, and $S_{i, j} = 0$, and continue onto next iteration of loop.
+        \item Fetch pre-calculated values for $\beta(P)$ for all $P \in \mathcal{P}_{\mathrm{cover}}$.
+        \item Given that $\pixtogeo{i}{j} = [x,~y]^T$, calculate surface elevation $z = \beta_0 + \beta_x x + \beta_y y$.
+          Select polygon $P_m$ with the greatest elevation value.
+        \item Set $Z_{i,j} = \beta_0 + \beta_x x + \beta_y y$, $N_{i, j} = \vec{n}\left(\vec{\beta}(P_m)\right)$, and $S_{i, j} = 1$.
       \end{itemize}
     \end{itemize}
   \end{itemize}
 \end{leftbar}
-
-\subsubsection{Notation}
-
-Let $r_{p,i}$ denote a linear ring belonging to a polygon denoted as $P_p$.
-The symbol $p$ denotes the \textit{polygon index}, while $i$ denotes the \textit{ring index}.
-A ring index of 1 indicates an \textit{exterior ring}, while a ring index of greater than one represents an interior ring.
-The polygon $P_p$ can therefore be represented as a sequence of $|P_p| \geq 1$ linear rings,
-%
-\begin{equation*}
-P_p = \{ r_{p,1}, \dots, r_{p, |P_p|}\}
-\end{equation*}
-%
-Linear rings are represented as ordered sequences of $(x, y, z)$ coordinate tuples, assuming that the associated polygon is three-dimensional.
-The linear ring can therefore be denoted as
-%
-\begin{equation*}
-  r_{p,i}
-  =
-  \{
-    (x_{p,i,1}, y_{p,i,1}, z_{p,i,1}),
-    \dots,
-    (x_{p,i,|r_{p, i}|}, y_{p,i,|r_{p, i}|}, z_{p,i,|r_{p, i}|}),
-    (x_{p,i,1}, y_{p,i,1}, z_{p,i,1})
-  \},
-\end{equation*}
-%
-where the first and last coordinate tuple are identical in order to close the ring.
+\noindent
+All of these steps will now be explained in more detail.
 
 \subsubsection{R-Tree index}
+
+\begin{leftbar}
+for $B$ in $\mathcal{T}$:
+  \begin{itemize}[nosep,label=]
+    \item $Z, N, S \leftarrow \texttt{ConstructPlaceHolderArrays()}$
+    \item for $P$ in $\mathcal{P}$:
+    \begin{itemize}[nosep,label=]
+      \item $\hat{Z}, \hat{N}, \hat{S} \leftarrow \texttt{Rasterize}(P,~B)$
+      \item $\texttt{FillValues(from}=[\hat{Z}, \hat{N}, \hat{S}],~\texttt{into}=[Z, N, S])$
+    \end{itemize}
+  \item $\texttt{SaveToHashLookup(data}=[Z, N, S],~\texttt{hash}=B)$.
+  \end{itemize}
+\end{leftbar}
+
+\begin{leftbar}
+for $B$ in $\mathcal{T}$:
+  \begin{itemize}[nosep,label=]
+    \item $Z, N, S \leftarrow \texttt{ConstructPlaceHolderArrays()}$
+    \item $\mathcal{P}_B \leftarrow \left\{P \mid P \in \mathcal{P} \text{ and } \project{P} \text{ intersects } B \right\}$
+    \item for $P$ in $\mathcal{P}_B$:
+    \begin{itemize}[nosep,label=]
+      \item $\hat{Z}, \hat{N}, \hat{S} \leftarrow \texttt{Rasterize}(P,~B)$
+      \item $\texttt{FillValues(from}=[\hat{Z}, \hat{N}, \hat{S}],~\texttt{into}=[Z, N, S])$
+    \end{itemize}
+  \item $\texttt{SaveToHashLookup(data}=[Z, N, S],~\texttt{hash}=B)$.
+  \end{itemize}
+\end{leftbar}
+
+\begin{leftbar}
+\noindent $\texttt{RTreeIndex} \leftarrow \texttt{GenerateRTreeIndex}(\mathcal{P})$\\
+for $B$ in $\mathcal{T}$:
+  \begin{itemize}[nosep,label=]
+    \item $Z, N, S \leftarrow \texttt{ConstructPlaceHolderArrays()}$
+    \item $\hat{\mathcal{P}}_B \leftarrow \texttt{RTreeIndex}(B)$
+    \item for $P$ in $\hat{\mathcal{P}}_B$:
+    \begin{itemize}[nosep,label=]
+      \item $\hat{Z}, \hat{N}, \hat{S} \leftarrow \texttt{Rasterize}(P,~B)$
+      \item $\texttt{FillValues(from}=[\hat{Z}, \hat{N}, \hat{S}],~\texttt{into}=[Z, N, S])$
+    \end{itemize}
+  \item $\texttt{SaveToHashLookup(data}=[Z, N, S],~\texttt{hash}=B)$.
+  \end{itemize}
+\end{leftbar}
 
 Denote the indexed collection of three-dimensional polygons $\mathcal{P}$, and assume that the size of the collection is of size $|\mathcal{P}| \gg 1$, i.e. $\mathcal{P} = \{P_1, P_2, \dots, P_{|\mathcal{P}|} \}$.
 In our case the collection $\mathcal{P}$ consists of all roof surfaces in the municipality of Trondheim, Norway with $|\mathcal{P}| = \num{293336}$.
