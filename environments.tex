@@ -15,3 +15,32 @@
 
 % Reference custom algorithm environment
 \newcommand{\algref}[1]{\ref{#1}}
+
+% Quick and dirty pseudocode which does not deserve the algorithm environment
+\newenvironment{pseudocode}[0]
+{%
+  \begin{leftbar}
+  \noindent
+  \hspace{-0.6em}
+}
+{%
+  \end{leftbar}
+  \noindent
+}
+\newenvironment{pseudoloop}[0]
+{%
+  \begin{itemize}[nosep,label=,leftmargin=1em]
+}
+{%
+  \end{itemize}
+}
+\newenvironment{pseudofunc}[2]
+{%
+  \begin{pseudocode}
+  def \textbf{\texttt{#1}}(#2):
+  \begin{pseudoloop}
+}
+{%
+  \end{pseudoloop}
+  \end{pseudocode}
+}

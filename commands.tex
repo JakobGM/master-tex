@@ -21,6 +21,11 @@
 \newcommand{\project}[1]{\pi_{\mathrm{2D}}\left(#1\right)}
 % The decomposition of a three-dimensional polygon to its planar equation
 \newcommand{\planar}[1]{\vec{\beta}\left(#1\right)}
+% The (lossy) decomposition of a three-dimensional polygon to its normal vector
+\newcommand{\normalplanar}[1]{\vec{n}\left(\planar{#1}\right)}
 
 % Mapping from pixel coordinate to real geographic coordinate
 \newcommand{\pixtogeo}[2]{\pi_{\mathrm{geo}}\left(#1,~#2\right)}
+
+% Big-O notation
+\newcommand{\bigo}[1]{\mathcal{O}\left(#1\right)}

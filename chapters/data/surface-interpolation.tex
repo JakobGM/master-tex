@@ -228,7 +228,7 @@ The projection mapping $\project{P}$ is also illustrated in \cref{fig:2d-polygon
   \label{fig:2d-polygon-projection}
 \end{figure}
 
-The second sub-component is the parametric description of the plane on which \emph{all} vertices of the given polygon lies.
+The second sub-component is the parametric description of the plane on which \emph{all} vertices of the given polygon lie.
 Denote this mapping as $\vec{\beta}(P)$ and define it according to the following relationship:
 \begin{align*}
   \vec{\beta}(P)
@@ -262,6 +262,22 @@ The task of rasterizing $\project{P}$ is quite simple, it is a two-dimensional p
   \tag{semantic segmentation raster}
 \end{align*}
 Where we have defined $\pixtogeo{i}{j}$ as a function that maps array pixel coordinates $(i, j)$ to the respective coordinate in the UTM coordinate system in which the polygons $P \in \mathcal{P}$ are specified.
+Given that we have a raster array of \emph{resolution} height $H$ and width $W$, which covers a geographic area represented by the bounding box $B = B(\vec{c}, w, h)$ centered at $\vec{c}$, with \emph{geographic} width $w$ and height $h$, and that $(i, j) = (0, 0)$ represents the upper left (northwestern) corner of the bounding box, then we have:
+\begin{equation*}
+  \pixtogeo{i}{j}
+  =
+  \vec{c}
+  +
+  \frac{1}{2} \begin{bmatrix}
+    -w\\
+    h
+  \end{bmatrix}
+  +
+  \begin{bmatrix}
+    \frac{w}{W} j\\
+    -\frac{h}{H} i\\
+  \end{bmatrix}
+\end{equation*}
 When it comes to the rasterization of $\planar{P} = {[\beta_0, \beta_x, \beta_y]}^T$, we start by noticing that the \textit{normal vector} of the plane can be constructed from $\planar{P}$ in the following manner:
 \begin{equation*}
   \planar{P}
@@ -272,7 +288,7 @@ When it comes to the rasterization of $\planar{P} = {[\beta_0, \beta_x, \beta_y]
     \beta_y\\
   \end{bmatrix}
   \iff
-  \vec{n}\left(\planar{P}\right)
+  \normalplanar{P}
   =
   \frac{1}{\sqrt{\beta_x^2 + \beta_y^2 + 1}}
   \begin{bmatrix}
@@ -280,13 +296,19 @@ When it comes to the rasterization of $\planar{P} = {[\beta_0, \beta_x, \beta_y]
     -\beta_y\\
     1
   \end{bmatrix}
+  \defeq
+  \begin{bmatrix}
+    n_x\\
+    n_y\\
+    n_z
+  \end{bmatrix}
 \end{equation*}
 The relationship between the equation of the plane and the associated surface normal vector is illustrated in \cref{fig:3d-normal-vector}.
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.55\linewidth]{3d-normal-vector.tikz}
   \caption{%
-    The relationship between the equation of the plane and the surface normal vector.
+    The relationship between the equation of the plane, $\planar{P}$, and the surface normal vector, $\normalplanar{P}$.
   }{%
     The plane is defined by $z = \beta_0 + \beta_x x + \beta_y y$.
     The elements of the parameter vector $\vec{\beta}$ are shown in \textcolor{orange}{orange}, while the normal vector $\vec{n}$ is shown in \textcolor{blue}{blue}.
@@ -294,7 +316,7 @@ The relationship between the equation of the plane and the associated surface no
   \label{fig:3d-normal-vector}
 \end{figure}
 \noindent
-Denote this normal vector as $\vec{n} = {[n_x, n_y, n_z]}^T$, and by construction we can now ascertain that
+The following restrictions on $\vec{n}$ hold by construction,
 \begin{align*}
   ||\vec{n}||_2 = \sqrt{n_x^2 + n_y^2 + n_z^2} &\equiv 1,
   \\
@@ -305,7 +327,7 @@ With other words, the normal vector has been constructed such that it is of leng
 Given that we can easily determine $\planar{P}$ for any polygon, we now define the following raster format:
 \begin{align*}
   N_{i,j} &= \begin{cases}
-    \vec{n}\left(\planar{P}\right), &\text{if $\project{P}$ covers } \pixtogeo{i}{j}.\\
+    \normalplanar{P}, &\text{if $\project{P}$ covers } \pixtogeo{i}{j}.\\
     \vec{0} \defeq {[0, 0, 0]}^T, &\text{if no such } P \in \mathcal{P} \text{ exists.}
   \end{cases}
   \tag{surface normal raster}
@@ -334,11 +356,11 @@ We can now construct two relatively independent predictors, $\hat{f}_{\mathrm{se
   \end{cases}
 \end{equation*}
 Now an optimal value for $\vec{\theta}_{\mathrm{seg}}$ can be found by training $\hat{f}_{\mathrm{seg}}$ on $S$ as the ground truth, using model architectures and loss functions from the semantic segmentation literature.
-A model architecture and loss function can be likewise be chosen for $\hat{f}_{\mathrm{norm}}$ entirely independent of the segmentation problem at hand.
-The model architecture can for instance enforce $||\hat{f}_{\mathrm{norm}}||_2 \equiv 1$, and the respective loss function can utilize this restriction of the model output and ground truth.
+A model architecture and loss function can be likewise be chosen for $\hat{f}_{\mathrm{norm}}$ \emph{entirely} independent of the segmentation problem at hand.
+The normal vector model architecture can for instance enforce $||\hat{f}_{\mathrm{norm}}||_2 \equiv 1$, and the respective loss function can utilize this restriction of the model output and ground truth.
 Such a \enquote{separation of concerns} has been shown to be beneficial for several model architectures.
 
-We can now rasterize any polygon $P \in \mathcal{P}$ into two separate raster formats, $S$ and $N$, as illustrated in \cref{fig:3d-polygon-decomposition}.
+We can now rasterize any single polygon $P \in \mathcal{P}$ into two separate raster formats, $S$ and $N$, as illustrated in \cref{fig:3d-polygon-decomposition}.
 \begin{figure}
   \centering
   \includegraphics{3d-polygon-decomposition.tikz}
@@ -346,11 +368,11 @@ We can now rasterize any polygon $P \in \mathcal{P}$ into two separate raster fo
   \label{fig:3d-polygon-decomposition}
 \end{figure}
 When generalizing from a single three-dimensional polygon $P$ to a set of polygons $\mathcal{P}$, we can iteratively fill in the values into a single pair of raster arrays, $S$ and $N$, since the polygons are mutually non-overlapping.
-In order to map from this raster domain, represented by $S$ and $N$, back to the original polygon domain, represented by $\mathcal{P}$, we propose the following inverse mapping, $m^{\dagger}$:
+In order to map from this raster domain, represented by $S$ and $N$, back to the original polygon domain, represented by $\mathcal{P}$, we propose the following pseudo-inverse mapping, $m^{\dagger}$:
 \begin{framed}
   \noindent
   \textbf{Proposed $\mathbf{m^{\dagger}}$} -- Partition semantic segmentation raster $S$ such that all partitions form contiguous pixel areas which share the same value of $N$.
-  Reconstruct $\beta_0$ by inferring from LiDAR input data.
+  Reconstruct $\beta_0$ by inference from LiDAR input data.
 \end{framed}
 \noindent
 It should be noted that this is in fact a lossy decomposition, making the raster format not perfectly representative.
@@ -361,7 +383,7 @@ For now, suffice it to say that the following two conditions must be simultaneou
   \item There exists two polygons $P_1, P_2 \in \mathcal{P}$ such that $\project{P_1}$ and $\project{P_2}$ touch borders when rasterized.
     That is, $P_1$ and $P_2$ form one single, contiguous area in the semantic segmentation map $S$.
   \item $P_1$ and $P_2$ share values for $\beta_x$ and $\beta_y$, but \emph{not} $\beta_0$.
-    That is, the plane of $P_1$ and $P_2$ share the same \textit{orientation} in space, but not the same elevation.
+    That is, the plane of $P_1$ and $P_2$ share the same \textit{orientation} in space, but not the same \textit{elevation}.
 \end{enumerate}
 In order to correct for the lossy decomposition into $S$ and $N$, we must introduce a third raster format into the mix.
 Given that the pixel coordinate ${[i, j]}^T$ maps to the geographic coordinate $[x, y]^T$, i.e. $\pixtogeo{i}{j} = {[x, y]}^T$, then we define the \textit{surface elevation raster} as:
@@ -373,6 +395,7 @@ Given that the pixel coordinate ${[i, j]}^T$ maps to the geographic coordinate $
   \tag{surface elevation raster}
 \end{align*}
 This \textit{surface elevation} raster array enables us to define a perfectly representative raster format and associated reverse mapping.
+In practice however, it will be shown that the decomposition of $\mathcal{P}$ into $S$ and $N$, discarding $Z$, is sufficient for accurate roof geometry inference.
 The three surface raster formats presented so far are all illustrated in \cref{fig:interpolation-concepts}.
 \begin{figure}
   \centering
@@ -384,8 +407,8 @@ The three surface raster formats presented so far are all illustrated in \cref{f
   \label{fig:interpolation-concepts}
 \end{figure}
 
-We will describe how to construct these three raster arrays from a practical implementation perspective in the following subsections.
-A conceptual summary of the implementation goes as follows:
+We will describe how to construct these three raster arrays from a practical implementation perspective.
+We start by summarizing the entire implementation in conceptual terms:
 \begin{leftbar}
   \noindent
   Given a set of two-dimensional bounding boxes $\mathcal{T}$ and a set of three-dimensional polygons $\mathcal{P}$:
@@ -395,16 +418,16 @@ A conceptual summary of the implementation goes as follows:
     \item For each bounding box $B \in \mathcal{T}$\ldots
     \begin{itemize}[nosep,leftmargin=0.5cm]
       \item Determine the subset of polygons $\mathcal{P}_B \subset \mathcal{P}$ which is at least partially covered by the bounding box $B$.
-        The aforementioned R-tree index is used in order to substantially speed up this filtering.
+        The aforementioned R-tree index is used in order to substantially speed up this spatial query.
       \item Map all coordinates of all $P \in \mathcal{P}_B$ to the pixel coordinate system $\left[0, 255\right] \times \left[0, 255\right]$.
-      \item For each pixel $(i, j)$ in rasterized tile\ldots
+      \item For each pixel coordinate $(i, j)$\ldots
       \begin{itemize}[nosep,leftmargin=0.5cm]
         \item Determine subset of polygons $\mathcal{P}_{\mathrm{cover}} \subset \mathcal{P}_B$ which covers the area represented by the pixel $(i, j)$.
           If $|\mathcal{P}_{\mathrm{cover}}| = 0$, set $Z_{i,j} = -\infty$, $N_{i, j} = {[0, 0, 0]}^T$, and $S_{i, j} = 0$, and continue onto next iteration of loop.
         \item Fetch pre-calculated values for $\beta(P)$ for all $P \in \mathcal{P}_{\mathrm{cover}}$.
-        \item Given that $\pixtogeo{i}{j} = [x,~y]^T$, calculate surface elevation $z = \beta_0 + \beta_x x + \beta_y y$.
-          Select polygon $P_m$ with the greatest elevation value.
-        \item Set $Z_{i,j} = \beta_0 + \beta_x x + \beta_y y$, $N_{i, j} = \vec{n}\left(\vec{\beta}(P_m)\right)$, and $S_{i, j} = 1$.
+        \item Given that $\pixtogeo{i}{j} = [x,~y]^T$, calculate surface elevation $z_P = \beta_0 + \beta_x x + \beta_y y$ for all $P \in \mathcal{P}_{\mathrm{cover}}$.
+          Select polygon $P_m$ with the greatest corresponding elevation value $z_P$.
+        \item Set $Z_{i,j} = z_{P_m}$, $N_{i, j} = \normalplanar{P_m}$, and $S_{i, j} = 1$.
       \end{itemize}
     \end{itemize}
   \end{itemize}
@@ -414,67 +437,108 @@ All of these steps will now be explained in more detail.
 
 \subsubsection{R-Tree index}
 
-\begin{leftbar}
-for $B$ in $\mathcal{T}$:
-  \begin{itemize}[nosep,label=]
+We will construct a computational procedure which is able to rasterize a given polygon $P \in \mathcal{P}$ relative to a given bounding box $B$.
+Denote this procedure as $\texttt{Rasterize}(P,~B)$, and say that this procedure returns three rasters: a surface elevation raster $Z_p$, a surface normal raster $N_p$, and a two-dimensional segmentation mask $S_p$.
+The idea is to iterate over the polygons in $\mathcal{P}$, rasterize them individually with \texttt{Rasterize()}, and fill these arrays into mutable arrays $Z$, $N$, and $S$ with the procedure \texttt{FillValues()}, defined as follows:
+%
+\begin{pseudofunc}{FillValues}{$\texttt{from}=[Z_p, N_p, S_p],~\texttt{into}=[Z, N, S]$}
+  \item for $i \in \{0, 1, \ldots, 255\}$:
+  \begin{pseudoloop}
+    \item for $j \in \{0, 1, \ldots, 255\}$:
+    \begin{pseudoloop}
+      \item If $(S_p)_{i,j} = 0$: continue onto next iteration of inner loop
+      \item Insert $S_{i,j} \leftarrow 1$, $N_{i,j} \leftarrow (N_p)_{i,j}$, and $Z_{i,j} \leftarrow (Z_p)_{i,j}$
+    \end{pseudoloop}
+  \end{pseudoloop}
+\end{pseudofunc}
+%
+Now, the naive implementation of the surface rasterization preprocessing procedure can be written as follows,
+%
+\begin{pseudofunc}{PreprocessRaster}{$\mathcal{P},~\mathcal{T}$}
+  \item for $B$ in $\mathcal{T}$:
+  \begin{pseudoloop}
     \item $Z, N, S \leftarrow \texttt{ConstructPlaceHolderArrays()}$
     \item for $P$ in $\mathcal{P}$:
-    \begin{itemize}[nosep,label=]
-      \item $\hat{Z}, \hat{N}, \hat{S} \leftarrow \texttt{Rasterize}(P,~B)$
-      \item $\texttt{FillValues(from}=[\hat{Z}, \hat{N}, \hat{S}],~\texttt{into}=[Z, N, S])$
-    \end{itemize}
-  \item $\texttt{SaveToHashLookup(data}=[Z, N, S],~\texttt{hash}=B)$.
-  \end{itemize}
-\end{leftbar}
-
-\begin{leftbar}
-for $B$ in $\mathcal{T}$:
-  \begin{itemize}[nosep,label=]
+    \begin{pseudoloop}
+      \item $Z_p, N_p, S_p \leftarrow \texttt{Rasterize}(P,~B)$
+      \item $\texttt{FillValues(from}=[Z_p, N_p, S_p],~\texttt{into}=[Z, N, S])$
+    \end{pseudoloop}
+    \item $\texttt{SaveToHashLookup(data}=[Z, N, S],~\texttt{hash}=B)$.
+  \end{pseudoloop}
+\end{pseudofunc}
+%
+\texttt{SaveToHashLookup()} is a procedure which persists the arrays $Z$, $N$, and $S$, to disk for later retrieval.
+Assume \texttt{Rasterize} to run in constant computational time, that is $\texttt{Rasterize()} = \bigo{1}$ (which is close to the truth, at least sufficiently so for this analysis).
+This results in the time complexity of \texttt{PreprocessRaster()} being $\bigo{|\mathcal{P}| |\mathcal{T}|}$.
+In our case, using bounding boxes and roof surface polygons from Trondheim, we have $|\mathcal{P} = \numsurfaces$ and $|\mathcal{T}| = \numtiles$.
+We can therefore safely conclude that $|\mathcal{P}||\mathcal{T}| = \numcombinations \gg 1$ is infeasible for a procedure of time complexity $\bigo{|\mathcal{P}| |\mathcal{T}|}$.
+A better approach is to reduce the number of iterations performed by the inner loop over $P \in \mathcal{P}$, utilizing the fact that only polygons $P \in \mathcal{P}$ for which $\project{P}$ intersects with $B$ will ever contribute with values to the raster arrays.
+We define such a filter procedure \texttt{IntersectingFilter()}:
+%
+\begin{pseudofunc}{IntersectFilter}{$\mathcal{P},~B$}
+  \item return $\left\{P \mid P \in \mathcal{P} \text{ and } \project{P} \text{ intersects with } B \right\}$
+\end{pseudofunc}
+%
+Using \texttt{IntersectingFilter()} we can improve upon \texttt{PreprocessRaster()} as follows:
+%
+\begin{pseudofunc}{PreprocessRaster}{$\mathcal{P},~\mathcal{T}$}
+  \item for $B$ in $\mathcal{T}$:
+  \begin{pseudoloop}
     \item $Z, N, S \leftarrow \texttt{ConstructPlaceHolderArrays()}$
-    \item $\mathcal{P}_B \leftarrow \left\{P \mid P \in \mathcal{P} \text{ and } \project{P} \text{ intersects } B \right\}$
+    \item $\mathcal{P}_B \leftarrow \texttt{IntersectingFilter}(\mathcal{P},~B)$
     \item for $P$ in $\mathcal{P}_B$:
-    \begin{itemize}[nosep,label=]
-      \item $\hat{Z}, \hat{N}, \hat{S} \leftarrow \texttt{Rasterize}(P,~B)$
-      \item $\texttt{FillValues(from}=[\hat{Z}, \hat{N}, \hat{S}],~\texttt{into}=[Z, N, S])$
-    \end{itemize}
-  \item $\texttt{SaveToHashLookup(data}=[Z, N, S],~\texttt{hash}=B)$.
-  \end{itemize}
-\end{leftbar}
-
-\begin{leftbar}
-\noindent $\texttt{RTreeIndex} \leftarrow \texttt{GenerateRTreeIndex}(\mathcal{P})$\\
-for $B$ in $\mathcal{T}$:
-  \begin{itemize}[nosep,label=]
+    \begin{pseudoloop}
+      \item $Z_p, N_p, S_p \leftarrow \texttt{Rasterize}(P,~B)$
+      \item $\texttt{FillValues(from}=[Z_p, N_p, S_p],~\texttt{into}=[Z, N, S])$
+    \end{pseudoloop}
+    \item $\texttt{SaveToHashLookup(data}=[Z, N, S],~\texttt{hash}=B)$.
+  \end{pseudoloop}
+\end{pseudofunc}
+%
+If we denote the \textit{average} size of the set $\mathcal{P}_B$ as $\overline{|\mathcal{P}_B|}$, that is,
+%
+\begin{equation*}
+  \overline{|\mathcal{P}_B|}
+  =
+  \frac{1}{|\mathcal{T}|}
+  \sum_{B \in \mathcal{T}}
+  \big|
+    \left\{P \mid P \in \mathcal{P} \text{ and } \project{P} \text{ intersects with } B \right\}
+  \big|,
+\end{equation*}
+%
+then the time complexity of this new implementation of \texttt{PreprocessRaster()} becomes $\bigo{|\mathcal{T}|\overline{|\mathcal{P}_B|}}$.
+In fact, for our dataset $\overline{|\mathcal{P}_B|} \approx \num{28.4}$ and $|\mathcal{T}|\overline{|\mathcal{P}_B|} = \num{1822376}$, the full distribution being plotted in \cref{fig:tile-surface-distribution}.
+\begin{figure}
+  \includegraphics{tile-surface-distribution}
+  \caption{%
+    Distribution of number of surface polygons contained by each raster tile.
+  }%
+  \label{fig:tile-surface-distribution}
+\end{figure}
+This is a great improvement, but we have neglected the time complexity of $\texttt{IntersectingFilter}(\mathcal{P}, B)$, which if linear or super-linear in $|\mathcal{P}|$ brings us back to a total time complexity of $\bigo{|\mathcal{T}||\mathcal{P}|}$.
+In practice, however, the constant cost term is much smaller, and the implementation becomes much faster as a result.
+However, if $\texttt{IntersectingFilter}()$ could be made close to a constant time operation, $\bigo{1}$, then we would truly be able to construct a close to $\bigo{|\mathcal{T}|\overline{|\mathcal{P}_B|}}$ procedure.
+The solution is to pre-compute a so-called R-tree spatial index, which when first computed, allows for almost instantaneous intersection filtering\cite{rtree}.
+\begin{pseudofunc}{PreprocessRaster}{$\mathcal{P},~\mathcal{T}$}
+  \item $\texttt{RTreeIndex} \leftarrow \texttt{GenerateRTreeIndex}(\mathcal{P})$
+  \item for $B$ in $\mathcal{T}$:
+  \begin{pseudoloop}
     \item $Z, N, S \leftarrow \texttt{ConstructPlaceHolderArrays()}$
     \item $\hat{\mathcal{P}}_B \leftarrow \texttt{RTreeIndex}(B)$
     \item for $P$ in $\hat{\mathcal{P}}_B$:
-    \begin{itemize}[nosep,label=]
-      \item $\hat{Z}, \hat{N}, \hat{S} \leftarrow \texttt{Rasterize}(P,~B)$
-      \item $\texttt{FillValues(from}=[\hat{Z}, \hat{N}, \hat{S}],~\texttt{into}=[Z, N, S])$
-    \end{itemize}
-  \item $\texttt{SaveToHashLookup(data}=[Z, N, S],~\texttt{hash}=B)$.
-  \end{itemize}
-\end{leftbar}
+    \begin{pseudoloop}
+      \item $Z_p, N_p, S_p \leftarrow \texttt{Rasterize}(P,~B)$
+      \item $\texttt{FillValues(from}=[Z_p, N_p, S_p],~\texttt{into}=[Z, N, S])$
+    \end{pseudoloop}
+    \item $\texttt{SaveToHashLookup(data}=[Z, N, S],~\texttt{hash}=B)$.
+  \end{pseudoloop}
+\end{pseudofunc}
 
-Denote the indexed collection of three-dimensional polygons $\mathcal{P}$, and assume that the size of the collection is of size $|\mathcal{P}| \gg 1$, i.e. $\mathcal{P} = \{P_1, P_2, \dots, P_{|\mathcal{P}|} \}$.
-In our case the collection $\mathcal{P}$ consists of all roof surfaces in the municipality of Trondheim, Norway with $|\mathcal{P}| = \num{293336}$.
-We want construct a set of rasterized tiles defined over a respective set of bounding boxes $\mathcal{T} = \{B(\vec{c}_1, \SI{64}{\meter}, \SI{64}{\meter}), B(\vec{c}_2, \SI{64}{\meter}, \SI{64}{\meter}),\allowbreak \dots,\allowbreak B(\vec{c}_{|\mathcal{T}|}, \SI{64}{\meter}, \SI{64}{\meter}) \}$ based on the polygon collection $\mathcal{P}$.
-Denote the algorithmic procedure which construct rasterized tiles \texttt{ConstructTile}.
-Assume that we \texttt{ConstructTile} and that this procedure accepts a bounding box $B(\vec{c}, w, h)$ and a polygon collection $\mathcal{P}$ as inputs.
-The average time complexity of \texttt{ConstructTile} will most likely be at least linearly dependent of the polygon collection size $|\mathcal{P}|$.
-%
 \begin{equation*}
-  \mathcal{P} \cap B(\vec{c}, h, w)
-  =
-  \left\{
-    P \in \mathcal{P} \mid P \cap B(\vec{c}, h, w) \neq \varnothing
-  \right\}
-\end{equation*}
-%
-\begin{equation*}
-  \texttt{ConstructTile}(B(\vec{c}, h, w),~\mathcal{P})
-  \equiv
-  \texttt{ConstructTile}(B(\vec{c}, h, w),~\mathcal{P} \cap B(\vec{c}, h, w))
+  \texttt{IntersectingFilter}(\mathcal{P},~B)
+  \subseteq
+  \texttt{GenerateRTreeIndex}(\mathcal{P})(B)
 \end{equation*}
 
 \subsubsection{Linear regression}

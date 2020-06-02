@@ -1,17 +1,23 @@
 \begin{tikzpicture}[
   node distance=0.4cm,
   bendy/.style={thick,draw=red!50},
+  component/.style={fill=gray!15},
+  split/.style={draw=red!50},
   ]
-  \node[](3d) at (0, 0) {$P = [(x_1, y_1, z_1), (x_2, y_2, z_2), \dots, (x_1, y_1, z_1)]$};
-  \node[below=of 3d,draw](split) {decomposition};
-  \node[below=of split](2d) {$\project{P} = [(x_1, y_1), (x_2, y_2), \dots, (x_1, y_1)]$};
-  \node[below=of split,right=of 2d](plane) {$\vec{\beta} = \begin{bmatrix}\beta_0 \\ \beta_x \\ \beta_y\end{bmatrix}$};
+  \node[component](3d) at (0, 0) {$P = [(x_1, y_1, z_1), (x_2, y_2, z_2), \dots, (x_1, y_1, z_1)]$};
+  \node[below=of 3d,split](split) {decomposition};
+
+  % Two split components
+  \node[component,below=of split](2d) {$\project{P} = [(x_1, y_1), (x_2, y_2), \dots, (x_1, y_1)]$};
+  \node[component, below=of split,right=of 2d](plane) {$\vec{\beta} = \begin{bmatrix}\beta_0 \\ \beta_x \\ \beta_y\end{bmatrix}$};
+
+  %Arrows from original to split
   \draw[-, bendy] (3d) -- (split);
   \draw[->, bendy] (split.south) -- (2d);
   \draw[->, bendy] (split.east) to [out=0, in=90] (plane);
 
-  \node[below=of 2d,draw](split2) {reconstruction};
-  \node[below=of split2](reconstruction) {$P = [(x, y, \beta_0 + \beta_x x + \beta_y y) \mid (x, y) \in \project{P}]$};
+  \node[below=of 2d,split](split2) {reconstruction};
+  \node[component,below=of split2](reconstruction) {$P = [(x, y, \beta_0 + \beta_x x + \beta_y y) \mid (x, y) \in \project{P}]$};
   \draw[->,bendy] (split2) to [out=270, in=90] (reconstruction);
   \draw[-, bendy] (plane.south) to [out=-90, in=0] (split2.east);
   \draw[-, bendy] (2d.south) to (split2);
