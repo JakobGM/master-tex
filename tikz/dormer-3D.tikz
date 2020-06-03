@@ -1,0 +1,25 @@
+\tdplotsetmaincoords{70}{300}
+\begin{tikzpicture}[
+  tdplot_main_coords,
+  surface/.style={fill opacity=0.1, draw=gray},
+  thick,
+  ]
+
+\coordinate (b1) at (0, 0, 0){};
+\coordinate (b2) at (2, 0, 0){};
+\coordinate (b3) at (2, 0.75, 0.75){};
+\coordinate (b4) at (0, 0.75, 0.75){};
+
+\coordinate (l1) at (0.6, 0.05, 0.05){};
+\coordinate (l2) at (1, 0.5, 0.5){};
+\coordinate (l3) at (1, 0.05, 0.5){};
+
+\coordinate (r1) at (1.4, 0.05, 0.05){};
+\coordinate (r2) at (1, 0.5, 0.5){};
+\coordinate (r3) at (1, 0.05, 0.5){};
+
+\draw [fill=red!80, surface] (b1) -- (b2) -- (b3) -- (b4) -- cycle;
+\draw [fill=blue!80, surface] (l1) -- (l2) -- (l3) -- cycle;
+\draw [fill=green, surface] (r1) -- (r2) -- (r3) -- cycle;
+
+\end{tikzpicture}

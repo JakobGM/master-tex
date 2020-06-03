@@ -435,6 +435,25 @@ We start by summarizing the entire implementation in conceptual terms:
 \noindent
 All of these steps will now be explained in more detail.
 
+\subsection{Handling overlapping surface polygons}
+
+Test \cref{fig:real-overlap}.
+
+\begin{figure}
+  \centering
+  \subfloat[Example of gable roof causing overlapping polygons. This public domain image has been sourced from Wikimedia~\cite{wiki:gable-roof}.]{\includegraphics[width=0.49\linewidth]{gable-roof.jpg}\label{fig:real-overlap}}
+  \hspace{3em}
+  \subfloat[Illustration of the \enquote{bird's eye view decision rule}.]{\includegraphics[width=0.3\linewidth]{ray-tracing.tikz}}
+  \\
+  \subfloat[Overlapping three-dimensional polygons.]{\includegraphics[width=0.4\linewidth]{dormer-3D.tikz}}
+  \hspace{3em}
+  \subfloat[Instance mask resulting from decision rule.]{\includegraphics[width=0.4\linewidth]{dormer-2D.tikz}}
+  \caption{%
+    Illustration of overlapping surface polygons.
+  }
+  \label{fig:overlapping-polygons}
+\end{figure}
+
 \subsubsection{R-Tree index}
 
 We will construct a computational procedure which is able to rasterize a given polygon $P \in \mathcal{P}$ relative to a given bounding box $B$.
