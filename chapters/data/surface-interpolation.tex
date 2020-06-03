@@ -12,7 +12,7 @@
 
 The roof of a given building can be decomposed into a collection of entirely flat polygons.
 This is an accurate data decomposition in most cases, the exception being conic shapes and other surfaces with continuous curvature which cannot be perfectly represented with a finite set of flat polygons.
-A \emph{gable roof}\footnote{\textit{Gable roof} -- A roof which consists of two flat roof surfaces which slope in opposite directions.
+A \emph{gable roof}\footnote{\textit{Gable roof} --- A roof which consists of two flat roof surfaces which slope in opposite directions.
 The roof surfaces are connected along the highest, horizontal edge (ridge).}, for instance, can be considered as the set of two flat polygons, which when combined together accurately represent the roof in its entirety.
 Our intent is to construct a machine learning pipeline which is able to identify such three-dimensional roof surfaces from remote sensing data.
 
@@ -189,8 +189,10 @@ We start by imposing two key assumptions on the polygons contained by $\mathcal{
 \end{enumerate}
 These assumptions are in fact \emph{not} satisfied by the Trondheim roof surface polygon dataset, but these issues are rectifiable.
 Assumption \ref{itm:flat} is \textit{nearly} satisfied and can be solved by regression with negligible error.
+This will be elaborated upon in \cref{sec:non-planar-fix}.
 Assumption \ref{itm:non-overlapping} can be solved with a suitable \enquote{conflict resolution} method which determines which polygon should be considered at each pixel location.
-These two solutions will be described in more detail later, but for now it is easier to describe the surface normal raster with these assumptions in place.
+Such a conflict resolution method will be described in \cref{sec:overlapping-fix}.
+For now it is easier to describe the surface normal raster with these assumptions in place.
 We will introduce one final assumption:
 \begin{enumerate}
   \setcounter{enumi}{2}
@@ -435,44 +437,80 @@ We start by summarizing the entire implementation in conceptual terms:
 \noindent
 All of these steps will now be explained in more detail.
 
-\subsection{Handling overlapping surface polygons}
-
-Test \cref{fig:real-overlap}.
+\subsection{Handling overlapping surface polygons}%
+\label{sec:overlapping-fix}
 
 \begin{figure}
   \centering
   \subfloat[Example of gable roof causing overlapping polygons. This public domain image has been sourced from Wikimedia~\cite{wiki:gable-roof}.]{\includegraphics[width=0.49\linewidth]{gable-roof.jpg}\label{fig:real-overlap}}
   \hspace{3em}
-  \subfloat[Illustration of the \enquote{bird's eye view decision rule}.]{\includegraphics[width=0.3\linewidth]{ray-tracing.tikz}}
-  \\
-  \subfloat[Overlapping three-dimensional polygons.]{\includegraphics[width=0.4\linewidth]{dormer-3D.tikz}}
+  \subfloat[Illustration of the \enquote{bird's eye view decision rule}.]{\includegraphics[width=0.3\linewidth]{ray-tracing.tikz}\label{fig:ray-tracing}}
+  \\\vspace{1em}
+  \subfloat[Three-dimensional polygons which overlap when projected.]{\includegraphics[width=0.4\linewidth]{dormer-3D.tikz}\label{fig:dormer-3D}}
   \hspace{3em}
-  \subfloat[Instance mask resulting from decision rule.]{\includegraphics[width=0.4\linewidth]{dormer-2D.tikz}}
+  \subfloat[Two-dimensional instance mask resulting from the bird's view decision rule.]{\includegraphics[width=0.4\linewidth]{dormer-2D.tikz}\label{fig:dormer-2D}}
   \caption{%
     Illustration of overlapping surface polygons.
   }
   \label{fig:overlapping-polygons}
 \end{figure}
-
-\subsubsection{R-Tree index}
+Earlier we made the assumption that all polygons $P \in \mathcal{P}$ are mutually non-overlapping when projected into the $xy$-plane by $\project{P}$.
+In reality, this is \emph{not} the case for our dataset.
+The assumption often being broken whenever small \enquote{sub-surfaces} are situated upon a main surface.
+One such example are \textit{dormers}\footnote{\textit{Dormer} --- Roof surface protruding out from the main roof surface, often in order to protect a loft window.}, an example of which can be seen in \cref{fig:real-overlap}.
+\cref{fig:dormer-3D} illustrates how our surface polygon dataset $\mathcal{P}$ would represent a type of dormer, namely one main roof surface (shown in red), and a dormer represented by two independent flat surfaces (shown in blue and green).
+The key point is that the main roof surface is a rectangular polygon \emph{without} any interior hull where the dormer surfaces are located.
+This results in the dormer surfaces overlapping with the main roof surface when they are projected into the horizontal plane.
+As mentioned earlier, this causes problems with the definition of the surface normal vector raster, $S$, and surface elevation raster, $Z$, as the choice of polygon becomes ambiguous.
+This ambiguity needs to be resolved with a \textit{decision rule}.
+For our dataset the \textit{bird's eye view decision rule} produces sensible results in most cases, and is defined as follows:
+%
+\begin{framed}
+  \noindent
+  \textbf{Bird's eye view decision rule}
+  ---
+  \textit{The polygon with the greatest elevation at a given coordinate is the applicable polygon at that point.}
+  \\
+  More formally, for a pixel location $(i, j)$ corresponding to the geographic coordinate $\pixtogeo{i}{j} = {[x, y]}^T$, we define the \textit{polygon shadow subset} $\mathcal{P}(x, y)$ as
+  \begin{equation*}
+    \mathcal{P}(x, y)
+    =
+    \{
+      P
+      \mid
+      P \in \mathcal{P}
+      \text{ and }
+      \project{P} \text{ covers } (x, y)
+    \}.
+  \end{equation*}
+  The \textit{applicable polygon} at the pixel location $(i, j)$ and the corresponding geographic coordinate $(x, y)$ is then defined as
+  \begin{equation*}
+    P(x, y)
+    =
+    \argmax_{P \in \mathcal{P}(x, y)}~
+    \left[1, x, y\right] \planar{P}
+  \end{equation*}
+  \vspace{-1.5em}
+\end{framed}
+%
+In other terms, the \textit{polygon shadow subset} $\mathcal{P}(x, y)$ consists of all polygons that are intersected by the line drawn from $(x, y, -\infty)$ to $(x, y, \infty)$, hence casting a shadow on the point $(x, y)$ when the sun stands at zenith (directly overhead).
+The \textit{applicable polygon} is the single polygon which actually ends up being hit by sunlight at the given geographic point, overshadowing all other polygons in the polygon shadow subset.
+This filtering problem can be thought of as a ray tracing problem, with rays emanating radially towards the earth's center.
+The bird's view decision rule has been illustrated in \cref{fig:ray-tracing}, and \cref{fig:dormer-2D} is an example of a two-dimensional instance segmentation map generated with this rule from the three-dimensional roof structure in \cref{fig:dormer-3D}.
 
 We will construct a computational procedure which is able to rasterize a given polygon $P \in \mathcal{P}$ relative to a given bounding box $B$.
 Denote this procedure as $\texttt{Rasterize}(P,~B)$, and say that this procedure returns three rasters: a surface elevation raster $Z_p$, a surface normal raster $N_p$, and a two-dimensional segmentation mask $S_p$.
-The idea is to iterate over the polygons in $\mathcal{P}$, rasterize them individually with \texttt{Rasterize()}, and fill these arrays into mutable arrays $Z$, $N$, and $S$ with the procedure \texttt{FillValues()}, defined as follows:
-%
-\begin{pseudofunc}{FillValues}{$\texttt{from}=[Z_p, N_p, S_p],~\texttt{into}=[Z, N, S]$}
-  \item for $i \in \{0, 1, \ldots, 255\}$:
-  \begin{pseudoloop}
-    \item for $j \in \{0, 1, \ldots, 255\}$:
-    \begin{pseudoloop}
-      \item If $(S_p)_{i,j} = 0$: continue onto next iteration of inner loop
-      \item Insert $S_{i,j} \leftarrow 1$, $N_{i,j} \leftarrow (N_p)_{i,j}$, and $Z_{i,j} \leftarrow (Z_p)_{i,j}$
-    \end{pseudoloop}
-  \end{pseudoloop}
-\end{pseudofunc}
-%
-Now, the naive implementation of the surface rasterization preprocessing procedure can be written as follows,
-%
+As a consequence these rasters represent just a \emph{single} polygon $P \in \mathcal{P}$.
+We now want to generalize from rasters $Z_p$, $N_p$, $S_p$ representing a single polygon $P \in \mathcal{P}$, to rasters $Z$, $N$, $S$ representing an arbitrarily sized \emph{set} of polygons $\mathcal{P}$.
+We start by initializing these arrays ($Z$, $N$, and $S$) with temporary placeholder values,
+\begin{align*}
+  Z_{i,j} = -\infty, \hspace{3em} &Z \in \mathbb{R}^{H \times W \times 1}, \\
+  N_{i,j} = {[0, 0, 0]}^T, \hspace{3em} &N \in [0, 1]^{H \times W \times 3}, \\
+  S_{i,j} = 0, \hspace{3em} &S \in \mathbb{B}^{H \times W \times 1}.
+\end{align*}
+This initialization is implemented by the procedure \texttt{ConstructPlaceholderArrays()}.
+Now the idea is to iterate over the polygons $P \in \mathcal{P}$, rasterize them individually with \texttt{Rasterize()}, and fill these arrays into the global mutable arrays $Z$, $N$, and $S$ by some decision rule implemented by \texttt{FillValues()}.
+The main loop will look like follows:
 \begin{pseudofunc}{PreprocessRaster}{$\mathcal{P},~\mathcal{T}$}
   \item for $B$ in $\mathcal{T}$:
   \begin{pseudoloop}
@@ -485,8 +523,21 @@ Now, the naive implementation of the surface rasterization preprocessing procedu
     \item $\texttt{SaveToHashLookup(data}=[Z, N, S],~\texttt{hash}=B)$.
   \end{pseudoloop}
 \end{pseudofunc}
-%
 \texttt{SaveToHashLookup()} is a procedure which persists the arrays $Z$, $N$, and $S$, to disk for later retrieval.
+The \textit{bird's view decision rule} can therefore be implemented in the following procedural manner:
+\begin{pseudofunc}{FillValues}{$\texttt{from}=[Z_p, N_p, S_p],~\texttt{into}=[Z, N, S]$}
+  \item for $i \in \{0, 1, \ldots, 255\}$:
+  \begin{pseudoloop}
+    \item for $j \in \{0, 1, \ldots, 255\}$:
+    \begin{pseudoloop}
+      \item If $(S_p)_{i,j} = 0$ or $(Z_p)_{i,j} < Z_{i,j}$: continue onto next iteration of inner loop
+      \item Insert $S_{i,j} \leftarrow 1$, $N_{i,j} \leftarrow (N_p)_{i,j}$, and $Z_{i,j} \leftarrow (Z_p)_{i,j}$
+    \end{pseudoloop}
+  \end{pseudoloop}
+\end{pseudofunc}
+
+\subsection{Handling expensive spatial queries}
+
 Assume \texttt{Rasterize} to run in constant computational time, that is $\texttt{Rasterize()} = \bigo{1}$ (which is close to the truth, at least sufficiently so for this analysis).
 This results in the time complexity of \texttt{PreprocessRaster()} being $\bigo{|\mathcal{P}| |\mathcal{T}|}$.
 In our case, using bounding boxes and roof surface polygons from Trondheim, we have $|\mathcal{P} = \numsurfaces$ and $|\mathcal{T}| = \numtiles$.
@@ -560,7 +611,8 @@ The solution is to pre-compute a so-called R-tree spatial index, which when firs
   \texttt{GenerateRTreeIndex}(\mathcal{P})(B)
 \end{equation*}
 
-\subsubsection{Linear regression}
+\subsection{Handling non-planar polygons}%
+\label{sec:non-planar-fix}
 
 Now assume that the polygon collection at hand contains three-dimensional polygons which are all approximately planar.
 Any $(x, y, z)$ vertex must therefore satisfy the following relationship:
