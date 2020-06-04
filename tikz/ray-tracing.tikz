@@ -1,11 +1,12 @@
 \begin{tikzpicture}[]
   \draw [red!80,thick] (0, 0) -- (1, 1);
-  \draw [green!80,thick] (0, 0.5) -- (0.5, 0.5);
+  \draw [green!80,thick] (0, 0.5) -- (1, 0.5);
 
-  \draw [black, ->] (0.25, 1) -- (0.25, 0.5);
-  \draw [black, dashed] (0.25, 0.5) -- (0.25, 0.25);
+  \draw [black, ->, thick] (0.25, 1) -- (0.25, 0.5);
+  \draw [black, dashed, thin, gray] (0.25, 0.5) -- (0.25, 0.25);
 
-  \draw [black, ->] (0.75, 1) -- (0.75, 0.75);
+  \draw [black, ->, thick] (0.75, 1) -- (0.75, 0.75);
+  \draw [black, dashed, thin, gray] (0.75, 0.75) -- (0.75, 0.5);
 
   \draw [draw=red!80, fill=red!80] (0.75, 1) circle (0.03);
   \draw [draw=green!80, fill=green!80] (0.25, 1) circle (0.03);

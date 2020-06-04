@@ -442,7 +442,7 @@ All of these steps will now be explained in more detail.
 
 \begin{figure}
   \centering
-  \subfloat[Example of gable roof causing overlapping polygons. This public domain image has been sourced from Wikimedia~\cite{wiki:gable-roof}.]{\includegraphics[width=0.49\linewidth]{gable-roof.jpg}\label{fig:real-overlap}}
+  \subfloat[Example of dormer roof causing overlapping polygons. This public domain image has been sourced from Wikimedia~\cite{wiki:gable-roof}.]{\includegraphics[width=0.49\linewidth]{gable-roof.jpg}\label{fig:real-overlap}}
   \hspace{3em}
   \subfloat[Illustration of the \enquote{bird's eye view decision rule}.]{\includegraphics[width=0.3\linewidth]{ray-tracing.tikz}\label{fig:ray-tracing}}
   \\\vspace{1em}
@@ -455,14 +455,13 @@ All of these steps will now be explained in more detail.
   \label{fig:overlapping-polygons}
 \end{figure}
 Earlier we made the assumption that all polygons $P \in \mathcal{P}$ are mutually non-overlapping when projected into the $xy$-plane by $\project{P}$.
-In reality, this is \emph{not} the case for our dataset.
-The assumption often being broken whenever small \enquote{sub-surfaces} are situated upon a main surface.
-One such example are \textit{dormers}\footnote{\textit{Dormer} --- Roof surface protruding out from the main roof surface, often in order to protect a loft window.}, an example of which can be seen in \cref{fig:real-overlap}.
-\cref{fig:dormer-3D} illustrates how our surface polygon dataset $\mathcal{P}$ would represent a type of dormer, namely one main roof surface (shown in red), and a dormer represented by two independent flat surfaces (shown in blue and green).
+In reality, this is \emph{not} the case for our dataset, the assumption often being broken whenever small \enquote{sub-surfaces} are situated upon larger \enquote{main} surfaces.
+\textit{Dormers}\footnote{\textit{Dormer} --- Roof surface protruding out from the main roof surface, often in order to protect a loft window. A dormer can be seen in \cref{fig:real-overlap}} often cause surfaces to overlap in two dimensions, for example.
+\cref{fig:dormer-3D} illustrates how the Trondheim surface polygon dataset $\mathcal{P}$ would represent a type of dormer, namely one main roof surface (shown in \textcolor{red!80}{red}), and a dormer represented by two separate flat surfaces (shown in \textcolor{blue!80}{blue} and \textcolor{green!80}{green}).
 The key point is that the main roof surface is a rectangular polygon \emph{without} any interior hull where the dormer surfaces are located.
 This results in the dormer surfaces overlapping with the main roof surface when they are projected into the horizontal plane.
-As mentioned earlier, this causes problems with the definition of the surface normal vector raster, $S$, and surface elevation raster, $Z$, as the choice of polygon becomes ambiguous.
-This ambiguity needs to be resolved with a \textit{decision rule}.
+As mentioned earlier, this causes problems with the definition of the surface normal vector raster, $N$, and surface elevation raster, $Z$, as the choice of polygon becomes ambiguous.
+This ambiguity needs to be resolved with a \textit{decision rule}, a rule which determines which polygon should be considered locations which are overlapped by several polygons.
 For our dataset the \textit{bird's eye view decision rule} produces sensible results in most cases, and is defined as follows:
 %
 \begin{framed}
@@ -475,33 +474,31 @@ For our dataset the \textit{bird's eye view decision rule} produces sensible res
   \begin{equation*}
     \mathcal{P}(x, y)
     =
-    \{
+    \left\{
       P
       \mid
       P \in \mathcal{P}
       \text{ and }
       \project{P} \text{ covers } (x, y)
-    \}.
+    \right\}.
   \end{equation*}
   The \textit{applicable polygon} at the pixel location $(i, j)$ and the corresponding geographic coordinate $(x, y)$ is then defined as
   \begin{equation*}
     P(x, y)
     =
     \argmax_{P \in \mathcal{P}(x, y)}~
-    \left[1, x, y\right] \planar{P}
+    \left[1, x, y\right] \planar{P}.
   \end{equation*}
   \vspace{-1.5em}
 \end{framed}
 %
 In other terms, the \textit{polygon shadow subset} $\mathcal{P}(x, y)$ consists of all polygons that are intersected by the line drawn from $(x, y, -\infty)$ to $(x, y, \infty)$, hence casting a shadow on the point $(x, y)$ when the sun stands at zenith (directly overhead).
-The \textit{applicable polygon} is the single polygon which actually ends up being hit by sunlight at the given geographic point, overshadowing all other polygons in the polygon shadow subset.
-This filtering problem can be thought of as a ray tracing problem, with rays emanating radially towards the earth's center.
-The bird's view decision rule has been illustrated in \cref{fig:ray-tracing}, and \cref{fig:dormer-2D} is an example of a two-dimensional instance segmentation map generated with this rule from the three-dimensional roof structure in \cref{fig:dormer-3D}.
+The \textit{applicable polygon} is the single polygon which ends up being hit by direct sunlight at the given geographic point, thus casting a shadow upon all other polygons in the polygon shadow subset.
+The bird's view decision rule has been illustrated in \cref{fig:ray-tracing}, and \cref{fig:dormer-2D} is an example of a two-dimensional instance segmentation map generated with this rule from the three-dimensional roof structure shown in \cref{fig:dormer-3D}.
 
 We will construct a computational procedure which is able to rasterize a given polygon $P \in \mathcal{P}$ relative to a given bounding box $B$.
 Denote this procedure as $\texttt{Rasterize}(P,~B)$, and say that this procedure returns three rasters: a surface elevation raster $Z_p$, a surface normal raster $N_p$, and a two-dimensional segmentation mask $S_p$.
-As a consequence these rasters represent just a \emph{single} polygon $P \in \mathcal{P}$.
-We now want to generalize from rasters $Z_p$, $N_p$, $S_p$ representing a single polygon $P \in \mathcal{P}$, to rasters $Z$, $N$, $S$ representing an arbitrarily sized \emph{set} of polygons $\mathcal{P}$.
+We now want to generalize from the rasters $Z_p$, $N_p$, $S_p$ which represent a \textit{single} polygon $P \in \mathcal{P}$, to rasters $Z$, $N$, $S$ representing an arbitrarily sized \emph{set} of polygons $\mathcal{P}$.
 We start by initializing these arrays ($Z$, $N$, and $S$) with temporary placeholder values,
 \begin{align*}
   Z_{i,j} = -\infty, \hspace{3em} &Z \in \mathbb{R}^{H \times W \times 1}, \\
@@ -509,13 +506,13 @@ We start by initializing these arrays ($Z$, $N$, and $S$) with temporary placeho
   S_{i,j} = 0, \hspace{3em} &S \in \mathbb{B}^{H \times W \times 1}.
 \end{align*}
 This initialization is implemented by the procedure \texttt{ConstructPlaceholderArrays()}.
-Now the idea is to iterate over the polygons $P \in \mathcal{P}$, rasterize them individually with \texttt{Rasterize()}, and fill these arrays into the global mutable arrays $Z$, $N$, and $S$ by some decision rule implemented by \texttt{FillValues()}.
+Now, the idea is to iterate over the polygons $P \in \mathcal{P}$, rasterize them individually with \texttt{Rasterize()}, and fill these arrays into the global mutable arrays $Z$, $N$, and $S$ by some decision rule implemented by \texttt{FillValues()}.
 The main loop will look like follows:
 \begin{pseudofunc}{PreprocessRaster}{$\mathcal{P},~\mathcal{T}$}
   \item for $B$ in $\mathcal{T}$:
   \begin{pseudoloop}
     \item $Z, N, S \leftarrow \texttt{ConstructPlaceHolderArrays()}$
-    \item for $P$ in $\mathcal{P}$:
+    \item for $P \in \mathcal{P}$:
     \begin{pseudoloop}
       \item $Z_p, N_p, S_p \leftarrow \texttt{Rasterize}(P,~B)$
       \item $\texttt{FillValues(from}=[Z_p, N_p, S_p],~\texttt{into}=[Z, N, S])$
@@ -538,12 +535,11 @@ The \textit{bird's view decision rule} can therefore be implemented in the follo
 
 \subsection{Handling expensive spatial queries}
 
-Assume \texttt{Rasterize} to run in constant computational time, that is $\texttt{Rasterize()} = \bigo{1}$ (which is close to the truth, at least sufficiently so for this analysis).
-This results in the time complexity of \texttt{PreprocessRaster()} being $\bigo{|\mathcal{P}| |\mathcal{T}|}$.
-In our case, using bounding boxes and roof surface polygons from Trondheim, we have $|\mathcal{P} = \numsurfaces$ and $|\mathcal{T}| = \numtiles$.
-We can therefore safely conclude that $|\mathcal{P}||\mathcal{T}| = \numcombinations \gg 1$ is infeasible for a procedure of time complexity $\bigo{|\mathcal{P}| |\mathcal{T}|}$.
+The (somewhat naive) implementation of $\texttt{PreprocessRaster}(\mathcal{P},~\mathcal{T})$ provided above invokes $\texttt{Rasterize}(P,~B)$ a total of $|\mathcal{P}| |\mathcal{T}|$ times.
+In our case, using bounding boxes and roof surface polygons from Trondheim, we have $|\mathcal{P} = \numsurfaces$ and $|\mathcal{T}| = \numtiles$, and thus $|\mathcal{P}||\mathcal{T}| = \numcombinations$.
+This is obviously an infeasible number of iterations, no matter how efficiently $\texttt{Rasterize}(P,~B)$ is implemented.
 A better approach is to reduce the number of iterations performed by the inner loop over $P \in \mathcal{P}$, utilizing the fact that only polygons $P \in \mathcal{P}$ for which $\project{P}$ intersects with $B$ will ever contribute with values to the raster arrays.
-We define such a filter procedure \texttt{IntersectingFilter()}:
+We implement such a filter procedure in \texttt{IntersectingFilter()}:
 %
 \begin{pseudofunc}{IntersectFilter}{$\mathcal{P},~B$}
   \item return $\left\{P \mid P \in \mathcal{P} \text{ and } \project{P} \text{ intersects with } B \right\}$
@@ -556,7 +552,7 @@ Using \texttt{IntersectingFilter()} we can improve upon \texttt{PreprocessRaster
   \begin{pseudoloop}
     \item $Z, N, S \leftarrow \texttt{ConstructPlaceHolderArrays()}$
     \item $\mathcal{P}_B \leftarrow \texttt{IntersectingFilter}(\mathcal{P},~B)$
-    \item for $P$ in $\mathcal{P}_B$:
+    \item for $P \in \mathcal{P}_B$:
     \begin{pseudoloop}
       \item $Z_p, N_p, S_p \leftarrow \texttt{Rasterize}(P,~B)$
       \item $\texttt{FillValues(from}=[Z_p, N_p, S_p],~\texttt{into}=[Z, N, S])$
@@ -565,7 +561,7 @@ Using \texttt{IntersectingFilter()} we can improve upon \texttt{PreprocessRaster
   \end{pseudoloop}
 \end{pseudofunc}
 %
-If we denote the \textit{average} size of the set $\mathcal{P}_B$ as $\overline{|\mathcal{P}_B|}$, that is,
+If we denote the \textit{average} size of the set $\texttt{IntersectFilter}(\mathcal{P},~B)$ over $B \in \mathcal{T}$ as $\overline{|\mathcal{P}_B|}$, that is,
 %
 \begin{equation*}
   \overline{|\mathcal{P}_B|}
@@ -577,8 +573,9 @@ If we denote the \textit{average} size of the set $\mathcal{P}_B$ as $\overline{
   \big|,
 \end{equation*}
 %
-then the time complexity of this new implementation of \texttt{PreprocessRaster()} becomes $\bigo{|\mathcal{T}|\overline{|\mathcal{P}_B|}}$.
-In fact, for our dataset $\overline{|\mathcal{P}_B|} \approx \num{28.4}$ and $|\mathcal{T}|\overline{|\mathcal{P}_B|} = \num{1822376}$, the full distribution being plotted in \cref{fig:tile-surface-distribution}.
+then the number of invocations of $\texttt{Rasterize}(P,~B)$ is reduced to $|\mathcal{T}|\overline{|\mathcal{P}_B|}$.
+Specifically, for our dataset $\overline{|\mathcal{P}_B|} \approx \num{28.4}$ and $|\mathcal{T}|\overline{|\mathcal{P}_B|} = \num{1822376}$.
+The full empirical distribution of $|\mathcal{P}_B|$ is provided in \cref{fig:tile-surface-distribution}.
 \begin{figure}
   \includegraphics{tile-surface-distribution}
   \caption{%
@@ -586,9 +583,8 @@ In fact, for our dataset $\overline{|\mathcal{P}_B|} \approx \num{28.4}$ and $|\
   }%
   \label{fig:tile-surface-distribution}
 \end{figure}
-This is a great improvement, but we have neglected the time complexity of $\texttt{IntersectingFilter}(\mathcal{P}, B)$, which if linear or super-linear in $|\mathcal{P}|$ brings us back to a total time complexity of $\bigo{|\mathcal{T}||\mathcal{P}|}$.
-In practice, however, the constant cost term is much smaller, and the implementation becomes much faster as a result.
-However, if $\texttt{IntersectingFilter}()$ could be made close to a constant time operation, $\bigo{1}$, then we would truly be able to construct a close to $\bigo{|\mathcal{T}|\overline{|\mathcal{P}_B|}}$ procedure.
+Although the number of invocations of $\texttt{Rasterize}(P,~B)$ has been greatly reduced, there has been introduced an additional cost of invoking $\texttt{IntersectFilter}(\mathcal{P},~B)$ a total of $|\mathcal{T}|$ times.
+A naive implementation of $\texttt{IntersectFilter}(\mathcal{P},~B)$ has computational cost that is linearly proportional to $|\mathcal{P}|$, which makes the introduction of $\texttt{IntersectFilter}()$ moot from an asymptotic perspective (it results in a substantial speedup for our finitely sized dataset, however).
 The solution is to pre-compute a so-called R-tree spatial index, which when first computed, allows for almost instantaneous intersection filtering\cite{rtree}.
 \begin{pseudofunc}{PreprocessRaster}{$\mathcal{P},~\mathcal{T}$}
   \item $\texttt{RTreeIndex} \leftarrow \texttt{GenerateRTreeIndex}(\mathcal{P})$
@@ -596,7 +592,7 @@ The solution is to pre-compute a so-called R-tree spatial index, which when firs
   \begin{pseudoloop}
     \item $Z, N, S \leftarrow \texttt{ConstructPlaceHolderArrays()}$
     \item $\hat{\mathcal{P}}_B \leftarrow \texttt{RTreeIndex}(B)$
-    \item for $P$ in $\hat{\mathcal{P}}_B$:
+    \item for $P \in \hat{\mathcal{P}}_B$:
     \begin{pseudoloop}
       \item $Z_p, N_p, S_p \leftarrow \texttt{Rasterize}(P,~B)$
       \item $\texttt{FillValues(from}=[Z_p, N_p, S_p],~\texttt{into}=[Z, N, S])$
@@ -604,12 +600,14 @@ The solution is to pre-compute a so-called R-tree spatial index, which when firs
     \item $\texttt{SaveToHashLookup(data}=[Z, N, S],~\texttt{hash}=B)$.
   \end{pseudoloop}
 \end{pseudofunc}
-
-\begin{equation*}
-  \texttt{IntersectingFilter}(\mathcal{P},~B)
-  \subseteq
-  \texttt{GenerateRTreeIndex}(\mathcal{P})(B)
-\end{equation*}
+The computational cost of $\texttt{RTreeIndex}(B)$ is $\bigo{\log{|\mathcal{P}|}}$, making the time complexity of $\texttt{PreprocessRaster}(\mathcal{P},~\mathcal{T})$ as a whole $\bigo{|\mathcal{T}| \overline{|\mathcal{P}_B|} \log{|\mathcal{P}|}}$.
+It should also be mentioned that \texttt{PreprocessRaster()} is a highly parallelizable process as well.
+The introduction of an R-tree index and splitting the processing of $\mathcal{T}$ over 12 cores/24 threads results in a reduction in computation from approximately 24 hours to only just over 40 minutes for the Trondheim dataset.
+% \begin{equation*}
+%   \texttt{IntersectingFilter}(\mathcal{P},~B)
+%   \subseteq
+%   \texttt{GenerateRTreeIndex}(\mathcal{P})(B)
+% \end{equation*}
 
 \subsection{Handling non-planar polygons}%
 \label{sec:non-planar-fix}
