@@ -136,7 +136,8 @@ For a sufficiently representative raster mapping this should also imply that $\v
 \end{align*}
 This is the metric we really intend to minimize, but can only do so implicitly with a good surrogate loss function, and a raster format that is sufficiently representative and targetable.
 
-\subsection{The \enquote{surface normal} raster format}
+\subsection{The \enquote{surface normal} raster format}%
+\label{sec:surface-normal-raster-format}
 
 We want to construct raster arrays (tiles) which represent different types of GIS data.
 Each such raster tile represents GIS data corresponding to a specific geographic area, the extent of which is specified by a bounding box $B(\vec{c}, w, h)$.
@@ -182,7 +183,7 @@ The idea is now to construct an entirely new raster format which is able to repr
 In our case $\mathcal{P}$ consists of all roof surfaces in Trondheim, totaling $|\mathcal{P}| = \numsurfaces$.
 Our surface raster format, which we will refer to as the \enquote{surface normal} raster, is intended as a format which is both representative and targetable.
 We start by imposing two key assumptions on the polygons contained by $\mathcal{P}$.
-\begin{enumerate}
+\begin{enumerate}[label=\bfseries\sffamily A\arabic*, ref=A\arabic*]
   \item\label{itm:flat} All polygons $P \in \mathcal{P}$ are \textbf{perfectly planar}.
     That is, for every polygon you can determine $\beta_0$, $\beta_x$, and $\beta_y$ such that $z = \beta_0 + \beta_x x + \beta_y y$ for \emph{all} vertices $(x, y, z)$ representing the given polygon.
   \item\label{itm:non-overlapping} All polygons $P \in \mathcal{P}$ are \textbf{mutually non-overlapping} when projected into the $xy$-plane, the $xy$-plane being the sea level.
@@ -194,7 +195,7 @@ Assumption \ref{itm:non-overlapping} can be solved with a suitable \enquote{conf
 Such a conflict resolution method will be described in \cref{sec:overlapping-fix}.
 For now it is easier to describe the surface normal raster with these assumptions in place.
 We will introduce one final assumption:
-\begin{enumerate}
+\begin{enumerate}[label=\bfseries\sffamily A\arabic*, ref=A\arabic*]
   \setcounter{enumi}{2}
   \item \label{itm:simple} All polygons $P \in \mathcal{P}$ are \textbf{simple} polygons without any interior hulls, and are thus representable by a single exterior ring.
    The exterior ring is represented as an ordered sequences of $(x, y, z)$ coordinate tuples, and will therefore be denoted as,
@@ -210,14 +211,16 @@ There is nothing preventing the surface normal raster format for being generaliz
 Under the assumption of all polygons in $\mathcal{P}$ being perfectly planar we are able to decompose any polygon $P \in \mathcal{P}$ into two constituent sub-components: its \textit{two-dimensional projection} and its \textit{planar equation}.
 The first sub-component is the projection of the polygon into the $xy$-plane, $\project{P}$, making the three-dimensional polygon two-dimensional instead.
 This simple projection is simply performed by truncating the $z$-component of each $(x, y, z)$-vertex in the polygon:
-\begin{align*}
+\begin{align}
   \project{P}
   &=
   \project{[(x_1, y_1, z_1), (x_2, y_2, z_2), \dots, (x_{|P|}, y_{|P|}, z_{|P|}), (x_1, y_1, z_1)]}
-  \\
+  \nonumber\\
   &=
   [(x_1, y_1), (x_2, y_2), \dots, (x_{|P|}, y_{|P|}), (x_1, y_1)]).
-\end{align*}
+  \tag{Projection mapping}\label{eq:project}
+\end{align}
+\cref{eq:project}
 The projection mapping $\project{P}$ is also illustrated in \cref{fig:2d-polygon-projection}.
 \begin{figure}
   \centering
@@ -232,8 +235,8 @@ The projection mapping $\project{P}$ is also illustrated in \cref{fig:2d-polygon
 
 The second sub-component is the parametric description of the plane on which \emph{all} vertices of the given polygon lie.
 Denote this mapping as $\vec{\beta}(P)$ and define it according to the following relationship:
-\begin{align*}
-  \vec{\beta}(P)
+\begin{align}
+  \planar{P}
   =
   \begin{bmatrix}
     \beta_0 \\
@@ -242,7 +245,8 @@ Denote this mapping as $\vec{\beta}(P)$ and define it according to the following
   \end{bmatrix}
   \text{ such that }
   z = \beta_0 + \beta_x x + \beta_y y \text{ for all } (x, y, z) \in P
-\end{align*}
+  \tag{Planar mapping}\label{eq:planar}
+\end{align}
 The original three-dimensional polygon can be easily reconstructed in a lossless manner from the two sub-components, as illustrated in \cref{fig:3d-polygon-reconstruction}, while still being a less redundant representation of the polygon.
 %
 \begin{figure}[H]
@@ -304,6 +308,7 @@ When it comes to the rasterization of $\planar{P} = {[\beta_0, \beta_x, \beta_y]
     n_y\\
     n_z
   \end{bmatrix}
+  \tag{Normal planar map}\label{eq:normalplanar}
 \end{equation*}
 The relationship between the equation of the plane and the associated surface normal vector is illustrated in \cref{fig:3d-normal-vector}.
 \begin{figure}[H]
@@ -612,50 +617,68 @@ The introduction of an R-tree index and splitting the processing of $\mathcal{T}
 \subsection{Handling non-planar polygons}%
 \label{sec:non-planar-fix}
 
-Now assume that the polygon collection at hand contains three-dimensional polygons which are all approximately planar.
-Any $(x, y, z)$ vertex must therefore satisfy the following relationship:
+Denote the number of unique vertices representing the polygon $P$ as $|P|$ and assume that all polygons $P \in \mathcal{P}$ are simple polygons without any interior hulls (assumption~\ref{itm:simple}).
+We can therefore denote the polygon $P$ as:
+\begin{align*}
+  P
+  &=
+  [(x_1, y_1, z_1), (x_2, y_2, z_2), \dots, (x_{|P|}, y_{|P|}, z_{|P|}), (x_1, y_1, z_1)]
+  \\
+  &\defeq
+  [\vec{p}_1, \vec{p}_2, \ldots, \vec{p}_{|P|}, \vec{p}_1]
+\end{align*}
+In \cref{sec:surface-normal-raster-format} we imposed assumption~\ref{itm:flat} on $\mathcal{P}$, namely that \emph{all} the three-dimensional vertices $(x, y, z)$ required in order to represent a given polygon $P \in \mathcal{P}$ must lie exactly flat on a three-dimensional plane.
+That is, there exists $\planar{P} = {[\beta_0, \beta_x, \beta_y]}^T$ such that
 %
 \begin{equation*}
-  z = \beta_{p,0} + \beta_{p,x} x + \beta_{p,y} y + \varepsilon
+  z = \beta_0 + \beta_x x + \beta_y y
+  \text{ for all vertices } (x, y, z) \text{ representing } P
 \end{equation*}
 %
+If this assumption holds, then three unique vertices $\vec{p}_i$, $\vec{p}_j$, and $\vec{p}_k$ which do \emph{not} form a straight line will perfectly represent the plane.
+It is therefore easy to implement a procedure for calculating $\planar{P}$, the definition of which was provided in \cref{eq:planar} on \cpageref{eq:planar}, and likewise for $\normalplanar{P}$ as defined in \cref{eq:normalplanar} on \cpageref{eq:normalplanar}.
+In reality assumption~\ref{itm:flat} does \emph{not} hold for our dataset, and any vertex $(x, y, z)$ rather obeys the following relationship,
+%
+\begin{equation*}
+  z = \beta_{0} + \beta_{x} x + \beta_{y} y + \varepsilon
+\end{equation*}
+%
+for some error term $\varepsilon$ caused by measurement errors, data entry errors, or other unknown causes.
+The accurate determination of $\planar{P}$ depends on the behaviour of the error term $\varepsilon$ and will heavily depend by the nature of the surface polygon dataset.
+In the case of $\varepsilon \sim \mathcal{N}(0, \sigma^2)$, that is a normally distributed error term with constant, unknown variance $\sigma^2$ and zero mean, we could confidently construct a unbiased ordinary least squares predictor $\hat{\vec{\beta}}$ for $\vec{\beta}$.
+\begin{align*}
+  X_{xy}
+  &=
+  \begin{bmatrix}
+    1 & x_{1} & y_{1} \\
+    1 & x_{2} & y_{2} \\
+    \vdots & \vdots & \vdots \\
+    1 & x_{|P|} & y_{|P|} \\
+  \end{bmatrix},
+  &
+  \vec{z}
+  &=
+  \begin{bmatrix}
+     z_{1} \\
+     z_{2} \\
+     \vdots \\
+     z_{|P|} \\
+  \end{bmatrix},
+  &
+  \widehat{\vec{\beta}}
+  &=
+  \left( X_{xy}^T X_{xy} \right)^{-1} X_{xy}^T \vec{z}
+\end{align*}
+
 Where $\varepsilon$ is error term due to measurement errors or other type of random data errors.
 The distribution of $\varepsilon$ must be investigated further for our dataset, but for the moment assume the error to be normally distributed with zero mean and some unknown variance $\sigma^2$, i.e. $\varepsilon \sim \mathcal{N}(0, \sigma^2)$.
 %
 The task is now to determine the coefficient vector $\vec{\beta}_p = {[\beta_{p,0}, \beta_{p,x}, \beta_{p,y}]}^T$ which describes the planar polygon surface.
 We construct a design matrix $X_p$ consisting of all $(x, y)$ vertex coordinate tuples of the given polygon $P_p$:
 %
-\begin{equation*}
-  X_p
-  =
-  \begin{bmatrix}
-    1 & x_{p,1,1} & y_{p,1,1} \\
-    1 & x_{p,1,2} & y_{p,1,2} \\
-    \vdots & \vdots & \vdots \\
-    1 & x_{p,1,|r_{p,1}|} & y_{p,1,|r_{p,1}|} \\
-    1 & x_{p,2,1} & y_{p,2,1} \\
-    1 & x_{p,2,2} & y_{p,2,2} \\
-    \vdots & \vdots & \vdots \\
-    1 & x_{p,|P_p|,|r_{|P_p|}|} & y_{p,|P_p|,|r_{|P_p|}|} \\
-  \end{bmatrix}.
-\end{equation*}
 %
 Likewise, a response vector $\vec{z}_p$ is constructed consisting of the respective elevation values associated with the $(x, y)$ tuples:
 %
-\begin{equation*}
-  \vec{z}_p
-  =
-  \begin{bmatrix}
-     z_{p,1,1} \\
-     z_{p,1,2} \\
-     \vdots \\
-     z_{p,1,|r_{p,1}|} \\
-     z_{p,2,1} \\
-     z_{p,2,2} \\
-     \vdots \\
-     z_{p,|P_p|,|r_{|P_p|}|} \\
-  \end{bmatrix}
-\end{equation*}
 %
 Again, by assuming $\varepsilon \sim \mathcal{N}(0, \sigma^2)$ we construct an ordinary least squares estimator $\widehat{\vec{\beta}}_p $ for $\vec{\beta}_p$:
 %
