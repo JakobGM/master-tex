@@ -10,3 +10,10 @@
 \renewcommand{\listfigurename}{Figures}
 \renewcommand{\listtablename}{Tables}
 }
+
+% Allows the use of \node[between=A and B] ...
+\tikzset{
+    between/.style args={#1 and #2}{
+         at = ($(#1)!0.5!(#2)$)
+    }
+}

@@ -337,7 +337,8 @@ Given that we can easily determine $\planar{P}$ for any polygon, we now define t
     \normalplanar{P}, &\text{if $\project{P}$ covers } \pixtogeo{i}{j}.\\
     \vec{0} \defeq {[0, 0, 0]}^T, &\text{if no such } P \in \mathcal{P} \text{ exists.}
   \end{cases}
-  \tag{surface normal raster}
+  \tag{surface normal raster}%
+  \label{eq:surface-normal-raster}
 \end{align*}
 This is a raster format consisting of three raster channels as each pixel location $(i, j)$ represents a three-dimensional normal vector.
 It should now become apparent why we made assumption \ref{itm:non-overlapping} earlier, that is, all polygons $P \in \mathcal{P}$ should be mutually non-overlapping after being projected by $\project{\cdot}$.
@@ -399,7 +400,8 @@ Given that the pixel coordinate ${[i, j]}^T$ maps to the geographic coordinate $
     \begin{bmatrix}1, x, y\end{bmatrix} \planar{P}, &\text{if } \project{P} \text{ covers } \pixtogeo{i}{j}.\\
     -\infty, &\text{if no such } P \in \mathcal{P} \text{ exists}.
   \end{cases}
-  \tag{surface elevation raster}
+  \tag{surface elevation raster}%
+  \label{eq:surface-elevation-raster}
 \end{align*}
 This \textit{surface elevation} raster array enables us to define a perfectly representative raster format and associated reverse mapping.
 In practice however, it will be shown that the decomposition of $\mathcal{P}$ into $S$ and $N$, discarding $Z$, is sufficient for accurate roof geometry inference.
@@ -500,6 +502,18 @@ For our dataset the \textit{bird's eye view decision rule} produces sensible res
 In other terms, the \textit{polygon shadow subset} $\mathcal{P}(x, y)$ consists of all polygons that are intersected by the line drawn from $(x, y, -\infty)$ to $(x, y, \infty)$, hence casting a shadow on the point $(x, y)$ when the sun stands at zenith (directly overhead).
 The \textit{applicable polygon} is the single polygon which ends up being hit by direct sunlight at the given geographic point, thus casting a shadow upon all other polygons in the polygon shadow subset.
 The bird's view decision rule has been illustrated in \cref{fig:ray-tracing}, and \cref{fig:dormer-2D} is an example of a two-dimensional instance segmentation map generated with this rule from the three-dimensional roof structure shown in \cref{fig:dormer-3D}.
+We can now update the definition of surface elevation raster $Z$ and the normal vector raster $N$, taking this new decision rule into account:
+\begin{align*}
+  N_{i,j} &= \begin{cases}
+    \normalplanar{P\left(x, y\right)}, &\text{if $|\mathcal{P}(x,y)| \geq 1$}.\\
+    \vec{0} \defeq {[0, 0, 0]}^T, &\text{otherwise.}
+  \end{cases}
+  \\
+  Z_{i,j} &= \begin{cases}
+    \begin{bmatrix}1, x, y\end{bmatrix} \planar{P(x, y)}, &\text{if } |\mathcal{P}(x,y)| \geq 1.\\
+    -\infty, &\text{otherwise}.
+  \end{cases}
+\end{align*}
 
 We will construct a computational procedure which is able to rasterize a given polygon $P \in \mathcal{P}$ relative to a given bounding box $B$.
 Denote this procedure as $\texttt{Rasterize}(P,~B)$, and say that this procedure returns three rasters: a surface elevation raster $Z_p$, a surface normal raster $N_p$, and a two-dimensional segmentation mask $S_p$.
@@ -637,147 +651,129 @@ That is, there exists $\planar{P} = {[\beta_0, \beta_x, \beta_y]}^T$ such that
 %
 If this assumption holds, then three unique vertices $\vec{p}_i$, $\vec{p}_j$, and $\vec{p}_k$ which do \emph{not} form a straight line will perfectly represent the plane.
 It is therefore easy to implement a procedure for calculating $\planar{P}$, the definition of which was provided in \cref{eq:planar} on \cpageref{eq:planar}, and likewise for $\normalplanar{P}$ as defined in \cref{eq:normalplanar} on \cpageref{eq:normalplanar}.
-In reality assumption~\ref{itm:flat} does \emph{not} hold for our dataset, and any vertex $(x, y, z)$ rather obeys the following relationship,
+In reality assumption~\ref{itm:flat} does \emph{not} hold for our dataset, the vertices are more accurately described by the following relationship:
 %
 \begin{equation*}
   z = \beta_{0} + \beta_{x} x + \beta_{y} y + \varepsilon
+  \text{ for all vertices } (x, y, z) \text{ representing } P
 \end{equation*}
 %
 for some error term $\varepsilon$ caused by measurement errors, data entry errors, or other unknown causes.
 The accurate determination of $\planar{P}$ depends on the behaviour of the error term $\varepsilon$ and will heavily depend by the nature of the surface polygon dataset.
-In the case of $\varepsilon \sim \mathcal{N}(0, \sigma^2)$, that is a normally distributed error term with constant, unknown variance $\sigma^2$ and zero mean, we could confidently construct a unbiased ordinary least squares predictor $\hat{\vec{\beta}}$ for $\vec{\beta}$.
+We will argue that an ordinary least squares predictor, denoted as $\planarestimator{P}$, is sufficiently accurate for our use, where we define $\planarestimator{P}$ as
 \begin{align*}
+  \planarestimator{P}
+  \defeq
+  \left( X_{xy}^T X_{xy} \right)^{-1} X_{xy}^T \vec{z},
+  \hspace{1em}
+  \text{ where }
   X_{xy}
-  &=
+  =
   \begin{bmatrix}
     1 & x_{1} & y_{1} \\
     1 & x_{2} & y_{2} \\
     \vdots & \vdots & \vdots \\
     1 & x_{|P|} & y_{|P|} \\
   \end{bmatrix},
-  &
   \vec{z}
-  &=
+  =
   \begin{bmatrix}
      z_{1} \\
      z_{2} \\
      \vdots \\
      z_{|P|} \\
   \end{bmatrix},
-  &
-  \widehat{\vec{\beta}}
-  &=
-  \left( X_{xy}^T X_{xy} \right)^{-1} X_{xy}^T \vec{z}
 \end{align*}
+%
+In order to investigate if $\planarestimator{P}$ is a sufficiently accurate estimator for $\planar{P}$, we will compare the original vertex coordinates $(x, y, z)$ with the fitted vertex coordinates $(x, y, \hat{z})$, where $\hat{z}$ is constructed from the linear predictor:
+\begin{equation*}
+  \widehat{z}
+  =
+  \widehat{f}_z\left(x, y; \planarestimator{P}\right)
+  =
+  \widehat{\beta}_{0}
+  + \widehat{\beta}_{x} x
+  + \widehat{\beta}_{y} y
+\end{equation*}
+%
+We can now define the \textit{vertex residuals} as:
+%
+\begin{equation*}
+  e_i
+  \defeq
+  z_i - \hat{z}_i
+  =
+  z_i - [1, x_i, y_i]~\planarestimator{P},
+  \text{ for } i \in \{1, 2, \ldots, |P|\}
+\end{equation*}
+%
+And also the coefficient of determination, $R^2$, for a given polygon regression fit.
+%
+\begin{equation*}
+  R^2
+  \defeq
+    1
+    -
+    \frac{
+      \sum_{i = 1}^{|P|} e_i^2
+    }{%
+    \sum_{i = 1}^{|P|} (z_i - \bar{z})^2
+    },
+  \text{ where }
+  \bar{z} \defeq \frac{1}{|P|} \sum_{i=1}^{|P|} z_i
+\end{equation*}
+%
+The distribution of $R^2$ over all Trondheim polygons is shown in the top part of \cref{fig:surface-regression-stats}, with a median $R^2$ value of 0.99998, which definitely should be considered a good fit.
+Of similar interest is the greatest absolute residual, $e_{\mathrm{max}} \defeq \max_{i \in \{1, \ldots, |P|\}} |e_i|$, the distribution of which is plotted in the bottom part of \cref{fig:surface-regression-stats}.
+This \enquote{maximum vertex deviation} goodness of fit metric also shows favorable results.
+It is possible to discard any polygon $P$ that performs badly under a given goodness of fit metric, $R^2$ or $e_{\mathrm{max}}$ for instance, and all the respective bounding boxes $B \in \mathcal{T}$ that $P$ is at least partially contained by.
+This could be done in order to prevent training a machine learning model on false ground truth data.
+We do not consider this to not be necessary for the Trondheim polygon dataset, but it may be necessary for other surface polygon datasets of lower quality.
+%
 \begin{figure}
   \includegraphics[width=\linewidth]{surface-regression-stats}
   \caption{%
-    TODO.
+    Statistical summary of the regression fits of the Trondheim surface polygons.
+  }{%
+    \textbf{Top} --- The distribution of the coefficient of determination, $R^2$, for an ordinary least squares estimator for $\planar{P}$ over all Trondheim polygons $P \in \mathcal{P}$.
+    \\
+    \textbf{Bottom} --- The distribution of the maximum distance between a vertex in a polygon and its fitted plane, $e_{\mathrm{max}}$.
   }%
   \label{fig:surface-regression-stats}
 \end{figure}
 
-Where $\varepsilon$ is error term due to measurement errors or other type of random data errors.
-The distribution of $\varepsilon$ must be investigated further for our dataset, but for the moment assume the error to be normally distributed with zero mean and some unknown variance $\sigma^2$, i.e. $\varepsilon \sim \mathcal{N}(0, \sigma^2)$.
+\begin{figure}
+  \centering
+  \includegraphics{lidar-residuals.tikz}
+  \caption{%
+    The construction of LiDAR residuals from a surface elevation raster.
+  }%
+  \label{fig:lidar-residuals}
+\end{figure}
 %
-The task is now to determine the coefficient vector $\vec{\beta}_p = {[\beta_{p,0}, \beta_{p,x}, \beta_{p,y}]}^T$ which describes the planar polygon surface.
-We construct a design matrix $X_p$ consisting of all $(x, y)$ vertex coordinate tuples of the given polygon $P_p$:
-%
-%
-Likewise, a response vector $\vec{z}_p$ is constructed consisting of the respective elevation values associated with the $(x, y)$ tuples:
-%
-%
-Again, by assuming $\varepsilon \sim \mathcal{N}(0, \sigma^2)$ we construct an ordinary least squares estimator $\widehat{\vec{\beta}}_p $ for $\vec{\beta}_p$:
-%
-\begin{equation*}
-  \widehat{\vec{\beta}}_p
-  =
-  {\left[
-    \widehat{\beta}_{p,0},
-    \widehat{\beta}_{p,x},
-    \widehat{\beta}_{p,y}
-  \right]}^T
-  =
-  \left( X_p^T X_p \right)^{-1} X_p^T \vec{z}_p
-\end{equation*}
-%
-Interpolated elevation values for arbitrary $(x, y)$ coordinate tuples can now be constructed:
-%
-\begin{equation*}
-  \widehat{z} = \widehat{\beta}_{p,0} + \widehat{\beta}_{p,x} x + \widehat{\beta}_{p,y} y
-\end{equation*}
-%
-Or as an alternative formulation, a linear predictor $\widehat{f}_z$ parametrized according to $\widehat{\vec{\beta}}_p$ can be constructed:
-%
-\begin{equation*}
-  \widehat{f}_z\left(x, y; \widehat{\vec{\beta}}_p\right)
-  =
-    \widehat{\beta}_{p,0}
-    + \widehat{\beta}_{p,x} x
-    + \widehat{\beta}_{p,y} y
-  =
-  \widehat{z}
-\end{equation*}
-%
-Now define the coefficient vector set $\mathcal{B}(x, y)$ which contains all coefficient vectors to polygons that contain the coordinate $(x, y)$ when projected into the $xy$-plane.
-More formally,
-%
-\begin{equation*}
-  \mathcal{B}(x, y) = \left\{
-    \vec{\beta}_p
-    \mid
-    (x, y) \in \project{P_p}
-  \right\},
-\end{equation*}
-%
-where $\project{P_p}$ is the projection of all polygon vertex coordinates into the $xy$-plane as illustrated in \cref{fig:2d-polygon-projection}.
-%
-\begin{equation*}
-  \vec{\beta}_m(x, y)
-  =
-  \argmax_{\vec{\beta} \in \mathcal{B}(x, y)}
-    \widehat{f}_z(x, y; \vec{\beta})
-\end{equation*}
-%
-\begin{equation*}
-  \vec{n}\left(\vec{\beta}\right)
-  =
-  \frac{%
-    1
-  }{%
-    \sqrt{\beta_x^2 + \beta_y^2 + 1}
-  }
-  \cdot
-  {\left[
-    -\beta_{x}, -\beta_{y}, 1
-  \right]}^T
-\end{equation*}
-
-
-
-\begin{algorithm}{Surface interpolation}{alg:surface-interpolation}{Tile bounding box $B(\vec{c}, w, h)$,\\Raster dimensions $H \times W$,\\R-Tree indexed polygon collection.}
-\item Construct arrays with temporary placeholder values:
-  \begin{itemize}[label=--,leftmargin=0cm]
-    \item Normal vector array $N$ of size $H \times W \times 3$ filled with $0$.
-    \item Interpolated elevation array $Z$ of size $H \times W \times 1$ filled with $-\infty$.
-  \end{itemize}
-\item Construct polygon collection $\mathcal{P}$ for given tile extents using R-Tree index.
-  Convert polygons to pixel coordinate system.
-\item For polygon $P_p = [r_{p0}, r_{p1}, \dots, r_{pn_p}]$ with a single exterior ring, $r_{p0}$, and $n_p$ interior rings, $[r_{p1}, \ldots, r_{pn_p}]$, in polygon collection $\mathcal{P}$.
-  \begin{enumerate}[leftmargin=0.5em,label=\textbf{\alph*}]
-      % \item The linear ring $r_{pj} = [(x_{pj0}, y_{pj0}, z_{ij0}), \dots, (x_{pjn_{ij}}, y_{ijn_{pj}}, z_{ijn_{pj}})]$.
-    \item Construct $M \times 3$ design matrix $X$ populated with pixel coordinates of all \textit{unique} xy-vertices $(1, x_{pij}, y_{pij})$.
-        Secondly, construct $M \times 1$ response vector $\vec{y}$ populated with the respective $z_{pij}$ coordinates.
-    \item Solve linear regression problem $\vec{\beta}_p = {\left(\beta_0, \beta_x, \beta_y\right)}^T = {\left(X^T X\right)}^{-1} X^T \vec{y}$
-    \item Construct polygon surface normal vector $\vec{n}_p$,
-      \begin{equation*}
-        \vec{n}_p \assign {\left(\beta_x^2 + \beta_y^2 + 1\right)}^{-1/2} \cdot {\left(-\beta_x, -\beta_y, 1\right)}^T,
-      \end{equation*}
-      where $||\vec{n}_p||_2 = 1$ by construction.
-    \item For each pixel coordinate $(i, j)$ contained by the polygon $P_p$ projected onto the 2-dimensional pixel index plane:
-      \begin{itemize}[leftmargin=0.5em]
-        \item $h \assign \beta_0 + \beta_x j + \beta_y i$. If $h < Z_ij$, continue loop, else\dots
-        \item $Z_{ij} \assign h$ and $\left(N_{ijx}, N_{ijy}, N_{ijz}\right) \assign \vec{n}_p$.
-      \end{itemize}
-    \end{enumerate}
-\end{algorithm}
+% \begin{algorithm}{Surface rasterization}{alg:surface-interpolation}{Tile bounding box $B(\vec{c}, w, h)$,\\Raster dimensions $H \times W$,\\R-Tree indexed polygon collection.}
+% \item Construct arrays with temporary placeholder values:
+%   \begin{itemize}[label=--,leftmargin=0cm]
+%     \item Normal vector array $N$ of size $H \times W \times 3$ filled with $0$.
+%     \item Interpolated elevation array $Z$ of size $H \times W \times 1$ filled with $-\infty$.
+%   \end{itemize}
+% \item Construct polygon collection $\mathcal{P}$ for given tile extents using R-Tree index.
+%   Convert polygons to pixel coordinate system.
+% \item For polygon $P_p = [r_{p0}, r_{p1}, \dots, r_{pn_p}]$ with a single exterior ring, $r_{p0}$, and $n_p$ interior rings, $[r_{p1}, \ldots, r_{pn_p}]$, in polygon collection $\mathcal{P}$.
+%   \begin{enumerate}[leftmargin=0.5em,label=\textbf{\alph*}]
+%       % \item The linear ring $r_{pj} = [(x_{pj0}, y_{pj0}, z_{ij0}), \dots, (x_{pjn_{ij}}, y_{ijn_{pj}}, z_{ijn_{pj}})]$.
+%     \item Construct $M \times 3$ design matrix $X$ populated with pixel coordinates of all \textit{unique} xy-vertices $(1, x_{pij}, y_{pij})$.
+%         Secondly, construct $M \times 1$ response vector $\vec{y}$ populated with the respective $z_{pij}$ coordinates.
+%     \item Solve linear regression problem $\vec{\beta}_p = {\left(\beta_0, \beta_x, \beta_y\right)}^T = {\left(X^T X\right)}^{-1} X^T \vec{y}$
+%     \item Construct polygon surface normal vector $\vec{n}_p$,
+%       \begin{equation*}
+%         \vec{n}_p \assign {\left(\beta_x^2 + \beta_y^2 + 1\right)}^{-1/2} \cdot {\left(-\beta_x, -\beta_y, 1\right)}^T,
+%       \end{equation*}
+%       where $||\vec{n}_p||_2 = 1$ by construction.
+%     \item For each pixel coordinate $(i, j)$ contained by the polygon $P_p$ projected onto the 2-dimensional pixel index plane:
+%       \begin{itemize}[leftmargin=0.5em]
+%         \item $h \assign \beta_0 + \beta_x j + \beta_y i$. If $h < Z_ij$, continue loop, else\dots
+%         \item $Z_{ij} \assign h$ and $\left(N_{ijx}, N_{ijy}, N_{ijz}\right) \assign \vec{n}_p$.
+%       \end{itemize}
+%     \end{enumerate}
+% \end{algorithm}

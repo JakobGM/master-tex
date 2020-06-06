@@ -1,0 +1,27 @@
+\begin{tikzpicture}
+  \node[] (polygons) at (0,0)
+    {\includegraphics[scale=0.4]{tile-data/0-0/polygon}};
+  \node[above=-0.5em of polygons.north] {Surface polygons, $\mathcal{P}$};
+
+  \node[below=of polygons] (elevation)
+    {\includegraphics[scale=0.4]{tile-data/0-0/elevation}};
+  \draw[->] (polygons.south) -- node[right] {\texttt{Rasterize}$\left(\mathcal{P},~B\right)$} (elevation.north);
+  \node[below=0em of elevation.south] {Surface elevation, $H$};
+
+
+  \node[left=of elevation] (lidar)
+    {\includegraphics[scale=0.4]{tile-data/0-0/lidar}};
+  \node[below=0em of lidar.south] {LiDAR, $Z$};
+
+  \node[right=of elevation] (error)
+    {\includegraphics[scale=0.4]{tile-data/0-0/surface_error}};
+  \node[below=0em of error.south] {LiDAR residuals, $E$};
+
+  \node[between=lidar and elevation] {\LARGE $-$};
+  \node[between=elevation and error] {\LARGE $=$};
+
+  \node[left=of polygons] (rgb)
+    {\includegraphics[scale=0.4]{tile-data/0-0/rgb}};
+  \node[above=-0.5em of rgb.north] {Bounding box, $B$};
+  \draw[] (rgb.south) -- ($(rgb)!0.5!(lidar)$) -- ($(polygons)!0.5!(elevation)$);
+\end{tikzpicture}
