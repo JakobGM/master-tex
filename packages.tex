@@ -144,6 +144,9 @@
 % Include .tikz images with \includegraphics, supporting proper scaling
 % https://ctan.uib.no/graphics/pgf/contrib/tikzscale/tikzscale.pdf
 \usepackage{tikzscale}
+% Allow the use of the \spy command in tikz, creating a looking glass effect
+% Section 50: http://www.texample.net/media/pgf/builds/pgfmanualCVS2012-11-04.pdf
+\usetikzlibrary{spy}
 
 % Proper formatting of units by using \SI{value}{\unit}
 % We enable use of \giga\byte and other binary units

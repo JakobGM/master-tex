@@ -1,4 +1,6 @@
-\begin{tikzpicture}
+\begin{tikzpicture}[
+  spy using outlines={circle, magnification=4, size=4cm, connect spies},
+  ]
   \node[] (polygons) at (0,0)
     {\includegraphics[scale=0.4]{tile-data/0-0/polygon}};
   \node[above=-0.5em of polygons.north] {Surface polygons, $\mathcal{P}$};
@@ -24,4 +26,8 @@
     {\includegraphics[scale=0.4]{tile-data/0-0/rgb}};
   \node[above=-0.5em of rgb.north] {Bounding box, $B$};
   \draw[] (rgb.south) -- ($(rgb)!0.5!(lidar)$) -- ($(polygons)!0.5!(elevation)$);
+
+  \node[above=2.5cm of error](glass) {};
+  \node[yshift=2.5em, xshift=1.25em](zoom) at (error) {};
+  \spy [black] on (zoom) in node [] at (glass);
 \end{tikzpicture}
