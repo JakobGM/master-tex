@@ -6,12 +6,12 @@
   \node[below=of polygons] (elevation)
     {\includegraphics[scale=0.4]{tile-data/0-0/elevation}};
   \draw[->] (polygons.south) -- node[right] {\texttt{Rasterize}$\left(\mathcal{P},~B\right)$} (elevation.north);
-  \node[below=0em of elevation.south] {Surface elevation, $H$};
+  \node[below=0em of elevation.south] {Surface elevation, $Z$};
 
 
   \node[left=of elevation] (lidar)
     {\includegraphics[scale=0.4]{tile-data/0-0/lidar}};
-  \node[below=0em of lidar.south] {LiDAR, $Z$};
+  \node[below=0em of lidar.south] {LiDAR, $X$};
 
   \node[right=of elevation] (error)
     {\includegraphics[scale=0.4]{tile-data/0-0/surface_error}};
