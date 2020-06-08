@@ -11,9 +11,9 @@
 \end{wrapfigure}
 
 The roof of a given building can be decomposed into a collection of entirely flat polygons.
-This is an accurate data decomposition in most cases, the exception being conic shapes and other surfaces with continuous curvature which cannot be perfectly represented with a finite set of flat polygons.
+This is an accurate data decomposition in most cases, the exception being conic shapes and other surfaces with continuous curvature which cannot be perfectly represented with a finite set of flat surfaces.
 A \emph{gable roof}\footnote{\textit{Gable roof} --- A roof which consists of two flat roof surfaces which slope in opposite directions.
-The roof surfaces are connected along the highest, horizontal edge (ridge).}, for instance, can be considered as the set of two flat polygons, which when combined together accurately represent the roof in its entirety.
+The roof surfaces are connected along the highest, horizontal edge (ridge).}, for instance, can be considered as a collection of two flat polygons, which when combined accurately represent the roof in its entirety.
 Our intent is to construct a machine learning pipeline which is able to identify such three-dimensional roof surfaces from remote sensing data.
 
 Although a set of vectorized, flat polygons is often the most suitable data representation for geometric roof data in the GIS world, it is \emph{not} considered an ideal representation for traditional machine vision data pipelines.
@@ -631,31 +631,32 @@ The introduction of an R-tree index and splitting the processing of $\mathcal{T}
 \subsection{Handling non-planar polygons}%
 \label{sec:non-planar-fix}
 
-Denote the number of unique vertices representing the polygon $P$ as $|P|$ and assume that all polygons $P \in \mathcal{P}$ are simple polygons without any interior hulls (assumption~\ref{itm:simple}).
-We can therefore denote the polygon $P$ as:
+Let $|P|$ denote the number of unique vertices required in order to represent a polygon $P \in \mathcal{P}$, and assume that all polygons $P \in \mathcal{P}$ are simple polygons without any interior hulls (assumption~\ref{itm:simple}).
+We can therefore denote the polygon $P$ as
 \begin{align*}
   P
   &=
   [(x_1, y_1, z_1), (x_2, y_2, z_2), \dots, (x_{|P|}, y_{|P|}, z_{|P|}), (x_1, y_1, z_1)]
   \\
   &\defeq
-  [\vec{p}_1, \vec{p}_2, \ldots, \vec{p}_{|P|}, \vec{p}_1]
+  [\vec{p}_1, \vec{p}_2, \ldots, \vec{p}_{|P|}, \vec{p}_1].
 \end{align*}
 In \cref{sec:surface-normal-raster-format} we imposed assumption~\ref{itm:flat} on $\mathcal{P}$, namely that \emph{all} the three-dimensional vertices $(x, y, z)$ required in order to represent a given polygon $P \in \mathcal{P}$ must lie exactly flat on a three-dimensional plane.
 That is, there exists $\planar{P} = {[\beta_0, \beta_x, \beta_y]}^T$ such that
 %
 \begin{equation*}
   z = \beta_0 + \beta_x x + \beta_y y
-  \text{ for all vertices } (x, y, z) \text{ representing } P
+  \text{ for all vertices } (x, y, z) \text{ representing } P.
 \end{equation*}
 %
-If this assumption holds, then three unique vertices $\vec{p}_i$, $\vec{p}_j$, and $\vec{p}_k$ which do \emph{not} form a straight line will perfectly represent the plane.
+Three unique polygon vertices, $\vec{p}_i$, $\vec{p}_j$, and $\vec{p}_k$, which do \emph{not} form a straight line is sufficient in order to perfectly represent the plane.
 It is therefore easy to implement a procedure for calculating $\planar{P}$, the definition of which was provided in \cref{eq:planar} on \cpageref{eq:planar}, and likewise for $\normalplanar{P}$ as defined in \cref{eq:normalplanar} on \cpageref{eq:normalplanar}.
-In reality assumption~\ref{itm:flat} does \emph{not} hold for our dataset, the vertices are more accurately described by the following relationship:
+In reality assumption~\ref{itm:flat} does \emph{not} hold for our dataset.
+The polygon vertices are more accurately described by the following relationship
 %
 \begin{equation*}
   z = \beta_{0} + \beta_{x} x + \beta_{y} y + \varepsilon
-  \text{ for all vertices } (x, y, z) \text{ representing } P
+  \text{ for all vertices } (x, y, z) \text{ representing } P,
 \end{equation*}
 %
 for some error term $\varepsilon$ caused by measurement errors, data entry errors, or other unknown causes.
@@ -682,10 +683,10 @@ We will argue that an ordinary least squares predictor, denoted as $\planarestim
      z_{2} \\
      \vdots \\
      z_{|P|} \\
-  \end{bmatrix},
+  \end{bmatrix}.
 \end{align*}
 %
-In order to investigate if $\planarestimator{P}$ is a sufficiently accurate estimator for $\planar{P}$, we will compare the original vertex coordinates $(x, y, z)$ with the fitted vertex coordinates $(x, y, \hat{z})$, where $\hat{z}$ is constructed from the linear predictor:
+In order to investigate if $\planarestimator{P}$ is a sufficiently accurate estimator for $\planar{P}$, we will compare the original vertex coordinates $(x, y, z)$ with the fitted vertex coordinates $(x, y, \hat{z})$, where $\hat{z}$ is constructed from the linear predictor
 \begin{equation*}
   \widehat{z}
   =
@@ -693,10 +694,10 @@ In order to investigate if $\planarestimator{P}$ is a sufficiently accurate esti
   =
   \widehat{\beta}_{0}
   + \widehat{\beta}_{x} x
-  + \widehat{\beta}_{y} y
+  + \widehat{\beta}_{y} y.
 \end{equation*}
 %
-We can now define the \textit{vertex residuals} as:
+We can now define the \textit{vertex residuals} as
 %
 \begin{equation*}
   e_i
@@ -704,7 +705,7 @@ We can now define the \textit{vertex residuals} as:
   z_i - \hat{z}_i
   =
   z_i - [1, x_i, y_i]~\planarestimator{P},
-  \text{ for } i \in \{1, 2, \ldots, |P|\}
+  \text{ for } i \in \{1, 2, \ldots, |P|\}.
 \end{equation*}
 %
 And also the coefficient of determination, $R^2$, for a given polygon regression fit.
@@ -720,16 +721,18 @@ And also the coefficient of determination, $R^2$, for a given polygon regression
     \sum_{i = 1}^{|P|} (z_i - \bar{z})^2
     },
   \text{ where }
-  \bar{z} \defeq \frac{1}{|P|} \sum_{i=1}^{|P|} z_i
+  \bar{z} \defeq \frac{1}{|P|} \sum_{i=1}^{|P|} z_i.
 \end{equation*}
 %
 The distribution of $R^2$ over all Trondheim polygons is shown in the top part of \cref{fig:surface-regression-stats}, with a median $R^2$ value of 0.99998, which definitely should be considered a good fit.
-Of similar interest is the greatest absolute residual, $e_{\mathrm{max}} \defeq \max_{i \in \{1, \ldots, |P|\}} |e_i|$, the distribution of which is plotted in the bottom part of \cref{fig:surface-regression-stats}.
-This \enquote{maximum vertex deviation} goodness of fit metric also shows favorable results.
-It is possible to discard any polygon $P$ that performs badly under a given goodness of fit metric, $R^2$ or $e_{\mathrm{max}}$ for instance, and all the respective bounding boxes $B \in \mathcal{T}$ that $P$ is at least partially contained by.
-This could be done in order to prevent training a machine learning model on false ground truth data.
-We do not consider this to not be necessary for the Trondheim polygon dataset, but it may be necessary for other surface polygon datasets of lower quality.
-%
+Of similar interest is the \textit{greatest absolute vertex residual} of a given polygon, defined as 
+\begin{equation*}
+  e_{\mathrm{max}}
+  \defeq
+  \max_{i \in \{1, \ldots, |P|\}}
+    |e_i|,
+\end{equation*}
+the distribution of which is plotted in the bottom part of \cref{fig:surface-regression-stats}.
 \begin{figure}
   \includegraphics[width=\linewidth]{surface-regression-stats}
   \caption{%
@@ -741,7 +744,15 @@ We do not consider this to not be necessary for the Trondheim polygon dataset, b
   }%
   \label{fig:surface-regression-stats}
 \end{figure}
-
+This \enquote{maximum vertex deviation} goodness of fit metric also shows favorable results.
+A final quality assurance metric which can be inspected in order to confirm that the polygons have been correctly fitted is the \textit{LiDAR residual}, defined as
+\begin{equation*}
+  E_{i, j}
+  \defeq
+  X_{i, j} - Z_{i, j}, \text{ for indices } (i, j) \text{ such that } S_{i, j} = 1.
+\end{equation*}
+The LiDAR residual is with other words the difference between the roof height calculated from the three-dimensional roof surface polygon dataset at a given coordinate, and the LiDAR height measurement at the same coordinate.
+An illustration of the LiDAR residual and how it is constructed is provided in \cref{fig:lidar-residuals}, and the distribution is provided in \cref{fig:lidar-residual-distribution}.
 \begin{figure}
   \centering
   \includegraphics{lidar-residuals.tikz}
@@ -750,15 +761,27 @@ We do not consider this to not be necessary for the Trondheim polygon dataset, b
   }%
   \label{fig:lidar-residuals}
 \end{figure}
-
 \begin{figure}
   \centering
   \includegraphics[width=\linewidth]{lidar-residual-distribution}
   \caption{%
-    TODO.
+    Distribution of LiDAR residuals calculated over all bounding boxes $B \in \mathcal{T}$ for the Trondheim dataset.
   }%
   \label{fig:lidar-residual-distribution}
 \end{figure}
+The discrepancy between the polygon surface elevation and LiDAR measurements can be attributed to three main mechanisms:
+\begin{enumerate}
+  \item Positive residuals caused by objects placed upon roof surfaces which are not part of the surface polygon dataset.
+  \item Negative residuals caused by LiDAR measurements taken close to building edges, measuring the height of building walls or the nearby ground instead.
+  \item Normally distributed LiDAR measurement errors centered around zero but with non-zero variance.
+\end{enumerate}
+The first two mechanisms can be observed within the focused area in \cref{fig:lidar-residuals}, while the zero-centered measurement error can be observed in the bell shaped distribution shown in \cref{fig:lidar-residual-distribution}.
+Mechanism 1 is more common than mechanism 2, but smaller in absolute extent, causing the empirical mean of the LiDAR residuals to become negative (\SI{-6.44}{\centi\meter}), while the median remains positive (\SI{2.06}{\centi\meter}).
+
+It is possible to discard any polygon $P \in \mathcal{P}$ that performs badly under a given goodness of fit metric, $R^2$ or $e_{\mathrm{\max}}$ for instance, but this would also require us to discard all the respective bounding boxes $B \in \mathcal{T}$ that $\project{P}$ at least partially intersects with.
+This could be done in order to prevent training a machine learning model on false ground truth data.
+We do not consider this to be necessary for the Trondheim polygon dataset, but it may be necessary for other surface polygon datasets of lower quality.
+%
 %
 % \begin{algorithm}{Surface rasterization}{alg:surface-interpolation}{Tile bounding box $B(\vec{c}, w, h)$,\\Raster dimensions $H \times W$,\\R-Tree indexed polygon collection.}
 % \item Construct arrays with temporary placeholder values:
