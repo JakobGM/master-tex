@@ -16,12 +16,12 @@ A \emph{gable roof}\footnote{\textit{Gable roof} --- A roof which consists of tw
 The roof surfaces are connected along the highest, horizontal edge (ridge).}, for instance, can be considered as a collection of two flat polygons, which when combined accurately represent the roof in its entirety.
 Our intent is to construct a machine learning pipeline which is able to identify such three-dimensional roof surfaces from remote sensing data.
 
-Although a set of vectorized, flat polygons is often the most suitable data representation for geometric roof data in the GIS world, it is \emph{not} considered an ideal representation for traditional machine vision data pipelines.
-Polygons can consist of an arbitrary number of linear rings, each with an arbitrary number of vertices.
-The number of rings and vertices depends on the complexity of the given polygon's shape.
+Although a set of vectorized, flat polygons is often the most suitable data representation for geometric roof data in the GIS domain, it is \emph{not} considered an ideal representation for traditional machine vision data pipelines.
+Polygons can consist of an arbitrary number of linear rings, and each linear ring can be represented by an arbitrary number of vertices.
+The number of rings and vertices depends on the complexity of the polygon's shape.
 Deep learning model architectures, on the other hand, are often restricted to training on and predicting observations of \emph{consistent} dimensionality.
-This is why machine vision architectures most often accept and/or emit spatial information in the form of \emph{rasters} rather than vectors, that is, numeric arrays of consistent size.
-In order to reconcile these conflicting requirements we now pose the following question:
+This is why machine vision architectures most often consume and/or produce spatial information in the form of \emph{rasters} rather than vectors, that is, numeric arrays of consistent size and dimension.
+In order to reconcile these conflicting requirements we now pose the following question,
 %
 \begin{quotation}
   \enquote{How can an arbitrarily sized set of three-dimensional polygons, all of arbitrary complexity, shape, and orientation, be accurately represented in the form of a raster?}.
@@ -35,25 +35,26 @@ The careful formulation and construction of this surface raster format is consid
     \includegraphics{invertible-rasterization.tikz}
   \end{center}
   \vspace{-1.5em}
-  \caption{Invertible rasterization}
+  \caption{Invertible rasterization.}
   \label{fig:invertible-rasterization}
   \vspace{-1.5em}
 \end{figure}
 
 \subsection{Desirable surface raster properties}
 The ideal surface raster format should be both \emph{representative} and \emph{targetable}, properties which we now shall formally define.
-Start by denoting the domain which consists of polygon \textit{sets} of arbitrary cardinality as $V$.
+Start by denoting the domain which consists of polygon \textit{sets} of arbitrary size as $V$.
 A polygon in vector format will be denoted as $P$, while a set of vector polygons will be denoted as $\mathcal{P} = \{P_1, P_2, \dots\}$.
 A vector polygon set $\mathcal{P}$ is therefore a member of the superset domain $V$, denoted as $\mathcal{P} \in V$.
-Assume that we want to construct a surface raster of height $H$ and width $W$, and that this raster will consists of $C_R$ raster channels.
-If we denote this surface raster domain as $R$ and assume that raster values will take values from the real number line then we have $R = \mathbb{R}^{H \times W \times C_R}$.
-Finally, assume that the remote sensing raster data, $X$, has all the same dimensional properties as the surface raster data with the possible exception of the number of raster channels, which we will denote as $C_X$, i.e. $X \in \mathbb{R}^{H \times W \times C_X}$.
+Assume that we want to construct a surface raster of resolution height $H$ and resolution width $W$, and that this raster will consists of $C_R$ raster channels.
+If we denote this surface raster domain as $R$ and assume that raster values will take values from the real number line, then we have $R = \mathbb{R}^{H \times W \times C_R}$.
+Finally, assume that the remote sensing raster data, $X$, has all the same dimensional properties as the surface raster data with the possible exception of the number of raster channels, which we will denote as $C_X$, i.e. $X = \mathbb{R}^{H \times W \times C_X}$.
+We can now define the surface raster properties of representativeness and targetability with this notation in mind.
 \begin{description}[style=nextline]
   \item[Representative]
     \textit{Converting surface polygons to the surface raster format and then back again incurs negligible loss of information.}
     \\
-    Define a suitable distance metric $d: V \times V \rightarrow{R}$ which incorporates some notion of the difference in spatial location and orientation between two sets consisting three-dimensional polygons.
-    A \emph{perfectly} \textit{representative} raster format would allow us to define a mapping from the vector domain to the surface raster domain, $m: V \rightarrow R$, for which there exists a functional inverse:
+    Define a suitable distance metric $d: V \times V \rightarrow{R}$ which incorporates some notion of the difference in spatial location and orientation between two polygons sets.
+    A \emph{perfectly} \textit{representative} raster format would allow us to define a mapping from the vector domain to the surface raster domain, $m: V \rightarrow R$, for which there exists a functional inverse, $m^{-1}$, such that
     \begin{align*}
       m^{-1}\left(m(\mathcal{P})\right)
       &\equiv
@@ -67,14 +68,15 @@ Finally, assume that the remote sensing raster data, $X$, has all the same dimen
       0,
       &\forall \mathcal{P} \in V.
     \end{align*}
+    That is, we can map from the vector polygon domain to the raster polygon domain, and then back, all without losing \emph{any} information.
     The vector domain $V$ is infinite-dimensional, while the raster domain $R$ is by necessity of finite and consistent size.
     It can therefore be concluded that no such invertible mapping exists.
-    For this reason we introduce the concept of a \textit{pseudo-inverse}, $m^{\dagger}$, a function which minimizes $d(m^{\dagger}(m(\mathcal{P})), \mathcal{P})$ for all $\mathcal{P} \in V$.
-    A raster domain (and associated pseudo-invertible mapping) which produces negligible distance metrics is considered to be \textit{representative}.
+    For this reason we introduce the concept of a \textit{pseudo-inverse}, $m^{\dagger}$, a function which minimizes $d(m^{\dagger}(m(\mathcal{P})),~\mathcal{P})$ for all $\mathcal{P} \in V$.
+    A raster domain (and an associated mapping and pseudo-invertible mapping) which produces negligible distance metrics after a round-trip mapping of arbitrary polygon sets is considered to be \textit{representative}.
   \item[Targetable] 
     \textit{A raster format which is feasible as a modelling target for a machine learning architecture.}
     \\
-    We intend to construct a predictor, $\hat{f}$, which accepts remote sensing raster data as input and produces the aforementioned surface raster data representation as output, i.e.  $\hat{f}: V \rightarrow R$, or equivalently
+    We intend to construct a predictor, $\hat{f}$, which accepts remote sensing raster data as input and produces the aforementioned surface raster data representation as output, i.e.  $\hat{f}: X \rightarrow R$, or equivalently
     $
       \hat{f}:
         \mathbb{R}^{H \times W \times C_X}
@@ -82,9 +84,9 @@ Finally, assume that the remote sensing raster data, $X$, has all the same dimen
         \mathbb{R}^{H \times W \times C_R}
     $.
     Now assume $\hat{f}$ to be parametrized according to the parameter vector $\vec{\theta}$, and denote the parametrized prediction as $\hat{Y} \defeq \hat{f}(X; \vec{\theta})$.
-    The intention is that surface raster prediction $\hat{Y}$ generated from remote sensing data should be as similar to the polygon-constructed raster $Y \defeq m(\mathcal{P})$ as possible.
+    The intention is that surface raster prediction $\hat{Y}$ constructed from remote sensing data should be as similar to the polygon-constructed raster $Y \defeq m(\mathcal{P})$ as possible.
     Similar to the distance metric $d$ defined previously, we now define a suitable differentiable \textit{loss} function $\mathcal{L}: R \times R \rightarrow \mathbb{R}$ which incorporates some notion of difference between two surface rasters.
-    The predictor $\hat{f}$ can therefore be parametrized such that this loss function is minimized when evaluated on the predicted surface raster in conjunction with the ground truth surface raster $m(P)$:
+    The predictor $\hat{f}$ can therefore be parametrized such that this loss function is minimized when evaluated on the predicted surface raster in conjunction with the ground truth surface raster $m(\mathcal{P})$:
     \begin{align*}
       \vec{\theta}_{\mathrm{opt}}
       &\defeq
@@ -105,33 +107,32 @@ Finally, assume that the remote sensing raster data, $X$, has all the same dimen
     \end{align*}
     A raster mapping for which a suitable loss function can be constructed and minimized is considered to be \textit{targetable}.
 \end{description}
-The considerations of representativeness and targetability are in many ways diametrically opposed when constructing a suitable raster mapping.
+The considerations of representativeness and targetability are in many ways diametrically opposed when constructing a suitable surface raster format.
 As an instructive example consider the choice of $C_R$, the number of raster channels used by the surface raster.
 Since the mapping $m$ maps from a infinite-dimensional space to a finite-dimensional one, it can be considered a compression method of sorts.
 The smaller the value of $C_R$, the greater the compression, and subsequently its associated compression loss.
 Thus the greater number of raster channels, the more representative the raster format can become.
 On the other hand, when $C_R$ grows large it is natural to assume that the increasing degree of freedom in the data format allows for many equivalently accurate representations of the same polygon collection.
-The raster format may also become more sparse as a result.
-This ambiguity and sparseness will result in a difficulties when formulating a proper, convex loss function with single, global minima.
+This ambiguity will result in a difficulties when formulating a proper, convex loss function with single, global minima.
 The targetability of the raster format may therefore suffer from large values of $C_R$.
 
-Although it is the surface raster loss function we minimize in practice, it is actually not what we \emph{really} are interested in.
+Although it is the surface raster loss function we minimize in practice, it is actually not what we are \emph{really} interested in minimizing.
 The surface raster is in essence only an intermediate data format which is intended to be converted back into the vector domain by the pseuo-inverse $m^{\dagger}$.
-The thought is that if we minimize the difference between $\hat{Y}$ and $Y$, we implicitly minimize the difference between $m^{\dagger}(\hat{Y})$ and $P$.
+The underlying idea is that if we minimize the difference between $\hat{Y}$ and $Y$, we implicitly minimize the difference between $m^{\dagger}(\hat{Y})$ and $\mathcal{P}$.
 This assumes that $\mathcal{L}$ is a good loss surrogate for functional composition $d \circ m^{\dagger}$, by which we mean that $\vec{\theta}_{\mathrm{opt}}$ also is a good minimizer for:
 \begin{align*}
   \sum_{(X, \mathcal{P})}
   d\left(
-    m^{\dagger}(m(\mathcal{P})),~
-    m^{\dagger}(\hat{f}(X; \vec{\theta}))
+    m^{\dagger}(\hat{f}(X; \vec{\theta})),~
+    m^{\dagger}(m(\mathcal{P}))
   \right).
 \end{align*}
 For a sufficiently representative raster mapping this should also imply that $\vec{\theta}_{\mathrm{opt}}$ also is a good minimizer for:
 \begin{align*}
   \sum_{(X, \mathcal{P})}
   d\left(
-    \mathcal{P},~
-    m^{\dagger}(\hat{f}(X; \vec{\theta}))
+    m^{\dagger}(\hat{f}(X; \vec{\theta})),~
+    \mathcal{P}
   \right).
 \end{align*}
 This is the metric we really intend to minimize, but can only do so implicitly with a good surrogate loss function, and a raster format that is sufficiently representative and targetable.
@@ -143,33 +144,33 @@ We want to construct raster arrays (tiles) which represent different types of GI
 Each such raster tile represents GIS data corresponding to a specific geographic area, the extent of which is specified by a bounding box $B(\vec{c}, w, h)$.
 In our case we intend to construct square tiles with areas of $\SI{4096}{\meter\squared}$, i.e. having width and height $w = h = \SI{64}{\meter}$.
 All of the bounding boxes have centroids $\vec{c}$ such that they are situated within the Norwegian municipality of Trondheim.
-Denote the set of all these bounding boxes as $\mathcal{T}$:
+Denote the set of all these bounding boxes as $\mathcal{B}$,
 %
 \begin{align*}
-  \mathcal{T}
+  \mathcal{B}
   &=
-  \{
+  \left\{
     B(\vec{c}_1, \SI{64}{\meter}, \SI{64}{\meter}),
     B(\vec{c}_2, \SI{64}{\meter}, \SI{64}{\meter}),
     \dots
-    B(\vec{c}_{|\mathcal{T}|}, \SI{64}{\meter}, \SI{64}{\meter})
-  \}
+    B(\vec{c}_{|\mathcal{B}|}, \SI{64}{\meter}, \SI{64}{\meter})
+  \right\}
   \\
   &=
-  \{
+  \left\{
     B_1,
     B_2,
     \dots,
-    B_{|\mathcal{T}|}
-  \}
+    B_{|\mathcal{B}|}
+  \right\}.
 \end{align*}
 %
-Our bounding boxes are constructed from cadastral plots in Trondheim, totaling $|\mathcal{T}| = \numtiles$.
+Our bounding boxes are constructed from cadastral plots in Trondheim, a set of size $|\mathcal{B}| = \numtiles$.
 We will restrict ourselves to constructing raster arrays of consistent resolution height $H = 256$ and resolution width $W = 256$.
 This results in $256^2$ \enquote{pixelized} GIS measurements per raster tile, or equivalently, \num{16} raster pixel values per meter squared.
-A specific bounding box $B(\vec{c}, \SI{64}{\meter}, \SI{64}{\meter})$ will therefore be represented by a set of $256 \times 256 \times C$ raster arrays consisting of $C$ channels.
+A specific bounding box $B(\vec{c}, \SI{64}{\meter}, \SI{64}{\meter})$ will therefore be represented by a set of $256 \times 256 \times C$ raster arrays consisting of $C$ raster channels.
 We have already described raster arrays representing different types of GIS data, such as RGB aerial photography ($C = 3$), LiDAR elevation data ($C = 1$), or building footprint segmentation masks ($C = 1$).
-The idea is now to construct an entirely new raster format which is able to represent a set of three-dimensional polygons:
+The idea is now to construct an entirely new raster format which is able to represent a set of three-dimensional polygons,
 \begin{equation*}
   \mathcal{P}
   =
@@ -180,7 +181,7 @@ The idea is now to construct an entirely new raster format which is able to repr
     P_{|\mathcal{P}|}
   \}.
 \end{equation*}
-In our case $\mathcal{P}$ consists of all roof surfaces in Trondheim, totaling $|\mathcal{P}| = \numsurfaces$.
+In our case $\mathcal{P}$ consists of all roof surfaces in Trondheim, a set of size $|\mathcal{P}| = \numsurfaces$.
 Our surface raster format, which we will refer to as the \enquote{surface normal} raster, is intended as a format which is both representative and targetable.
 We start by imposing two key assumptions on the polygons contained by $\mathcal{P}$.
 \begin{enumerate}[label=\bfseries\sffamily A\arabic*, ref=A\arabic*]
@@ -198,18 +199,19 @@ We will introduce one final assumption:
 \begin{enumerate}[label=\bfseries\sffamily A\arabic*, ref=A\arabic*]
   \setcounter{enumi}{2}
   \item \label{itm:simple} All polygons $P \in \mathcal{P}$ are \textbf{simple} polygons without any interior hulls, and are thus representable by a single exterior ring.
-   The exterior ring is represented as an ordered sequences of $(x, y, z)$ coordinate tuples, and will therefore be denoted as,
+    The exterior ring is represented as an ordered sequences of $(x, y, z)$ coordinate tuples, and we can therefore denote any polygon $P \in \mathcal{P}$ as
     \begin{equation*}
       P = [(x_1, y_1, z_1), (x_2, y_2, z_2), \dots, (x_{|P|}, y_{|P|}, z_{|P|}), (x_1, y_1, z_1)],
     \end{equation*}
-    where $|P|$ denotes the number of \emph{unique} vertices, and where the first and last coordinate tuples are identical in order to close the ring.
+    where $|P|$ denotes the number of \emph{unique} vertices.
+    The first and last coordinate tuples in any linear ring are always identical in order to close the ring.
 \end{enumerate}
 Assumption \ref{itm:simple} is solely introduced for notational simplicity.
 Keeping track of several linear rings for each polygon will substantially complicate all expressions that will follow.
 There is nothing preventing the surface normal raster format for being generalized to polygons with interior hulls, and our implementation does in fact take interior hulls into account when constructing the surface normal raster.
 
 Under the assumption of all polygons in $\mathcal{P}$ being perfectly planar we are able to decompose any polygon $P \in \mathcal{P}$ into two constituent sub-components: its \textit{two-dimensional projection} and its \textit{planar equation}.
-The first sub-component is the projection of the polygon into the $xy$-plane, $\project{P}$, making the three-dimensional polygon two-dimensional instead.
+The first sub-component is the projection of the polygon into the $xy$-plane, $\project{P}$, making the three-dimensional polygon two-dimensional.
 This simple projection is simply performed by truncating the $z$-component of each $(x, y, z)$-vertex in the polygon:
 \begin{align}
   \project{P}
@@ -220,8 +222,7 @@ This simple projection is simply performed by truncating the $z$-component of ea
   [(x_1, y_1), (x_2, y_2), \dots, (x_{|P|}, y_{|P|}), (x_1, y_1)]).
   \tag{Projection mapping}\label{eq:project}
 \end{align}
-\cref{eq:project}
-The projection mapping $\project{P}$ is also illustrated in \cref{fig:2d-polygon-projection}.
+The projection mapping $\project{P}$ has also been illustrated in \cref{fig:2d-polygon-projection}.
 \begin{figure}
   \centering
   \includegraphics[width=0.66\linewidth]{2d-projection.tikz}
@@ -234,17 +235,17 @@ The projection mapping $\project{P}$ is also illustrated in \cref{fig:2d-polygon
 \end{figure}
 
 The second sub-component is the parametric description of the plane on which \emph{all} vertices of the given polygon lie.
-Denote this mapping as $\vec{\beta}(P)$ and define it according to the following relationship:
+Denote this mapping as $\vec{\beta}(P)$ and define it according to the following relationship,
 \begin{align}
   \planar{P}
-  =
+  \defeq
   \begin{bmatrix}
     \beta_0 \\
     \beta_x \\
     \beta_y \\
-  \end{bmatrix}
+  \end{bmatrix},
   \text{ such that }
-  z = \beta_0 + \beta_x x + \beta_y y \text{ for all } (x, y, z) \in P
+  z = \beta_0 + \beta_x x + \beta_y y \text{ for \emph{all} vertices } (x, y, z) \in P
   \tag{Planar mapping}\label{eq:planar}
 \end{align}
 The original three-dimensional polygon can be easily reconstructed in a lossless manner from the two sub-components, as illustrated in \cref{fig:3d-polygon-reconstruction}, while still being a less redundant representation of the polygon.
@@ -323,15 +324,15 @@ The relationship between the equation of the plane and the associated surface no
   \label{fig:3d-normal-vector}
 \end{figure}
 \noindent
-The following restrictions on $\vec{n}$ hold by construction,
+The following restrictions on $\normalplanar{P}$ hold by construction,
 \begin{align*}
-  ||\vec{n}||_2 = \sqrt{n_x^2 + n_y^2 + n_z^2} &\equiv 1,
+  \norm{\normalplanar{P}}_2 = \sqrt{n_x^2 + n_y^2 + n_z^2} &\equiv 1,
   \\
   n_z &\geq 0.
 \end{align*}
 With other words, the normal vector has been constructed such that it is of length 1 in the Euclidean norm, and that it \emph{always} points upwards.
 \noindent
-Given that we can easily determine $\planar{P}$ for any polygon, we now define the following raster format:
+Given that we can easily determine $\planar{P}$ for any polygon, we now define the following raster format,
 \begin{align*}
   N_{i,j} &= \begin{cases}
     \normalplanar{P}, &\text{if $\project{P}$ covers } \pixtogeo{i}{j}.\\
@@ -340,11 +341,11 @@ Given that we can easily determine $\planar{P}$ for any polygon, we now define t
   \tag{surface normal raster}%
   \label{eq:surface-normal-raster}
 \end{align*}
-This is a raster format consisting of three raster channels as each pixel location $(i, j)$ represents a three-dimensional normal vector.
+This is a raster format consisting of three raster channels, as each pixel location $(i, j)$ in the raster \enquote{contains} a three-dimensional normal vector.
 It should now become apparent why we made assumption \ref{itm:non-overlapping} earlier, that is, all polygons $P \in \mathcal{P}$ should be mutually non-overlapping after being projected by $\project{\cdot}$.
 If more than one polygon covers the coordinate $\pixtogeo{i}{j}$, then the value for $N_{i,j}$ becomes ambiguous.
 You may now ask why we rasterize $\mathcal{P}$ into both a surface normal raster, $N$, \emph{and} a semantic segmentation map, $S$, when $S$ can be directly inferred from N.
-That is, we can formulate $S$ in form of $N$:
+That is, we can formulate $S$ in form of $N$,
 \begin{equation*}
   S_{i, j}
   =
@@ -354,7 +355,7 @@ That is, we can formulate $S$ in form of $N$:
   \end{cases}
 \end{equation*}
 The reason is that this is a more targetable raster decomposition.
-We can now construct two relatively independent predictors, $\hat{f}_{\mathrm{seg}}(X; \vec{\theta}_{\mathrm{seg}})$ and $\hat{f}_{\mathrm{norm}}(X; \vec{\theta}_{norm})$, which when combined form a main predictor $\hat{f}$ according to:
+We can now construct two relatively independent predictors, $\hat{f}_{\mathrm{seg}}(X; \vec{\theta}_{\mathrm{seg}})$ and $\hat{f}_{\mathrm{norm}}(X; \vec{\theta}_{\mathrm{norm}})$, which when combined form a main predictor $\hat{f}$ according to,
 \begin{equation*}
   \hat{f}\left(X; \vec{\theta}_{\mathrm{seg}}, \vec{\theta}_{\mathrm{norm}}\right)
   =
@@ -371,12 +372,12 @@ Such a \enquote{separation of concerns} has been shown to be beneficial for seve
 We can now rasterize any single polygon $P \in \mathcal{P}$ into two separate raster formats, $S$ and $N$, as illustrated in \cref{fig:3d-polygon-decomposition}.
 \begin{figure}
   \centering
-  \includegraphics{3d-polygon-decomposition.tikz}
-  \caption{The deconstruction of a three-dimensional polygon into two separate rasters formats.}
+  \resizebox{\textwidth}{!}{\includegraphics{3d-polygon-decomposition.tikz}}
+  \caption{The deconstruction of a three-dimensional polygon into two separate rasters formats.}%
   \label{fig:3d-polygon-decomposition}
 \end{figure}
 When generalizing from a single three-dimensional polygon $P$ to a set of polygons $\mathcal{P}$, we can iteratively fill in the values into a single pair of raster arrays, $S$ and $N$, since the polygons are mutually non-overlapping.
-In order to map from this raster domain, represented by $S$ and $N$, back to the original polygon domain, represented by $\mathcal{P}$, we propose the following pseudo-inverse mapping, $m^{\dagger}$:
+In order to map from this raster domain, represented by $S$ and $N$, back to the original polygon domain, represented by $\mathcal{P}$, we propose the following pseudo-inverse mapping, $m^{\dagger}$,
 \begin{framed}
   \noindent
   \textbf{Proposed $\mathbf{m^{\dagger}}$} -- Partition semantic segmentation raster $S$ such that all partitions form contiguous pixel areas which share the same value of $N$.
@@ -409,8 +410,8 @@ The three surface raster formats presented so far are all illustrated in \cref{f
 \begin{figure}
   \centering
   \includegraphics[width=\linewidth]{interpolation-concepts.tikz}
-  \caption{Three-dimensional surface raster values}{%
-    Illustration surface elevation values, $Z_{i,j}$, surface normal array values, $N_{i,j}$, and segmentation mask, $S_{i,j}$.
+  \caption{Illustration of surface raster formats $Z$, $N$, and $S$.}{%
+    Illustration of surface elevation values, $Z_{i,j}$, surface normal array values, $N_{i,j}$, and segmentation mask, $S_{i,j}$.
     Slice for $i = 1$ and $1 \leq j \leq 5$.
   }%
   \label{fig:interpolation-concepts}
@@ -420,15 +421,15 @@ We will describe how to construct these three raster arrays from a practical imp
 We start by summarizing the entire implementation in conceptual terms:
 \begin{leftbar}
   \noindent
-  Given a set of two-dimensional bounding boxes $\mathcal{T}$ and a set of three-dimensional polygons $\mathcal{P}$:
+  Given a set of bounding boxes $\mathcal{B}$ and a set of polygons $\mathcal{P}$:
   \begin{itemize}[nosep,leftmargin=*]
     \item Construct R-tree index for polygon collection $\mathcal{P}$.
     \item Calculate and memoize $\planar{P}$ for all $P \in \mathcal{P}$.
-    \item For each bounding box $B \in \mathcal{T}$\ldots
+    \item For each bounding box $B \in \mathcal{B}$\ldots
     \begin{itemize}[nosep,leftmargin=0.5cm]
       \item Determine the subset of polygons $\mathcal{P}_B \subset \mathcal{P}$ which is at least partially covered by the bounding box $B$.
         The aforementioned R-tree index is used in order to substantially speed up this spatial query.
-      \item Map all coordinates of all $P \in \mathcal{P}_B$ to the pixel coordinate system $\left[0, 255\right] \times \left[0, 255\right]$.
+      \item Map all vertex coordinates of $P \in \mathcal{P}_B$ to the pixel coordinate system $\left[0, 255\right] \times \left[0, 255\right]$.
       \item For each pixel coordinate $(i, j)$\ldots
       \begin{itemize}[nosep,leftmargin=0.5cm]
         \item Determine subset of polygons $\mathcal{P}_{\mathrm{cover}} \subset \mathcal{P}_B$ which covers the area represented by the pixel $(i, j)$.
@@ -462,14 +463,15 @@ All of these steps will now be explained in more detail.
   \label{fig:overlapping-polygons}
 \end{figure}
 Earlier we made the assumption that all polygons $P \in \mathcal{P}$ are mutually non-overlapping when projected into the $xy$-plane by $\project{P}$.
-In reality, this is \emph{not} the case for our dataset, the assumption often being broken whenever small \enquote{sub-surfaces} are situated upon larger \enquote{main} surfaces.
+In reality, this is \emph{not} the case for our dataset.
+The non-overlapping assumption is often broken whenever small \enquote{sub-surfaces} are situated upon larger \enquote{main} surfaces.
 \textit{Dormers}\footnote{\textit{Dormer} --- Roof surface protruding out from the main roof surface, often in order to protect a loft window. A dormer can be seen in \cref{fig:real-overlap}} often cause surfaces to overlap in two dimensions, for example.
 \cref{fig:dormer-3D} illustrates how the Trondheim surface polygon dataset $\mathcal{P}$ would represent a type of dormer, namely one main roof surface (shown in \textcolor{red!80}{red}), and a dormer represented by two separate flat surfaces (shown in \textcolor{blue!80}{blue} and \textcolor{green!80}{green}).
 The key point is that the main roof surface is a rectangular polygon \emph{without} any interior hull where the dormer surfaces are located.
-This results in the dormer surfaces overlapping with the main roof surface when they are projected into the horizontal plane.
-As mentioned earlier, this causes problems with the definition of the surface normal vector raster, $N$, and surface elevation raster, $Z$, as the choice of polygon becomes ambiguous.
-This ambiguity needs to be resolved with a \textit{decision rule}, a rule which determines which polygon should be considered locations which are overlapped by several polygons.
-For our dataset the \textit{bird's eye view decision rule} produces sensible results in most cases, and is defined as follows:
+This results in the two dormer surfaces overlapping with the single main roof surface when they are projected into the horizontal plane.
+As mentioned before, this causes problems with the definition of the surface normal vector raster, $N$, and surface elevation raster, $Z$, as the choice of polygon becomes ambiguous.
+This ambiguity needs to be resolved with a \textit{decision rule}, a rule which determines which single polygon should be considered as applicable at locations covered by multiple polygons.
+For our dataset, the \enquote{bird's eye view decision rule} produces sensible results in most cases, and is defined as follows.
 %
 \begin{framed}
   \noindent
@@ -480,7 +482,7 @@ For our dataset the \textit{bird's eye view decision rule} produces sensible res
   More formally, for a pixel location $(i, j)$ corresponding to the geographic coordinate $\pixtogeo{i}{j} = {[x, y]}^T$, we define the \textit{polygon shadow subset} $\mathcal{P}(x, y)$ as
   \begin{equation*}
     \mathcal{P}(x, y)
-    =
+    \defeq
     \left\{
       P
       \mid
@@ -489,10 +491,10 @@ For our dataset the \textit{bird's eye view decision rule} produces sensible res
       \project{P} \text{ covers } (x, y)
     \right\}.
   \end{equation*}
-  The \textit{applicable polygon} at the pixel location $(i, j)$ and the corresponding geographic coordinate $(x, y)$ is then defined as
+  The \textit{applicable polygon} at the pixel location $(i, j)$, and the corresponding geographic coordinate $(x, y)$, is then defined as
   \begin{equation*}
     P(x, y)
-    =
+    \defeq
     \argmax_{P \in \mathcal{P}(x, y)}~
     \left[1, x, y\right] \planar{P}.
   \end{equation*}
@@ -502,7 +504,7 @@ For our dataset the \textit{bird's eye view decision rule} produces sensible res
 In other terms, the \textit{polygon shadow subset} $\mathcal{P}(x, y)$ consists of all polygons that are intersected by the line drawn from $(x, y, -\infty)$ to $(x, y, \infty)$, hence casting a shadow on the point $(x, y)$ when the sun stands at zenith (directly overhead).
 The \textit{applicable polygon} is the single polygon which ends up being hit by direct sunlight at the given geographic point, thus casting a shadow upon all other polygons in the polygon shadow subset.
 The bird's view decision rule has been illustrated in \cref{fig:ray-tracing}, and \cref{fig:dormer-2D} is an example of a two-dimensional instance segmentation map generated with this rule from the three-dimensional roof structure shown in \cref{fig:dormer-3D}.
-We can now update the definition of surface elevation raster $Z$ and the normal vector raster $N$, taking this new decision rule into account:
+We can now update the definition of surface elevation raster $Z$ and the normal vector raster $N$, taking this new decision rule into account,
 \begin{align*}
   N_{i,j} &= \begin{cases}
     \normalplanar{P\left(x, y\right)}, &\text{if $|\mathcal{P}(x,y)| \geq 1$}.\\
@@ -515,7 +517,7 @@ We can now update the definition of surface elevation raster $Z$ and the normal 
   \end{cases}
 \end{align*}
 
-We will construct a computational procedure which is able to rasterize a given polygon $P \in \mathcal{P}$ relative to a given bounding box $B$.
+We will construct a computational procedure which is able to rasterize a given polygon $P \in \mathcal{P}$ relative to a given bounding box $B \in \mathcal{B}$.
 Denote this procedure as $\texttt{Rasterize}(P,~B)$, and say that this procedure returns three rasters: a surface elevation raster $Z_p$, a surface normal raster $N_p$, and a two-dimensional segmentation mask $S_p$.
 We now want to generalize from the rasters $Z_p$, $N_p$, $S_p$ which represent a \textit{single} polygon $P \in \mathcal{P}$, to rasters $Z$, $N$, $S$ representing an arbitrarily sized \emph{set} of polygons $\mathcal{P}$.
 We start by initializing these arrays ($Z$, $N$, and $S$) with temporary placeholder values,
@@ -526,9 +528,9 @@ We start by initializing these arrays ($Z$, $N$, and $S$) with temporary placeho
 \end{align*}
 This initialization is implemented by the procedure \texttt{ConstructPlaceholderArrays()}.
 Now, the idea is to iterate over the polygons $P \in \mathcal{P}$, rasterize them individually with \texttt{Rasterize()}, and fill these arrays into the global mutable arrays $Z$, $N$, and $S$ by some decision rule implemented by \texttt{FillValues()}.
-The main loop will look like follows:
-\begin{pseudofunc}{PreprocessRaster}{$\mathcal{P},~\mathcal{T}$}
-  \item for $B$ in $\mathcal{T}$:
+The main loop will look like follows,
+\begin{pseudofunc}{PreprocessRaster}{$\mathcal{P},~\mathcal{B}$}
+  \item for $B$ in $\mathcal{B}$:
   \begin{pseudoloop}
     \item $Z, N, S \leftarrow \texttt{ConstructPlaceHolderArrays()}$
     \item for $P \in \mathcal{P}$:
@@ -540,24 +542,24 @@ The main loop will look like follows:
   \end{pseudoloop}
 \end{pseudofunc}
 \texttt{SaveToHashLookup()} is a procedure which persists the arrays $Z$, $N$, and $S$, to disk for later retrieval.
-The \textit{bird's view decision rule} can therefore be implemented in the following procedural manner:
+The \textit{bird's view decision rule} can therefore be implemented in the following procedural manner,
 \begin{pseudofunc}{FillValues}{$\texttt{from}=[Z_p, N_p, S_p],~\texttt{into}=[Z, N, S]$}
   \item for $i \in \{0, 1, \ldots, 255\}$:
   \begin{pseudoloop}
     \item for $j \in \{0, 1, \ldots, 255\}$:
     \begin{pseudoloop}
-      \item If $(S_p)_{i,j} = 0$ or $(Z_p)_{i,j} < Z_{i,j}$: continue onto next iteration of inner loop
-      \item Insert $S_{i,j} \leftarrow 1$, $N_{i,j} \leftarrow (N_p)_{i,j}$, and $Z_{i,j} \leftarrow (Z_p)_{i,j}$
+      \item If $(S_p)_{i,j} = 0$ or $(Z_p)_{i,j} \leq Z_{i,j}$: continue onto next iteration of inner loop
+      \item Insert $S_{i,j} \leftarrow 1$, $N_{i,j} \leftarrow (N_p)_{i,j}$, and $Z_{i,j} \leftarrow (Z_p)_{i,j}$.
     \end{pseudoloop}
   \end{pseudoloop}
 \end{pseudofunc}
 
 \subsection{Handling expensive spatial queries}
 
-The (somewhat naive) implementation of $\texttt{PreprocessRaster}(\mathcal{P},~\mathcal{T})$ provided above invokes $\texttt{Rasterize}(P,~B)$ a total of $|\mathcal{P}| |\mathcal{T}|$ times.
-In our case, using bounding boxes and roof surface polygons from Trondheim, we have $|\mathcal{P} = \numsurfaces$ and $|\mathcal{T}| = \numtiles$, and thus $|\mathcal{P}||\mathcal{T}| = \numcombinations$.
+The naive implementation of $\texttt{PreprocessRaster}(\mathcal{P},~\mathcal{B})$ provided above invokes $\texttt{Rasterize}(P,~B)$ a total of $|\mathcal{P}| |\mathcal{B}|$ times.
+In our case, using bounding boxes and roof surface polygons from Trondheim, we have $|\mathcal{P}| = \numsurfaces$ and $|\mathcal{B}| = \numtiles$, and thus $|\mathcal{P}||\mathcal{B}| = \numcombinations$.
 This is obviously an infeasible number of iterations, no matter how efficiently $\texttt{Rasterize}(P,~B)$ is implemented.
-A better approach is to reduce the number of iterations performed by the inner loop over $P \in \mathcal{P}$, utilizing the fact that only polygons $P \in \mathcal{P}$ for which $\project{P}$ intersects with $B$ will ever contribute with values to the raster arrays.
+A better approach is to reduce the number of iterations performed by the inner loop over $\mathcal{P}$, utilizing the fact that only polygons $P \in \mathcal{P}$ for which $\project{P}$ intersects with $B$ will ever contribute with values to the raster arrays.
 We implement such a filter procedure in \texttt{IntersectingFilter()}:
 %
 \begin{pseudofunc}{IntersectFilter}{$\mathcal{P},~B$}
@@ -566,8 +568,8 @@ We implement such a filter procedure in \texttt{IntersectingFilter()}:
 %
 Using \texttt{IntersectingFilter()} we can improve upon \texttt{PreprocessRaster()} as follows:
 %
-\begin{pseudofunc}{PreprocessRaster}{$\mathcal{P},~\mathcal{T}$}
-  \item for $B$ in $\mathcal{T}$:
+\begin{pseudofunc}{PreprocessRaster}{$\mathcal{P},~\mathcal{B}$}
+  \item for $B$ in $\mathcal{B}$:
   \begin{pseudoloop}
     \item $Z, N, S \leftarrow \texttt{ConstructPlaceHolderArrays()}$
     \item $\mathcal{P}_B \leftarrow \texttt{IntersectingFilter}(\mathcal{P},~B)$
@@ -580,34 +582,34 @@ Using \texttt{IntersectingFilter()} we can improve upon \texttt{PreprocessRaster
   \end{pseudoloop}
 \end{pseudofunc}
 %
-If we denote the \textit{average} size of the set $\texttt{IntersectFilter}(\mathcal{P},~B)$ over $B \in \mathcal{T}$ as $\overline{|\mathcal{P}_B|}$, that is,
+If we denote the \textit{average} size of the set $\texttt{IntersectFilter}(\mathcal{P},~B)$ over $B \in \mathcal{B}$ as $\overline{|\mathcal{P}_B|}$, that is,
 %
 \begin{equation*}
   \overline{|\mathcal{P}_B|}
   =
-  \frac{1}{|\mathcal{T}|}
-  \sum_{B \in \mathcal{T}}
+  \frac{1}{|\mathcal{B}|}
+  \sum_{B \in \mathcal{B}}
   \big|
     \left\{P \mid P \in \mathcal{P} \text{ and } \project{P} \text{ intersects with } B \right\}
   \big|,
 \end{equation*}
 %
-then the number of invocations of $\texttt{Rasterize}(P,~B)$ is reduced to $|\mathcal{T}|\overline{|\mathcal{P}_B|}$.
-Specifically, for our dataset $\overline{|\mathcal{P}_B|} \approx \num{28.4}$ and $|\mathcal{T}|\overline{|\mathcal{P}_B|} = \num{1822376}$.
-The full empirical distribution of $|\mathcal{P}_B|$ is provided in \cref{fig:tile-surface-distribution}.
+then the number of invocations of $\texttt{Rasterize}(P,~B)$ is reduced to $|\mathcal{B}|\overline{|\mathcal{P}_B|}$.
+Specifically, for our dataset $\overline{|\mathcal{P}_B|} \approx \num{28.4}$ and $|\mathcal{B}|\overline{|\mathcal{P}_B|} = \num{1822376}$.
+The full empirical distribution of $|\mathcal{P}_B|$ for the Trondheim dataset is provided in \cref{fig:tile-surface-distribution}.
 \begin{figure}
   \includegraphics{tile-surface-distribution}
   \caption{%
-    Distribution of number of surface polygons contained by each raster tile.
+    Trondheim distribution of number of intersecting surface polygons contained by each raster tile $B \in \mathcal{B}$.
   }%
   \label{fig:tile-surface-distribution}
 \end{figure}
-Although the number of invocations of $\texttt{Rasterize}(P,~B)$ has been greatly reduced, there has been introduced an additional cost of invoking $\texttt{IntersectFilter}(\mathcal{P},~B)$ a total of $|\mathcal{T}|$ times.
+Although the number of invocations of $\texttt{Rasterize}(P,~B)$ has been greatly reduced, there has been introduced an additional cost of invoking $\texttt{IntersectFilter}(\mathcal{P},~B)$ a total of $|\mathcal{B}|$ times.
 A naive implementation of $\texttt{IntersectFilter}(\mathcal{P},~B)$ has computational cost that is linearly proportional to $|\mathcal{P}|$, which makes the introduction of $\texttt{IntersectFilter}()$ moot from an asymptotic perspective (it results in a substantial speedup for our finitely sized dataset, however).
 The solution is to pre-compute a so-called R-tree spatial index, which when first computed, allows for almost instantaneous intersection filtering\cite{rtree}.
-\begin{pseudofunc}{PreprocessRaster}{$\mathcal{P},~\mathcal{T}$}
+\begin{pseudofunc}{PreprocessRaster}{$\mathcal{P},~\mathcal{B}$}
   \item $\texttt{RTreeIndex} \leftarrow \texttt{GenerateRTreeIndex}(\mathcal{P})$
-  \item for $B$ in $\mathcal{T}$:
+  \item for $B$ in $\mathcal{B}$:
   \begin{pseudoloop}
     \item $Z, N, S \leftarrow \texttt{ConstructPlaceHolderArrays()}$
     \item $\hat{\mathcal{P}}_B \leftarrow \texttt{RTreeIndex}(B)$
@@ -619,9 +621,9 @@ The solution is to pre-compute a so-called R-tree spatial index, which when firs
     \item $\texttt{SaveToHashLookup(data}=[Z, N, S],~\texttt{hash}=B)$.
   \end{pseudoloop}
 \end{pseudofunc}
-The computational cost of $\texttt{RTreeIndex}(B)$ is $\bigo{\log{|\mathcal{P}|}}$, making the time complexity of $\texttt{PreprocessRaster}(\mathcal{P},~\mathcal{T})$ as a whole $\bigo{|\mathcal{T}| \overline{|\mathcal{P}_B|} \log{|\mathcal{P}|}}$.
-It should also be mentioned that \texttt{PreprocessRaster()} is a highly parallelizable process as well.
-The introduction of an R-tree index and splitting the processing of $\mathcal{T}$ over 12 cores/24 threads results in a reduction in computation from approximately 24 hours to only just over 40 minutes for the Trondheim dataset.
+The computational cost of $\texttt{RTreeIndex}(B)$ is $\bigo{\log{|\mathcal{P}|}}$, making the time complexity of $\texttt{PreprocessRaster}(\mathcal{P},~\mathcal{B})$ as a whole $\bigo{|\mathcal{B}| \overline{|\mathcal{P}_B|} \log{|\mathcal{P}|}}$.
+It should also be mentioned that \texttt{PreprocessRaster()} is a highly parallelizable process.
+The introduction of an R-tree index and splitting the processing of $\mathcal{B}$ over 12 cores/24 threads results in a reduction in computation from approximately 24 hours to only just over 40 minutes for the Trondheim dataset.
 % \begin{equation*}
 %   \texttt{IntersectingFilter}(\mathcal{P},~B)
 %   \subseteq
@@ -699,14 +701,15 @@ In order to investigate if $\planarestimator{P}$ is a sufficiently accurate esti
 %
 We can now define the \textit{vertex residuals} as
 %
-\begin{equation*}
+\begin{align*}
   e_i
-  \defeq
+  &\defeq
   z_i - \hat{z}_i
-  =
+  \\
+  &=
   z_i - [1, x_i, y_i]~\planarestimator{P},
-  \text{ for } i \in \{1, 2, \ldots, |P|\}.
-\end{equation*}
+  \quad \text{ for } i \in \{1, 2, \ldots, |P|\}.
+\end{align*}
 %
 And also the coefficient of determination, $R^2$, for a given polygon regression fit.
 %
@@ -745,14 +748,14 @@ the distribution of which is plotted in the bottom part of \cref{fig:surface-reg
   \label{fig:surface-regression-stats}
 \end{figure}
 This \enquote{maximum vertex deviation} goodness of fit metric also shows favorable results.
-A final quality assurance metric which can be inspected in order to confirm that the polygons have been correctly fitted is the \textit{LiDAR residual}, defined as
+A final quality assurance metric can be inspected in order to confirm that the polygons have been correctly fitted; the \textit{LiDAR residual} defined as
 \begin{equation*}
   E_{i, j}
   \defeq
-  X_{i, j} - Z_{i, j}, \text{ for indices } (i, j) \text{ such that } S_{i, j} = 1.
+  X_{i, j} - Z_{i, j}, \text{ for indices } (i, j) \text{ where } S_{i, j} = 1.
 \end{equation*}
 The LiDAR residual is with other words the difference between the roof height calculated from the three-dimensional roof surface polygon dataset at a given coordinate, and the LiDAR height measurement at the same coordinate.
-An illustration of the LiDAR residual and how it is constructed is provided in \cref{fig:lidar-residuals}, and the distribution is provided in \cref{fig:lidar-residual-distribution}.
+An illustration of the LiDAR residual and how it is constructed is provided in \cref{fig:lidar-residuals}, and the distribution of the Trondheim LiDAR residuals is provided in \cref{fig:lidar-residual-distribution}.
 \begin{figure}
   \centering
   \includegraphics{lidar-residuals.tikz}
@@ -765,20 +768,20 @@ An illustration of the LiDAR residual and how it is constructed is provided in \
   \centering
   \includegraphics[width=\linewidth]{lidar-residual-distribution}
   \caption{%
-    Distribution of LiDAR residuals calculated over all bounding boxes $B \in \mathcal{T}$ for the Trondheim dataset.
+    Distribution of LiDAR residuals calculated over all bounding boxes $B \in \mathcal{B}$ for the Trondheim dataset.
   }%
   \label{fig:lidar-residual-distribution}
 \end{figure}
 The discrepancy between the polygon surface elevation and LiDAR measurements can be attributed to three main mechanisms:
 \begin{enumerate}
-  \item Positive residuals caused by objects placed upon roof surfaces which are not part of the surface polygon dataset.
-  \item Negative residuals caused by LiDAR measurements taken close to building edges, measuring the height of building walls or the nearby ground instead.
-  \item Normally distributed LiDAR measurement errors centered around zero but with non-zero variance.
+  \item \emph{Positive} residuals caused by objects and structures placed upon roof surfaces, e.g.\ chimneys, which are not part of the surface polygon dataset itself.
+  \item \emph{Negative} residuals caused by LiDAR measurements taken close to the edges of roof surface situated adjacent to vertical drops, measuring the height of building walls or the nearby ground instead.
+  \item \emph{Normally distributed} residuals caused by LiDAR measurement errors centered around zero but with non-zero variance.
 \end{enumerate}
 The first two mechanisms can be observed within the focused area in \cref{fig:lidar-residuals}, while the zero-centered measurement error can be observed in the bell shaped distribution shown in \cref{fig:lidar-residual-distribution}.
-Mechanism 1 is more common than mechanism 2, but smaller in absolute extent, causing the empirical mean of the LiDAR residuals to become negative (\SI{-6.44}{\centi\meter}), while the median remains positive (\SI{2.06}{\centi\meter}).
+Mechanism 1 is more common than mechanism 2, but smaller in absolute extent, causing the empirical mean of the LiDAR residuals to become negative (\SI{-6.44}{\centi\meter}), while the empirical median is positive (\SI{2.06}{\centi\meter}).
 
-It is possible to discard any polygon $P \in \mathcal{P}$ that performs badly under a given goodness of fit metric, $R^2$ or $e_{\mathrm{\max}}$ for instance, but this would also require us to discard all the respective bounding boxes $B \in \mathcal{T}$ that $\project{P}$ at least partially intersects with.
+It is possible to discard any polygon $P \in \mathcal{P}$ that performs badly under a given goodness of fit metric, $R^2$ or $e_{\mathrm{\max}}$ for instance, but this would also require us to discard all the respective bounding boxes $B \in \mathcal{B}$ that $\project{P}$ at least partially intersects with.
 This could be done in order to prevent training a machine learning model on false ground truth data.
 We do not consider this to be necessary for the Trondheim polygon dataset, but it may be necessary for other surface polygon datasets of lower quality.
 %
