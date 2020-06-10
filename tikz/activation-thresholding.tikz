@@ -1,0 +1,11 @@
+\begin{tikzpicture}
+  % Graphics scaling
+  \def\gs{0.5}
+  \node[](activations) at (0, 0) {\includegraphics[scale=\gs]{tile-data/130-0/segmented_normals_2/activations}};
+  \node[above=0 of activations.north] {$\hat{S}$};
+
+  \node[right=0.1 of activations](thresholding) {\Huge $> \texttt{TOL}~=$};
+
+  \node[right=0.2 of thresholding](predictedmask) {\includegraphics[scale=\gs]{tile-data/130-0/segmented_normals_2/predicted_mask}};
+  \node[above=0 of predictedmask.north] {$\tilde{S}$};
+\end{tikzpicture}

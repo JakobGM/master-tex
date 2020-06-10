@@ -1,0 +1,27 @@
+\begin{tikzpicture}
+  % Graphics scaling
+  \def\gs{0.8}
+  \def\halfoffset{7em}
+  \node[anchor=south west,inner sep=0](image1) at (0, 0) {\includegraphics[scale=\gs]{tile-data/130-0/segmented_normals_2/predicted_mask}};
+  \node[anchor=south west,inner sep=0, right=of image1](image2) {\includegraphics[scale=\gs]{tile-data/130-0/surface_normals_3+segmented_normals_2/predicted_segmented_normals}};
+  \foreach \i / \arrowcolor in {0/white, 0.524\linewidth/black}{
+  \begin{scope}[
+      x={(image1.south east)},
+      y={(image1.north west)},
+      xshift=\i,
+      iteration/.style={draw=white, fill=none, thick, line width=1.5},
+      next/.style={->, line width=2, \arrowcolor, dashed},
+      iterlabel/.style={black, shape=circle, fill=white, fill opacity=0.7, inner sep=1pt, font=\bfseries},
+    ]
+    \filldraw[iteration](0.6,0.55) node[iterlabel](iter1){A} circle (0.15);
+    \filldraw[iteration](0.35,0.54) node[iterlabel](iter2){B} circle (0.1);
+    \filldraw[iteration](0.285,0.195) node[iterlabel](iter3){C} circle (0.075);
+    \filldraw[iteration] (0, 0) -- (0.33, 0) -- (0.14, 0.2) -- (0.2, 0.26) -- (0, 0.47) -- cycle; 
+    \node[iterlabel](iter4) at (0.1, 0.1) {D};
+
+    \draw[next](iter1) to[in=0, out=180] (iter2);
+    \draw[next](iter2) to[in=0, out=-90] (iter3);
+    \draw[next](iter3) to[in=90, out=180] (iter4);
+  \end{scope}
+  }
+\end{tikzpicture}
