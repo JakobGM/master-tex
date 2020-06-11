@@ -1,0 +1,20 @@
+\begin{tikzpicture}
+  % Graphics scaling
+  \def\gs{0.5}
+
+  % Polygonization result
+  \node[](polygons) at (0, 0) {\includegraphics[scale=\gs]{tile-data/130-0/surface_normals_3+segmented_normals_2/unsimplified_polygons}};
+  \node[above=0 of polygons.north] {$\hat{\mathcal{P}}$};
+
+  % Polygonization result
+  \begin{scope}
+    [spy using outlines={circle, magnification=4, size=3.2cm, connect spies}]
+    \node[right=1.5 of polygons](simplification) {\includegraphics[scale=\gs]{tile-data/130-0/surface_normals_3+segmented_normals_2/simplified_polygons}};
+    \node[right=2 of simplification](glass) {};
+    \spy[black] on \relcoord{simplification}{0.1}{0.2} in node (glassarea) [] at (glass);
+  \end{scope}
+
+  \node[above=0 of simplification.north] {$\tilde{\mathcal{P}}$};
+  \draw[->, thick] (polygons.east) -- node[midway, above]{\texttt{RDP}} (simplification.west);
+  \node[above=0 of glassarea] {\small Simplified edges};
+\end{tikzpicture}

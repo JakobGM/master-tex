@@ -34,3 +34,6 @@
 
 % Double bar norm
 \newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+
+% Provide relative coordinate in tikz node
+\newcommand{\relcoord}[3]{($(#1.south west)!#3!(#1.north west) + (#1.south west)!#2!(#1.south east) - (#1.south west)$)}

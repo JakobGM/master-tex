@@ -1,0 +1,20 @@
+\begin{tikzpicture}
+  % Graphics scaling
+  \def\gs{0.5}
+
+  % Segmented normals
+  \node[](segmentednormals) at (0, 0) {\includegraphics[scale=\gs]{tile-data/130-0/surface_normals_3+segmented_normals_2/predicted_segmented_normals}};
+  \node[above=0 of segmentednormals.north] {$\hat{N}$};
+
+  % DBSCAN result
+  \begin{scope}
+    [spy using outlines={circle, magnification=4, size=3.2cm, connect spies}]
+    \node[right=1.5 of segmentednormals](dbscan) {\includegraphics[scale=\gs]{tile-data/130-0/surface_normals_3+segmented_normals_2/dbscan_instances}};
+    \node[right=2 of dbscan](glass) {};
+    \spy[black] on \relcoord{dbscan}{0.1}{0.2} in node (glassarea) [] at (glass);
+  \end{scope}
+
+  \node[above=0 of dbscan.north] {\texttt{DBSCAN}$(\hat{N})$};
+  \draw[->, thick] (segmentednormals.east) -- node[midway, above]{\texttt{DBSCAN}} (dbscan.west);
+  \node[above=0 of glassarea] {\small Identified noise};
+\end{tikzpicture}

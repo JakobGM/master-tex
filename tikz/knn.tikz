@@ -1,0 +1,20 @@
+\begin{tikzpicture}
+  % Graphics scaling
+  \def\gs{0.5}
+
+  % DBSCAN result
+  \node[](dbscan) at (0, 0) {\includegraphics[scale=\gs]{tile-data/130-0/surface_normals_3+segmented_normals_2/dbscan_instances}};
+  \node[above=0 of dbscan.north] {$\texttt{DBSCAN}(\hat{N})$};
+
+  % KNN result
+  \begin{scope}
+    [spy using outlines={circle, magnification=4, size=3.2cm, connect spies}]
+    \node[right=1.5 of dbscan](knn) {\includegraphics[scale=\gs]{tile-data/130-0/surface_normals_3+segmented_normals_2/knn_instances}};
+    \node[right=2 of knn](glass) {};
+    \spy[black] on \relcoord{knn}{0.1}{0.2} in node (glassarea) [] at (glass);
+  \end{scope}
+
+  \node[above=0 of knn.north] {$\texttt{KNN}(\texttt{DBSCAN}(\hat{N}))$};
+  \draw[->, thick] (dbscan.east) -- node[midway, above]{\texttt{KNN}} (knn.west);
+  \node[above=0 of glassarea] {\small Classified noise};
+\end{tikzpicture}
