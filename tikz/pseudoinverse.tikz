@@ -4,9 +4,9 @@
   \node[](activations) at (0, 0) {\includegraphics[scale=\gs]{tile-data/130-0/segmented_normals_2/activations}};
   \node[shift={(0.5, -0.5)}](normals) at (activations) {\includegraphics[scale=\gs]{tile-data/130-0/surface_normals_3/predicted_normals}};
 
-  \node[between=activations and normals, xshift=10em, shape=circle, draw](pseudoinverse) {\Large $m^{\dagger}$};
+  \node[between=activations and normals, xshift=10em, shape=circle, draw](pseudoinverse) {\Large $\pseudoinverse$};
   \node[right=of pseudoinverse](polygons) {\includegraphics[scale=\gs]{tile-data/130-0/polygon}};
 
-  \draw ($(activations.east)!0.5!(normals.east) + (0.19, 0)$) -- node[above]{$R$} (pseudoinverse);
-  \draw[->] (pseudoinverse) -- node[above]{$V$} (polygons.west);
+  \draw ($(activations.east)!0.5!(normals.east) + (0.19, 0)$) -- node[above]{$\rasterdomain$} (pseudoinverse);
+  \draw[->] (pseudoinverse) -- node[above]{$\vectordomain$} (polygons.west);
 \end{tikzpicture}

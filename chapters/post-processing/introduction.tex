@@ -1,39 +1,77 @@
-We have a multitask model.
-
+Assume that we now have two separate models; $\segmodel$, which is able to predict \emph{semantic} segmentation masks, $\predsegraster$, and $\normmodel$, which is able to predict surface normal rasters, $\prednormraster$.
+The main prediction pipeline has been demonstrated in \cref{fig:multitask-prediction}.
+% $\segmodel$ and $\normmodel$ could conceivably be sub-models of a \emph{single} multi-task model, but that is besides the point.
 \begin{figure}[H]
   \centering
   \includegraphics{multitask-prediction.tikz}
-  \caption{TODO.}
+  \caption{%
+    Demonstration of unprocessed output from a surface raster machine learning pipeline.
+  }%
+  \label{fig:multitask-prediction}
 \end{figure}
-
-We must construct a pseudoinverse.
-
+\noindent
+Now, as discussed in \cref{sec:surface-rasterization} -- \enquote{\nameref{sec:surface-rasterization}}, the goal is now to convert these model predictions, which belong to the raster domain $R$, back to the vector polygon domain $V$ by constructing a suitable pseudoinverse mapping $m^{\dagger}: R \rightarrow V$ as illustrated in \cref{fig:pseudoinverse}.
 \begin{figure}[H]
   \centering
   \includegraphics{pseudoinverse.tikz}
-  \caption{TODO.}
+  \caption{Pseudoinverse mapping, $m^{\dagger}$, mapping from raster domain to vector domain.}%
+  \label{fig:pseudoinverse}
 \end{figure}
+\noindent
+We will construct a pseudoinverse mapping which accepts a predicted surface normal raster and semantic segmentation map, and produces predicted three-dimensional polygons, which we will denote as $\predpolygons$,
+\begin{equation*}
+  \predpolygons
+  =
+  \pseudoinverse\left(
+    \predsegraster,
+    \prednormraster
+  \right).
+\end{equation*}
+This pseudoinverse mapping needs to produce three-dimensional polygons that are considered close to the ground truth polygons $\polygons$.
+The \enquote{closeness} is encoded in a distance metric $d: V \times V \rightarrow \mathbb{R}$, so our task is to produce a pseudoinverse mapping which minimizes
+\begin{equation*}
+  d\left(
+    \predpolygons,
+    \polygons
+  \right)
+  =
+  d\left(
+    \pseudoinverse\left(\predsegraster, \prednormraster\right),
+    \polygons
+  \right).
+\end{equation*}
+Now, the model predictions $\predsegraster$ and $\prednormraster$ are not perfect, and this must be accounted for in the implementation of the pseudoinverse.
+The pseudoinverse must be robust relative to the types of errors commonly produced by the models, producing minimal error as defined by the distance metric $d$.
+This is therefore a task that is highly dependent on the behaviour of the trained models themselves.
+It is still a good sanity check to test the ground truth rasters, $m(\polygons)$, as well, with other words verify that pseudoinverse mapping also minimizes
+\begin{equation*}
+  d\left(
+    \pseudoinverse\left(m\left(\polygons\right)\right),
+    \polygons
+  \right).
+\end{equation*}
+A pseudoinverse mapping which performs badly under this \enquote{round-trip metric} will likely perform badly under the pseudoinverse mapping of model predictions as well.
 
-We threshold according to some tolerance.
+In \cref{sec:surface-normal-raster-format} we proposed the following conceptual definition of the pseudoinverse mapping
+\input{chapters/data/pseudoinverse-mapping.part.tex}\noindent
+The implementation of such a pseudoinverse mapping is what will be presented in the following sections.
+The conceptual definition was a simplification when presented in the first place, since pixel areas which \enquote{share the same value of $\normraster$} must account for some leeway in the specific definition of \enquote{share}.
+The task of determining pixels $(i, j)$ which share the same values for $N_{i, j}$ is considered to be a \textit{clustering problem}, the exact solution of which will be presented in \cref{sec:instance-clustering}.
+A divide-and-conquer approach, by the application of \textit{connected region labeling}, will make this problem simpler to solve.
+These classified pixels must then be converted to polygons, and will be described in \cref{sec:vectorization}, and possibly simplified as well, as described in the following \cref{sec:simplification}.
 
-\begin{figure}[H]
-  \centering
-  \includegraphics{activation-thresholding.tikz}
-  \caption{TODO.}
-\end{figure}
+Before delving into the details of the implementation, we begin by summarizing the entire post-processing algorithm in conceptual terms:
 
-We can segment the normals.
-
-\begin{figure}[H]
-  \centering
-  \includegraphics{normal-segmentation.tikz}
-  \caption{TODO.}
-\end{figure}
-
-We iterate over contiguous mask areas.
-
-\begin{figure}[H]
-  \centering
-  \includegraphics{mask-iteration.tikz}
-  \caption{TODO.}
-\end{figure}
+\begin{leftbar}
+  \noindent
+  Given a predicted segmentation map $\predsegraster$ and surface normal raster $\prednormraster$:
+  \begin{itemize}[leftmargin=*]
+    \item Threshold segmentation activations $\predsegraster$ according to some tolerance $\texttt{TOL}$ in order to construct \emph{binary} segmentation raster $\predbinarysegraster$.
+    \item Identify connected sub-regions of the binary segmentation raster $\predbinarysegraster$, and sub-divide the following processing independently across these sub-regions.
+    \item Apply a conservative clustering algorithm which does \emph{not} require the specification of the number of clusters \textit{a priori}.
+    \item Apply a second clustering algorithm which encodes suitable domain knowledge in order to classify the remaining points, producing a labeled partition of the original binary segmentation raster.
+    \item Create vector polygons which represent the labeled partitions.
+    \item Simplify these vector polygons.
+    \item Reconstruct $z$-coordinates of each polygon vertex.
+  \end{itemize}
+\end{leftbar}

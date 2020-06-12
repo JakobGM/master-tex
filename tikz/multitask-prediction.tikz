@@ -4,22 +4,23 @@
   % Graphics scaling
   \def\gs{0.5}
   \def\halfoffset{5.5em}
+  \def\pathoffset{2.75em}
   \node[](rgb) at (0, 0) {\includegraphics[scale=\gs]{tile-data/130-0/rgb.pdf}};
   \node[below=of rgb](lidar) {\includegraphics[scale=\gs]{tile-data/130-0/lidar.pdf}};
 
   \node[right=of rgb, yshift=-\halfoffset](concatenate) {};
-  \draw (rgb.east) -- (concatenate.center);
-  \draw (lidar.east) -- (concatenate.center);
+  \draw (rgb.east) -- ($(rgb.east) + (\pathoffset, 0)$) -- ($(concatenate.west) - (\pathoffset, 0)$) -- (concatenate.center);
+  \draw (lidar.east) -- ($(lidar.east) + (\pathoffset, 0)$) -- ($(concatenate.west) - (\pathoffset, 0)$) -- (concatenate.center);
 
   \node[right=of concatenate, yshift=\halfoffset](activations) {\includegraphics[scale=\gs]{tile-data/130-0/segmented_normals_2/activations}};
   \node[below=of activations](normals) {\includegraphics[scale=\gs]{tile-data/130-0/surface_normals_3/predicted_normals}};
 
-  \draw (concatenate.center) -- node[midway, above, sloped]{\hspace{2em}$\widehat{f}_{\mathrm{seg}}\left(X;\vec{\theta}_{\mathrm{seg}}\right)$} (activations.west);
-  \draw (concatenate.center) -- node[midway, below, sloped]{\hspace{2.5em}$\widehat{f}_{\mathrm{norm}}\left(X;\vec{\theta}_{\mathrm{norm}}\right)$} (normals.west);
+  \draw (concatenate.center) -- node[midway, above, sloped]{\hspace{1em}$\segmodel\left(X;\vec{\theta}_{\mathrm{seg}}\right)$} (activations.west);
+  \draw (concatenate.center) -- node[midway, below, sloped]{\hspace{1em}$\normmodel\left(X;\vec{\theta}_{\mathrm{norm}}\right)$} (normals.west);
   \node[shape=circle, fill=white, draw=black] at (concatenate) {$X$};
 
-  \node[above=0 of rgb.north] {$I$};
-  \node[below=0 of lidar.south] {$H$};
-  \node[above=0 of activations.north] {$\hat{S}$};
-  \node[below=0 of normals.south] {$\hat{N}$};
+  \node[above=0 of rgb.north] {RGB, $\rgbraster$};
+  \node[below=0 of lidar.south] {LiDAR, $\lidarraster$};
+  \node[above=0 of activations.north] {Segmentation, $\predsegraster$};
+  \node[below=0 of normals.south] {Surface normals, $\prednormraster$};
 \end{tikzpicture}

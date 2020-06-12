@@ -53,10 +53,14 @@
 % Docs: http://texdoc.net/texmf-dist/doc/latex/amsmath/amsldoc.pdf
 \usepackage{amsmath}
 
+% Allows definition of colors using \definecolor{}{}{}
+\usepackage{xcolor}
+
 % Sub-figures with captions within figures and customisation of captions
+\definecolor{dark-gray}{gray}{0.25}
 \usepackage[
-    font=small,
-    labelfont=bf,
+    font={small,color=dark-gray},
+    labelfont={bf, color=black},
     margin=\parindent
 ]{caption}                    
 % Sub-figures with captions within figures
@@ -65,9 +69,6 @@
     labelfont=bf,
     margin=\parindent
 ]{subcaption}
-
-% Allows definition of colors using \definecolor{}{}{}
-\usepackage{xcolor}
 
 % Empty pages should be blank
 \usepackage{emptypage}

@@ -37,3 +37,19 @@
 
 % Provide relative coordinate in tikz node
 \newcommand{\relcoord}[3]{($(#1.south west)!#3!(#1.north west) + (#1.south west)!#2!(#1.south east) - (#1.south west)$)}
+
+% Different types of models, rasters, and so on
+\newcommand{\segmodel}[0]{\widehat{f}_{\mathrm{seg}}}
+\newcommand{\normmodel}[0]{\widehat{f}_{\mathrm{norm}}}
+\newcommand{\segraster}[0]{S}
+\newcommand{\predsegraster}[0]{\hat{S}}
+\newcommand{\predbinarysegraster}[0]{\tilde{S}}
+\newcommand{\normraster}[0]{N}
+\newcommand{\prednormraster}[0]{\hat{N}}
+\newcommand{\rgbraster}[0]{I}
+\newcommand{\lidarraster}[0]{H}
+\newcommand{\polygons}[0]{\mathcal{P}}
+\newcommand{\predpolygons}[0]{\hat{\mathcal{P}}}
+\newcommand{\pseudoinverse}[0]{m^{\dagger}}
+\newcommand{\rasterdomain}[0]{R}
+\newcommand{\vectordomain}[0]{V}

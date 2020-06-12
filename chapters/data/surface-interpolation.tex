@@ -71,8 +71,8 @@ We can now define the surface raster properties of representativeness and target
     That is, we can map from the vector polygon domain to the raster polygon domain, and then back, all without losing \emph{any} information.
     The vector domain $V$ is infinite-dimensional, while the raster domain $R$ is by necessity of finite and consistent size.
     It can therefore be concluded that no such invertible mapping exists.
-    For this reason we introduce the concept of a \textit{pseudo-inverse}, $m^{\dagger}$, a function which minimizes $d(m^{\dagger}(m(\mathcal{P})),~\mathcal{P})$ for all $\mathcal{P} \in V$.
-    A raster domain (and an associated mapping and pseudo-invertible mapping) which produces negligible distance metrics after a round-trip mapping of arbitrary polygon sets is considered to be \textit{representative}.
+    For this reason we introduce the concept of a \textit{pseudoinverse}, $m^{\dagger}$, a function which minimizes $d(m^{\dagger}(m(\mathcal{P})),~\mathcal{P})$ for all $\mathcal{P} \in V$.
+    A raster domain (and an associated mapping and pseudoinvertible mapping) which produces negligible distance metrics after a round-trip mapping of arbitrary polygon sets is considered to be \textit{representative}.
   \item[Targetable] 
     \textit{A raster format which is feasible as a modelling target for a machine learning architecture.}
     \\
@@ -377,12 +377,8 @@ We can now rasterize any single polygon $P \in \mathcal{P}$ into two separate ra
   \label{fig:3d-polygon-decomposition}
 \end{figure}
 When generalizing from a single three-dimensional polygon $P$ to a set of polygons $\mathcal{P}$, we can iteratively fill in the values into a single pair of raster arrays, $S$ and $N$, since the polygons are mutually non-overlapping.
-In order to map from this raster domain, represented by $S$ and $N$, back to the original polygon domain, represented by $\mathcal{P}$, we propose the following pseudo-inverse mapping, $m^{\dagger}$,
-\begin{framed}
-  \noindent
-  \textbf{Proposed $\mathbf{m^{\dagger}}$} -- Partition semantic segmentation raster $S$ such that all partitions form contiguous pixel areas which share the same value of $N$.
-  Reconstruct $\beta_0$ by inference from LiDAR input data.
-\end{framed}
+In order to map from this raster domain, represented by $S$ and $N$, back to the original polygon domain, represented by $\mathcal{P}$, we propose the following pseudoinverse mapping, $m^{\dagger}$,
+\input{chapters/data/pseudoinverse-mapping.part.tex}
 \noindent
 It should be noted that this is in fact a lossy decomposition, making the raster format not perfectly representative.
 The reason for this is that the parameter $\beta_0$ has been entirely discarded when we rasterize $\planar{P}$.
@@ -422,7 +418,7 @@ We start by summarizing the entire implementation in conceptual terms:
 \begin{leftbar}
   \noindent
   Given a set of bounding boxes $\mathcal{B}$ and a set of polygons $\mathcal{P}$:
-  \begin{itemize}[nosep,leftmargin=*]
+  \begin{itemize}[leftmargin=*]
     \item Construct R-tree index for polygon collection $\mathcal{P}$.
     \item Calculate and memoize $\planar{P}$ for all $P \in \mathcal{P}$.
     \item For each bounding box $B \in \mathcal{B}$\ldots
