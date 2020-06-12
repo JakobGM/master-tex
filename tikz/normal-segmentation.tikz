@@ -2,13 +2,13 @@
   % Graphics scaling
   \def\gs{0.47}
   \node[](normals) at (0, 0) {\includegraphics[scale=\gs]{tile-data/130-0/surface_normals_3/predicted_normals}};
-  \node[above=0 of normals.north] {$\hat{N}$};
+  \node[above=0 of normals.north] {$\prednormraster$};
 
   \node[right=of normals](predictedmask) {\includegraphics[scale=\gs]{tile-data/130-0/segmented_normals_2/predicted_mask}};
-  \node[above=0 of predictedmask.north] {$\tilde{S}$};
+  \node[above=0 of predictedmask.north] {$\predbinarysegraster$};
 
   \node[right=of predictedmask](segmentednormals) {\includegraphics[scale=\gs]{tile-data/130-0/surface_normals_3+segmented_normals_2/predicted_segmented_normals}};
-  \node[above=0 of segmentednormals.north] {$\tilde{N}$};
+  \node[above=0 of segmentednormals.north] {$\predsegnormraster$};
 
   \node[between=normals and predictedmask] {\Huge $\odot$};
   \node[between=predictedmask and segmentednormals] {\Huge $=$};

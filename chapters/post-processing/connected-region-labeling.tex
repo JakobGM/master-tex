@@ -1,24 +1,64 @@
-Divide-and-conquer approach.
-We threshold according to some tolerance.
-
+The predicted segmentation map $\predsegraster$ produced by $\segmodel$ is a $H \times W \times 1$ raster array with values in the continuous domain $[0, 1]$, values $\predsegraster_{i,j}$ which can be interpreted as the model's confidence in there being a roof surface at pixel location $(i, j)$.
+In order to make an actual binary prediction, we \textit{threshold} the segmentation map, creating a binary segmentation map $\predbinarysegraster$ defined by
+\begin{equation*}
+  \predbinarysegraster \defeq \predsegraster > \texttt{TOL}
+  \iff
+  \predbinarysegraster_{i, j}
+  =
+  \begin{cases}
+    1, &\text{if } \predsegraster_{i, j} > \texttt{TOL}. \\
+    0, &\text{otherwise.}
+  \end{cases}
+\end{equation*}
+We will use the most commonly used threshold value, naturally $\texttt{TOL} = 0.5$.
+The process of thresholding has been illustrated in \cref{fig:activation-thresholding}.
 \begin{figure}[H]
   \centering
   \includegraphics{activation-thresholding.tikz}
-  \caption{TODO.}
+  \caption{Thresholding model segmentation prediction in order to create a \textit{binary} segmentation map.}%
+  \label{fig:activation-thresholding}
 \end{figure}
-
-We can segment the normals.
-
+\noindent
+This binary segmentation map can now be used in order to segment the predicted surface normal raster as well, producing what we will refer to as a \textit{segmented surface normals}.
+The segmented surface normal raster can be easily produced by taking the element-wise product of the predicted surface normal raster and the thresholded binary segmentation map, which we will denote as $\predbinarysegraster \odot \prednormraster$, and is formally defined as
+\begin{equation*}
+  \predsegnormraster \defeq \predbinarysegraster \odot \prednormraster
+  \iff
+  \predsegnormraster_{i, j}
+  =
+    \predbinarysegraster_{i, j}
+    \cdot
+    \left[\prednormraster_{i,j,x}, \prednormraster_{i,j,y}, \prednormraster_{i,j,z}\right].
+\end{equation*}
+The effect of segmenting the predicted surface normal raster is illustrated in \cref{fig:normal-segmentation}.
 \begin{figure}[H]
   \centering
   \includegraphics{normal-segmentation.tikz}
-  \caption{TODO.}
+  \caption{Demonstration of segmenting a predicted surface normal raster using a thresholded segmentation map.}%
+  \label{fig:normal-segmentation}
 \end{figure}
-
-We iterate over contiguous mask areas.
-
+\noindent
+We have now found an index set, $\mathcal{I}$, for which there is predicted to contain a polygon.
+\begin{equation*}
+  \mathcal{I}
+  =
+  \left\{
+  (i, j)
+  ~\big{|}~
+  \left|\predpolygons\left(\pixtogeo{i}{j}\right)\right| > 0
+  \right\}
+\end{equation*}
+We now need to assign a single label to each such coordinate, indicating which polygon $P \in \predpolygons$ the given coordinate belongs to.
+We apply a divide-and-conquer approach by partitioning the thresholded segmentation map into those regions which are connected.
+This can be performed by a so-called \textit{connected region labeling} algorithm, and has been illustrated in \cref{fig:mask-iteration}.
 \begin{figure}[H]
   \centering
   \includegraphics{mask-iteration.tikz}
-  \caption{TODO.}
+  \caption{The result of the  \textit{connected region labeling} algorithm applied on the thresholded segmentation map.}%
+  \label{fig:mask-iteration}
 \end{figure}
+\noindent
+The example presented in \cref{fig:mask-iteration} shows that there exists four, separate connected regions ($A$, $B$, $C$ and $D$).
+If we assume that the segmentation map is correct, then we can conclude that any polygon belonging to one of these regions will not belong to any other region.
+We can therefore solve the partition of each region as entirely independent tasks.
+The partitioning of each connected sub-region is now formulated as a normal vector clustering problem.
