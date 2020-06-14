@@ -2,6 +2,15 @@ Important that the algorithm does not presume the number of clusters.
 First a conservative pass which determines number of clusters and identifies the pixels which are a "sure thing".
 Then a second clustering pass which encodes our domain knowledge.
 
+\begin{wrapfigure}{r}{0.35\textwidth}
+  \begin{center}
+    \includegraphics[width=0.35\textwidth]{tile-data/130-0/surface_normals_3+segmented_normals_2/polar_normals_true_labels.pdf}
+  \end{center}
+  \caption{TODO.}%
+  \label{fig:polar-normal-true-labels}
+\end{wrapfigure}
+\lipsum[1-2]
+
 \subsection{DBSCAN}
 
 \begin{figure}[H]
@@ -9,6 +18,15 @@ Then a second clustering pass which encodes our domain knowledge.
   \includegraphics[width=\textwidth]{cosine-similarity-distribution}
   \caption{All cosine similarities for all \numtesttiles~test tiles.}
 \end{figure}
+
+\begin{wrapfigure}{r}{0.35\textwidth}
+  \begin{center}
+    \includegraphics[width=0.35\textwidth]{tile-data/130-0/surface_normals_3+segmented_normals_2/polar_normals_dbscan_labels.pdf}
+  \end{center}
+  \caption{TODO.}%
+  \label{fig:polar-normal-dbscan-labels}
+\end{wrapfigure}
+\lipsum[1-2]
 
 \begin{figure}[H]
   \centering
@@ -23,3 +41,20 @@ Then a second clustering pass which encodes our domain knowledge.
   \includegraphics[]{knn.tikz}
   \caption{Application of KNN on DBSCAN-identified noise.}
 \end{figure}
+
+\newpage
+\begin{wrapfigure}{r}{0.35\textwidth}
+  \begin{center}
+    \includegraphics[width=0.35\textwidth]{tile-data/130-0/surface_normals_3+segmented_normals_2/polar_normals_knn_labels.pdf}
+  \end{center}
+  \caption{%
+    TODO.
+  }%
+  \label{fig:polar-normal-knn-labels}
+\end{wrapfigure}
+
+DBSCAN accuracy = \num{9978233830845771}\%.
+Noise accuracy = \num{76.86832740213523}\%.
+Final accuracy = \num{97.94109236488419}\%.
+
+\lipsum[1-2]
