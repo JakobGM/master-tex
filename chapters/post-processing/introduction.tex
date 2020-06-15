@@ -1,6 +1,5 @@
-Assume that we now have two separate models; $\segmodel$, which is able to predict \emph{semantic} segmentation masks, $\predsegraster$, and $\normmodel$, which is able to predict surface normal rasters, $\prednormraster$.
-The main prediction pipeline has been demonstrated in \cref{fig:multitask-prediction}.
-% $\segmodel$ and $\normmodel$ could conceivably be sub-models of a \emph{single} multi-task model, but that is besides the point.
+Assume that we have two machine learning models; firstly $\segmodel$ which is able to predict \emph{semantic} segmentation masks $\predsegraster$, and secondly $\normmodel$ which is able to predict surface normal rasters $\prednormraster$.
+These two models could conceivably be sub-models of a \emph{single} multi-task model, both accepting remote sensing data in the form of aerial photography and/or LiDAR measurements as illustrated in \cref{fig:multitask-prediction}.
 \begin{figure}[H]
   \centering
   \includegraphics{multitask-prediction.tikz}
@@ -10,25 +9,25 @@ The main prediction pipeline has been demonstrated in \cref{fig:multitask-predic
   \label{fig:multitask-prediction}
 \end{figure}
 \noindent
-Now, as discussed in \cref{sec:surface-rasterization} -- \enquote{\nameref{sec:surface-rasterization}}, the goal is now to convert these model predictions, which belong to the raster domain $R$, back to the vector polygon domain $V$ by constructing a suitable pseudoinverse mapping $m^{\dagger}: R \rightarrow V$ as illustrated in \cref{fig:pseudoinverse}.
+As discussed in \cref{sec:surface-rasterization} -- \enquote{\nameref{sec:surface-rasterization}}, the goal is to convert these two model predictions which belong to the surface \emph{raster} domain $R$ back to the \emph{vector} polygon domain $V$ by constructing a suitable pseudoinverse mapping $m^{\dagger}: R \rightarrow V$ as illustrated in \cref{fig:pseudoinverse}.
 \begin{figure}[H]
   \centering
   \includegraphics{pseudoinverse.tikz}
-  \caption{Pseudoinverse mapping, $m^{\dagger}$, mapping from raster domain to vector domain.}%
+  \caption{Pseudoinverse mapping, $m^{\dagger}$, mapping from the raster domain to the vector domain.}%
   \label{fig:pseudoinverse}
 \end{figure}
 \noindent
-We will construct a pseudoinverse mapping which accepts a predicted surface normal raster and semantic segmentation map, and produces predicted three-dimensional polygons, which we will denote as $\predpolygons$,
+More specifically, we will construct a pseudoinverse mapping which accepts two inputs, a predicted surface normal raster and a semantic segmentation map, and produces three-dimensional vector polygons, which we will denote as $\predpolygons$,
 \begin{equation*}
   \predpolygons
-  =
+  \defeq
   \pseudoinverse\left(
     \predsegraster,
     \prednormraster
   \right).
 \end{equation*}
-This pseudoinverse mapping needs to produce three-dimensional polygons that are considered close to the ground truth polygons $\polygons$.
-The \enquote{closeness} is encoded in a distance metric $d: V \times V \rightarrow \mathbb{R}$, so our task is to produce a pseudoinverse mapping which minimizes
+This pseudoinverse mapping should produce three-dimensional polygons which can be considered close to the ground truth polygons $\polygons$, where the notion of \enquote{closeness} between $\predpolygons$ and $\polygons$ is expressed in a \textit{polygon distance metric} $d: V \times V \rightarrow \mathbb{R}$.
+The main objective of the pseudoinverse mapping is therefore to minimize
 \begin{equation*}
   d\left(
     \predpolygons,
@@ -40,10 +39,9 @@ The \enquote{closeness} is encoded in a distance metric $d: V \times V \rightarr
     \polygons
   \right).
 \end{equation*}
-Now, the model predictions $\predsegraster$ and $\prednormraster$ are not perfect, and this must be accounted for in the implementation of the pseudoinverse.
-The pseudoinverse must be robust relative to the types of errors commonly produced by the models, producing minimal error as defined by the distance metric $d$.
-This is therefore a task that is highly dependent on the behaviour of the trained models themselves.
-It is still a good sanity check to test the ground truth rasters, $m(\polygons)$, as well, with other words verify that pseudoinverse mapping also minimizes
+The model predictions, $\predsegraster$ and $\prednormraster$, are not perfect, and the pseudoinverse should therefore be \textit{robust} relative to the types of errors commonly produced by the models, $\segmodel$ and $\normmodel$, producing minimal error as defined by the distance metric $d$.
+Constructing a suitable pseudoinverse is therefore not only highly dependent on the surface raster format itself, but also the specific behaviour of the models used to produce the raster format.
+In the evaluation of a pseudoinverse mapping it may still be beneficial to take the models themselves out of the equation by replacing the predicted rasters with the ground truth rasters $m(\polygons)$, thus verifying that the pseudoinverse mapping also minimizes
 \begin{equation*}
   d\left(
     \pseudoinverse\left(m\left(\polygons\right)\right),
@@ -51,14 +49,17 @@ It is still a good sanity check to test the ground truth rasters, $m(\polygons)$
   \right).
 \end{equation*}
 A pseudoinverse mapping which performs badly under this \enquote{round-trip metric} will likely perform badly under the pseudoinverse mapping of model predictions as well.
+\newpage
 
-In \cref{sec:surface-normal-raster-format} we proposed the following conceptual definition of the pseudoinverse mapping
-\input{chapters/data/pseudoinverse-mapping.part.tex}\noindent
-The implementation of such a pseudoinverse mapping is what will be presented in the following sections.
-The conceptual definition was a simplification when presented in the first place, since pixel areas which \enquote{share the same value of $\normraster$} must account for some leeway in the specific definition of \enquote{share}.
-The task of determining pixels $(i, j)$ which share the same values for $N_{i, j}$ is considered to be a \textit{clustering problem}, the exact solution of which will be presented in \cref{sec:instance-clustering}.
-A divide-and-conquer approach, by the application of \textit{connected region labeling}, will make this problem simpler to solve.
-These classified pixels must then be converted to polygons, and will be described in \cref{sec:vectorization}, and possibly simplified as well, as described in the following \cref{sec:simplification}.
+In the following sections we will present a pseudoinverse mapping which is considered highly suitable for producing roof surface polygons, a mapping which encodes our specific domain knowledge about the general geometric properties of roof surfaces.
+Our main idea is to use the predicted surface normal raster in order to \textit{partition} the \textit{semantic} segmentation map into an \textit{instance} segmentation map.
+The instance segmentation map can subsequently be used in order to construct enclosing polygons for each instance, and the three-dimensional orientation of each polygon is inferred from the predicted surface normals in conjunction with the original LiDAR data.
+
+Our implementation applies a divide-and-conquer approach to the problem by dividing the semantic segmentation map into mutually disjunct sub-regions and partitioning these sub-regions entirely independent of each other.
+This first-pass partitioning is described in \cref{sec:connected-region-labeling} -- \enquote{\nameref{sec:connected-region-labeling}}.
+A second-pass partitioning is performed by grouping together connected regions which share the same normal vector orientation.
+The task of determining which pixels $(i, j)$ which share the same values for $N_{i, j}$ is formulated as a \textit{clustering problem}, the solution of which will be presented in \cref{sec:instance-clustering}.
+A final conversion of classified pixels to vector polygons will be described in \cref{sec:vectorization}, and an optional simplification of these polygons is described in \cref{sec:simplification}.
 
 Before delving into the details of the implementation, we begin by summarizing the entire post-processing algorithm in conceptual terms:
 
@@ -70,7 +71,7 @@ Before delving into the details of the implementation, we begin by summarizing t
     \item Identify connected sub-regions of the binary segmentation raster $\predbinarysegraster$, and sub-divide the following processing independently across these sub-regions.
     \item Apply a conservative clustering algorithm which does \emph{not} require the specification of the number of clusters \textit{a priori}.
     \item Apply a second clustering algorithm which encodes suitable domain knowledge in order to classify the remaining points, producing a labeled partition of the original binary segmentation raster.
-    \item Create vector polygons which represent the labeled partitions.
+    \item Construct two-dimensional vector polygons which enclose each instance region.
     \item Simplify these vector polygons.
     \item Reconstruct $z$-coordinates of each polygon vertex.
   \end{itemize}
