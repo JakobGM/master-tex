@@ -1,29 +1,47 @@
-Important that the algorithm does not presume the number of clusters.
-First a conservative pass which determines number of clusters and identifies the pixels which are a "sure thing".
-Then a second clustering pass which encodes our domain knowledge.
-
+We now intend to subdivide each roof partition into constituent surface partitions, creating a polygon instance segmentation map as a result.
+Each partition should be constructed such that all pixels $(i, j)$ in the given surface partition share the same normal vector orientation, $\prednormraster_{i,j}$.
+A complicating factor is that the predicted surface normal raster is not perfect, that is, the predicted normal vectors are spatially distributed across some neighbourhood of the ground truth surface normal vector.
+The distribution of the cosine similarity between the predicted normal vectors and the ground truth normal vectors for an unspecified surface normal model $\normmodel$ is shown in \cref{fig:cosine-similarity-distribution}.
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.7\textwidth]{cosine-similarity-distribution}
+  \caption{%
+    The distribution of the cosine similarities between the ground truth normal vectors and the predicted normal vectors of a surface normal model over \numtesttiles~test tiles.
+  }%
+  \label{fig:cosine-similarity-distribution}
+\end{figure}
 \begin{wrapfigure}{r}{0.35\textwidth}
   \begin{center}
     \includegraphics[width=0.35\textwidth]{tile-data/130-0/surface_normals_3+segmented_normals_2/polar_normals_true_labels.pdf}
   \end{center}
-  \caption{TODO.}%
+  \caption{Ground truth labeling of predicted normal vectors.}%
   \label{fig:polar-normal-true-labels}
 \end{wrapfigure}
-\lipsum[1-2]
+\noindent
+Denote the index set of a given roof partition as $\mathcal{I}_{r} = \{(i_{r,1}, j_{r,1}), (i_{r,2}, j_{r,2}), \ldots\}$.
+As an example, let us focus on roof partition $r=D$ as labeled in \cref{fig:mask-iteration}.
+We can construct a set of surface normal vector observations defined over the given roof partition, $\mathcal{N}_{D} \defeq \{N_{i,j} \mid (i, j) \in \mathcal{I}_{D}\}$.
+The directional distribution of $\mathcal{N}_{D}$ is shown in \cref{fig:polar-normal-true-labels}, each normal vector being represented as a scatter point.
+Now, the region defined by roof partition $D$ contains four ground truth roof surface polygons, each with an unique surface normal vector.
+These four ground truth normal vectors are annotated as black crosses ($\times$) in \cref{fig:polar-normal-true-labels}.
+The task is now to assign a cluster label $l \in \{1, 2, \ldots, k\}$ to each observation in $\mathcal{N}_D$ such that those observations which share the same label also can be considered to share the same normal vector.
+In our example, where the ground truth is available, we know that the number of clusters $k$ should ideally be equal to four, i.e.\ the number of unique roof surfaces.
+These four ground truth clusters have been color annotated in \cref{fig:polar-normal-true-labels}.
+In practice, however, it is important to notice that the number of roof surfaces in a given roof partition is not known \textit{a priori}, and $k$ therefore needs to be inferred from the spatial distribution of $\mathcal{N}_{D}$.
+It is therefore important that the clustering algorithm we chose does not require $k$ to be specified.
+
+Our clustering implementation utilizes two different clustering algorithms applied in succession, first \textit{DBSCAN} and then \textit{$k$-nearest neighbours} (\textit{KNN}).
+DBSCAN has the benefit of being able to infer $k$ from $\mathcal{N}_D$, a value which can then be passed forwards to the KNN clustering algorithm which requires it \textit{a priori}.
+Additionally, DBSCAN has the ability to label observations as \enquote{noise} when the clusters they belong in not entirely clear.
+This allows us to use the conservative non-noisy labels produced by DBSCAN to estimate the ground truth normal vectors, while applying KNN (which encodes a greater degree of our domain knowledge) on the remaining noisy observations.
 
 \subsection{DBSCAN}
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=\textwidth]{cosine-similarity-distribution}
-  \caption{All cosine similarities for all \numtesttiles~test tiles.}
-\end{figure}
 
 \begin{wrapfigure}{r}{0.35\textwidth}
   \begin{center}
     \includegraphics[width=0.35\textwidth]{tile-data/130-0/surface_normals_3+segmented_normals_2/polar_normals_dbscan_labels.pdf}
   \end{center}
-  \caption{TODO.}%
+  \caption{DBSCAN labeling of predicted normal vectors.}%
   \label{fig:polar-normal-dbscan-labels}
 \end{wrapfigure}
 \lipsum[1-2]
