@@ -23,7 +23,13 @@ The following section will describe such a simplification.
 \subsection{Simplification}%
 \label{sec:simplification}
 
-\textit{Ramer–Douglas–Peucker algorithm}.
+As previously explained, a vectorized polygon is simply a collection of line segments which start and end at the same coordinate (a so-called linear ring), i.e.\ $l = [p_1, p_2, \ldots, p_{|l|}, p_1]$.
+The simplification of vectorized line segments with minimal loss is a well researched area, with many proposed algorithms.
+The most common approach is to select a subsequence of the original linear ring while minimizing some criterion.
+Methods for preserving areas \cite{ls-area-preserving}, distances \cite{ls-distance-preserving}, and angles \cite{ls-angle-preserving} have been proposed.
+\citeauthor{ls-vw} proposes an area-based progressive algorithm in \cite{ls-vw}\footnote{The Visvalingam-Whyatt polygon simplification method has been implemented and newly released on the Python Package Index (PyPI) under the name \texttt{visvalingamwyatt}.}.
+Another common simplification guideline is the \textit{bandwidth criterion}, stating that a simplified line is acceptable as long as it is within an $\varepsilon$-neighbourhood of the original line segment, the task being to select the minimum number of vertices which still satisfies this criterion.
+The \textit{Ramer–Douglas–Peucker} (RDP) algorithm\cite{ls-rdp} is one such method, a method which we will use.
 
 \begin{figure}[H]
   \centering
