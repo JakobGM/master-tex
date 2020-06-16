@@ -4,7 +4,7 @@
 
   % KNN result
   \node[](knn) at (0, 0) {\includegraphics[scale=\gs]{tile-data/130-0/surface_normals_3+segmented_normals_2/knn_instances}};
-  \node[above=0 of knn.north] {$\texttt{KNN}(\texttt{DBSCAN}(\hat{N}))$};
+  \node[above=0 of knn.north] {$\texttt{KNN}(\texttt{DBSCAN}(\predsegnormraster))$};
 
   % Polygonization result
   \begin{scope}
@@ -14,7 +14,7 @@
     \spy[black] on \relcoord{polygons}{0.1}{0.2} in node (glassarea) [] at (glass);
   \end{scope}
 
-  \node[above=0 of polygons.north] {$\hat{\mathcal{P}}$};
+  \node[above=0 of polygons.north] {$\predpolygons$};
   \draw[->, thick] (knn.east) -- node[midway, above]{\texttt{Boundary}} (polygons.west);
   \node[above=0 of glassarea] {\small Manhattan edges};
 \end{tikzpicture}

@@ -4,7 +4,7 @@
 
   % Segmented normals
   \node[](segmentednormals) at (0, 0) {\includegraphics[scale=\gs]{tile-data/130-0/surface_normals_3+segmented_normals_2/predicted_segmented_normals}};
-  \node[above=0 of segmentednormals.north] {$\hat{N}$};
+  \node[above=0 of segmentednormals.north] {$\predsegnormraster$};
 
   % DBSCAN result
   \begin{scope}
@@ -14,7 +14,7 @@
     \spy[black] on \relcoord{dbscan}{0.1}{0.2} in node (glassarea) [] at (glass);
   \end{scope}
 
-  \node[above=0 of dbscan.north] {\texttt{DBSCAN}$(\hat{N})$};
+  \node[above=0 of dbscan.north] {\texttt{DBSCAN}$(\predsegnormraster)$};
   \draw[->, thick] (segmentednormals.east) -- node[midway, above]{\texttt{DBSCAN}} (dbscan.west);
   \node[above=0 of glassarea] {\small Identified noise};
 \end{tikzpicture}
