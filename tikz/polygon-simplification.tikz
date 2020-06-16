@@ -4,7 +4,7 @@
 
   % Polygonization result
   \node[](polygons) at (0, 0) {\includegraphics[scale=\gs]{tile-data/130-0/surface_normals_3+segmented_normals_2/unsimplified_polygons}};
-  \node[above=0 of polygons.north] {$\hat{\mathcal{P}}$};
+  \node[above=0 of polygons.north] {$\predpolygons$};
 
   % Polygonization result
   \begin{scope}
@@ -14,7 +14,7 @@
     \spy[black] on \relcoord{simplification}{0.1}{0.2} in node (glassarea) [] at (glass);
   \end{scope}
 
-  \node[above=0 of simplification.north] {$\tilde{\mathcal{P}}$};
+  \node[above=0 of simplification.north] {$\simplifiedpolygons$};
   \draw[->, thick] (polygons.east) -- node[midway, above]{\texttt{RDP}} (simplification.west);
   \node[above=0 of glassarea] {\small Simplified edges};
 \end{tikzpicture}

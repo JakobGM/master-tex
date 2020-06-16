@@ -59,7 +59,7 @@ Our implementation applies a divide-and-conquer approach to the problem by divid
 This first-pass partitioning is described in \cref{sec:connected-region-labeling} -- \enquote{\nameref{sec:connected-region-labeling}}.
 A second-pass partitioning is performed by grouping together connected regions which share the same normal vector orientation.
 The task of determining which pixels $(i, j)$ which share the same values for $N_{i, j}$ is formulated as a \textit{clustering problem}, the solution of which will be presented in \cref{sec:instance-clustering}.
-A final conversion of classified pixels to vector polygons will be described in \cref{sec:vectorization}, and an optional simplification of these polygons is described in \cref{sec:simplification}.
+A final conversion of classified pixels to vector polygons will be described in \cref{sec:vectorization}.
 
 Before delving into the details of the implementation, we begin by summarizing the entire post-processing algorithm in conceptual terms:
 
