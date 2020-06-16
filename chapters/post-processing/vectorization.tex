@@ -1,10 +1,24 @@
+The clustering performed in the previous section has produced an instance segmentation map, $\predinstraster$.
+Lets denote the total number of identified clusters across all roof partitions as $C$ such that $\predinstraster \in \{0, 1, 2, \ldots, C\}^{H \times W \times 1}$.
+Here $\predinstraster_{i,j} = 0$ indicates that the pixel location $(i,j)$ does not contain any surface polygon, i.e.\ $\predsegraster_{i,j} = 0$.
+This section will describe how to convert this two-dimensional instance segmentation raster map into a set of vectorized three-dimensional polygons $\predpolygons$.
+
 \subsection{Two-dimensional polygonization}
 
+As previously described in \cref{sec:connected-region-labeling}, we can use connected region labeling in order to group together all neighbouring pixels with equal values for $\predinstraster_{i,j}$.
+Each connected sub-region can be naively converted to polygons by drawing line segments along pixel borders, resulting in a fine-grained polygon for each instance\footnote{This functionality is implemented in \texttt{GDALPolygonize} in the GDAL library. The \texttt{rasterio} python package wraps this GDAL function in \texttt{rasterio.features.shapes}.}.
+Denote the resulting set of two-dimensional polygons as $\predpolygons$, an example of which is shown in \cref{fig:polygonization}.
 \begin{figure}[H]
   \centering
-  \includegraphics[]{polygonization.tikz}
-  \caption{TODO.}
+  \includegraphics{polygonization.tikz}
+  \caption{The result of applying \texttt{GDALPolygonize} on the clustered instance map $\predinstraster$.}%
+  \label{fig:polygonization}
 \end{figure}
+\noindent
+As can be seen in \cref{fig:polygonization}, the resulting polygons $\predpolygon \in \predpolygons$ show a high degree of \enquote{rasterization}, having edges which are exclusively oriented along the east-west or north-south axis (\enquote{Manhattan edges}).
+Depending on the application of the predicted polygons, it may be preferable to simplify these edges to some degree in order to represent diagonal edges in a better way.
+The following section will describe such a simplification.
+\newpage
 
 \subsection{Simplification}%
 \label{sec:simplification}
@@ -17,7 +31,7 @@
   \caption{Polygons before and after RDP has been applied.}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[p]
   \centering
   \includegraphics{rdp-algorithm.tikz}
   \appcaption{%
