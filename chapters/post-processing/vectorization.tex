@@ -52,7 +52,7 @@ The result of applying RDP on the vectorized polygons $\predpolygons$ with $\var
     Illustration of the Ramer-Douglas-Peucker algorithm.
   }{%
     The perpendicular distances between the points $p_{\perp}$ and the lines formed by the endpoints are shown in \textcolor{orange}{orange}.
-    Row 1 shows the original line, while rows 2 to 4 show the vertices determined to be included since they are closer than $\varepsilon$.
+    Row 1 shows the original line, while rows 2 to 4 show the vertices determined to be included since they are further away than $\varepsilon$.
     Row 5 shows the final resulting line, where the \textcolor{darkgreen}{green} points indicate the vertices to be kept, while the \textcolor{red}{red} points indicate the discarded vertices.
     This specific example has been recreated from Figure~5 in~\cite{original-rdp-figure}.
   }%
@@ -61,4 +61,87 @@ The result of applying RDP on the vectorized polygons $\predpolygons$ with $\var
 
 \subsection{Three-dimensional fitting}
 
-TODO.
+As discussed in \cref{sec:surface-normal-raster-format}, any planar three-dimensional polygon $P \in \polygons$ can be decomposed into, and reconstructed from, two sub-components,
+\begin{enumerate}[nosep]
+  \item the two-dimensional projection $\project{P}$, \dots
+  \item and the parametric equation of the plane $\planar{P} = [\beta_0, \beta_x, \beta_y]$.
+\end{enumerate}
+The first sub-component has now been approximated by the simplified polygons $\simplifiedpolygons$.
+We must now try to approximate $\planar{P}$ before we can reconstruct the three-dimensional polygons.
+Start by noticing that $\beta_x$ and $\beta_y$ can be expressed in terms of the normal vector of the plane, $\vec{n} = {[n_x, n_y, n_z]}^T$, because of how it was constructed in \cref{eq:normalplanar} on \cpageref{eq:normalplanar},
+\begin{equation*}
+  \begin{bmatrix}
+    n_x\\
+    n_y\\
+    n_z
+  \end{bmatrix}
+  \defeq
+  \frac{1}{\sqrt{\beta_x^2 + \beta_y^2 + 1}}
+  \begin{bmatrix}
+    -\beta_x\\
+    -\beta_y\\
+    1
+  \end{bmatrix}
+  \iff
+  \begin{bmatrix}
+    \beta_x\\
+    \beta_y
+  \end{bmatrix}
+  =
+  -\frac{1}{n_z}
+  \begin{bmatrix}
+    n_x\\
+    n_y
+  \end{bmatrix}.
+\end{equation*}
+With other words, if we are able to construct a good estimate for the normal vector of the plane $\normalplanar{P}$, we can also estimate $\beta_x$ and $\beta_y$.
+Now, each polygon $P \in \simplifiedpolygons$ has an associated cluster label value $l$ in the instance segmentation map $\predinstraster$.
+The corresponding raster index set can be reconstructed as $\mathcal{I}_P \defeq \{(i, j) \mid \predinstraster_{i,j} = l \}$.
+All the predicted normal vectors associated to the polygon $P$ can be retrieved from the predicted surface normal vector raster as $\mathcal{N}_{P} \defeq \{\predsegnormraster_{i,j} \mid (i,j) \in \mathcal{I}_P \}$.
+Now we can construct a predictor for $\normalplanar{P}$ from the associated normal vector set $\mathcal{N}_P$, for example the \textit{normalized vector average}, defined as
+\begin{equation*}
+  \overline{\vec{n}}
+  =
+  \begin{bmatrix}
+    \overline{n}_x\\
+    \overline{n}_y\\
+    \overline{n}_z
+  \end{bmatrix}
+  \defeq
+  \frac{
+    \sum_{\predsegnormraster_{i,j} \in \mathcal{N}_P} \predsegnormraster_{i,j}
+  }{
+    \norm{\sum_{\predsegnormraster_{i,j} \in \mathcal{N}_P} \predsegnormraster_{i,j}}_2
+  }.
+\end{equation*}
+In order to construct an even more robust estimation of the surface normal vectors, we can remove the DBSCAN-identified noise from the normal vector set, that is, if the polygon $P$ belongs to roof partition $r$, we use $\mathcal{N}_{P}^* \defeq \{\predsegnormraster_{i,j} \mid (i,j) \in (\mathcal{I}_P \setminus \mathcal{I}_r^*) \}$ instead.
+We can now construct estimators for $\beta_x$, $\hat{\beta}_x = -\overline{n}_x / \overline{n}_z$, and $\beta_y$, $\hat{\beta}_y = -\overline{n}_y / \overline{n}_z$.
+The remaining task is now to construct a estimator for the final planar parameter, $\beta_0$, which we will denote as $\hat{\beta}_0$.
+Since the surface normal raster is entirely independent of elevation of the plane, we must use the LiDAR input data in order to construct an estimator $\hat{\beta}_0$ for $\beta_0$.
+The idea is to formulate the search for $\hat{\beta}_0$ such that the \textit{LiDAR residuals} (see \cref{sec:non-planar-fix}) are minimized.
+Given a distance metric $d$, we can construct the predictor as
+\begin{align*}
+  \hat{\beta}_0
+  &=
+  \argmin_{\beta_0 \in \mathbb{R}}
+  \sum_{(i,j) \in \mathcal{I}_P}
+  d\left(
+    \lidarraster_{i,j},
+    \beta_0 + \hat{\beta}_x x + \hat{\beta}_y y
+  \right),
+\end{align*}
+where ${[x, y]}^T \defeq \pixtogeo{i}{j}$ and $H_{i,j}$ is the LiDAR measurement at pixel location $(i,j)$.
+If we specify the square distance $d(x, y) = (x - y)^2$, we have an ordinary least squares regression.
+Due to the nature of LiDAR measurement errors, the absolute distance $d(x, y) = |x - y|$ has been shown to produce more robust estimators for $\beta_0$.
+
+We can now reconstruct the predicted set of simplified, three-dimensional polygons:
+\begin{equation*}
+  P_{\mathrm{3D}}
+  =
+  \left[
+    (x, y, \hat{\beta}_0 + \hat{\beta}_x x + \beta_y y)
+    \mid
+    \text{ for vertex } (x, y) \in P
+  \right],
+  \text{ for } P \in \simplifiedpolygons.
+\end{equation*}
