@@ -1,7 +1,7 @@
 The clustering performed in the previous section has produced an instance segmentation map, $\predinstraster$.
 Lets denote the total number of identified clusters across all roof partitions as $C$ such that $\predinstraster \in \{0, 1, 2, \ldots, C\}^{H \times W \times 1}$.
 Here $\predinstraster_{i,j} = 0$ indicates that the pixel location $(i,j)$ does not contain any surface polygon, i.e.\ $\predsegraster_{i,j} = 0$.
-This section will describe how to convert this two-dimensional instance segmentation raster map into a set of vectorized three-dimensional polygons $\predpolygons$.
+This section will describe how to convert this two-dimensional instance segmentation raster map into a set of at least $C$ vectorized three-dimensional polygons $\predpolygons$.
 
 \subsection{Two-dimensional polygonization}
 
@@ -23,29 +23,40 @@ The following section will describe such a simplification.
 \subsection{Simplification}%
 \label{sec:simplification}
 
-As previously explained, a vectorized polygon is simply a collection of line segments which start and end at the same coordinate (a so-called linear ring), i.e.\ $l = [p_1, p_2, \ldots, p_{|l|}, p_1]$.
-The simplification of vectorized line segments with minimal loss is a well researched area, with many proposed algorithms.
-The most common approach is to select a subsequence of the original linear ring while minimizing some criterion.
+A vectorized polygon is, as previously mentioned, simply a collection of line segments which start and end at the same point (a so-called linear ring).
+The simplification of vectorized line segments is a well researched area with many proposed algorithms.
+The most common approach is to select a subsequence of the original linear ring while minimizing some loss criterion.
 Methods for preserving areas \cite{ls-area-preserving}, distances \cite{ls-distance-preserving}, and angles \cite{ls-angle-preserving} have been proposed.
 \citeauthor{ls-vw} proposes an area-based progressive algorithm in \cite{ls-vw}\footnote{The Visvalingam-Whyatt polygon simplification method has been implemented and newly released on the Python Package Index (PyPI) under the name \texttt{visvalingamwyatt}.}.
-Another common simplification guideline is the \textit{bandwidth criterion}, stating that a simplified line is acceptable as long as it is within an $\varepsilon$-neighbourhood of the original line segment, the task being to select the minimum number of vertices which still satisfies this criterion.
-The \textit{Ramer–Douglas–Peucker} (RDP) algorithm\cite{ls-rdp} is one such method, a method which we will use.
-
+Another common simplification guideline is the \textit{bandwidth criterion}, stating that a simplified line is acceptable as long as it is within an $\varepsilon$-neighbourhood of the original line segment.
+The task is then to select the minimum number of vertices which still satisfies this criterion.
+The \textit{Ramer-Douglas-Peucker} (RDP) algorithm\cite{ls-rdp} is one such method, a recursive algorithm which is implemented along the following lines:
+\begin{pseudofunc}{RDP}{$[p_1, p_2, \ldots, p_n];~\varepsilon$}
+  \item Find $p_{\perp} \in [p_1, \ldots, p_n]$ furthest away from the line between $p_1$ and $p_n$.
+  \item If the distance from $p_{\perp}$ to the line is less than $\varepsilon$, return $[p_1, p_n]$.
+  \item Otherwise, merge result of $\texttt{RDP}([p_1, \ldots, p_{\perp}])$ and $\texttt{RDP}([p_{\perp}, \ldots, p_n])$.
+\end{pseudofunc}
+An illustration of the RDP algorithm is provided in \cref{fig:rdp-algorithm} on \cpageref{fig:rdp-algorithm}.
+We will use a slightly modified version of RDP implemented in the GEOS library which preserves certain topological properties of the simplified polygons\footnote{Documentation for \texttt{TopologyPreservingSimplifier} available at: \url{https://geos.osgeo.org/doxygen/classgeos_1_1simplify_1_1TopologyPreservingSimplifier.html}. A python wrapper is available in the \texttt{simplify()} function implemented in the \texttt{shapely} library when parametrized with \texttt{preserve\_topology=True}: \url{https://shapely.readthedocs.io/en/latest/manual.html\#object.simplify}.}, specifically the number of exterior and interior rings.
+The result of applying RDP on the vectorized polygons $\predpolygons$ with $\varepsilon = \SI{0.75}{\meter}$, producing simplified polygons $\simplifiedpolygons$, is shown in \cref{fig:polygon-simplification-tile}.
 \begin{figure}[H]
   \centering
   \includegraphics[]{polygon-simplification.tikz}
-  \caption{Polygons before and after RDP has been applied.}
+  \caption{Polygons before and after RDP has been applied with bandwidth tolerance $\varepsilon = \SI{0.75}{\meter}$.}%
+  \label{fig:polygon-simplification-tile}
 \end{figure}
-
 \begin{figure}[p]
   \centering
   \includegraphics{rdp-algorithm.tikz}
   \appcaption{%
     Illustration of the Ramer-Douglas-Peucker algorithm.
   }{%
+    The perpendicular distances between the points $p_{\perp}$ and the lines formed by the endpoints are shown in \textcolor{orange}{orange}.
+    Row 1 shows the original line, while rows 2 to 4 show the vertices determined to be included since they are closer than $\varepsilon$.
+    Row 5 shows the final resulting line, where the \textcolor{darkgreen}{green} points indicate the vertices to be kept, while the \textcolor{red}{red} points indicate the discarded vertices.
     This specific example has been recreated from Figure~5 in~\cite{original-rdp-figure}.
-  }
-  \label{}
+  }%
+  \label{fig:rdp-algorithm}
 \end{figure}
 
 \subsection{Three-dimensional fitting}

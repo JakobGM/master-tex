@@ -15,39 +15,39 @@
   }
 
   % The line itself
-  \draw[color=blue] (1)--(2)--(3)--(4)--(5)--(6)--(7)--(8);
+  \draw[color=cyan] (1)--(2)--(3)--(4)--(5)--(6)--(7)--(8);
   \foreach \i in {1,2,...,8}{
-    \draw[fill=blue,draw=none] (\i) circle (0.2em) node[above] {};
+    \draw[fill=cyan,draw=none] (\i) circle (0.2em) node[above] {};
   }
 
   % First elimination
   \begin{scope}[transform canvas={yshift = -80}]
-    \draw[color=blue,style=dashed] (1)--(2)--(3)--(4)--(5)--(6)--(7)--(8);
+    \draw[color=cyan,style=dashed] (1)--(2)--(3)--(4)--(5)--(6)--(7)--(8);
     \foreach \i in {1,2,...,8}{
-      \draw[fill=blue,draw=none] (\i) circle (0.2em);
+      \draw[fill=cyan,draw=none] (\i) circle (0.2em);
     }
-    \draw[color=blue,text=black] (1) node[above] {$p_1$} -- (3) node[below] {$p_3$} -- (8) node[above] {$p_8$} -- (1);
-    \draw [color=red] ($(1)!(3)!(8)$) -- node[right] {$\varepsilon$} (3);
+    \draw[color=cyan,text=black] (1) node[above] {$p_1$} -- (3) node[below] {$p_{\perp}$} -- (8) node[above] {$p_n$} -- (1);
+    \draw [color=orange] ($(1)!(3)!(8)$) -- node[right, yshift=1em] {$> \varepsilon$} (3);
   \end{scope}
 
   % Second elimination
   \begin{scope}[transform canvas={yshift = -160}]
-    \draw[color=blue,style=dashed] (1)--(2)--(3)--(4)--(5)--(6)--(7)--(8);
+    \draw[color=cyan,style=dashed] (1)--(2)--(3)--(4)--(5)--(6)--(7)--(8);
     \foreach \i in {1,2,...,8}{
-      \draw[fill=blue,draw=none] (\i) circle (0.2em);
+      \draw[fill=cyan,draw=none] (\i) circle (0.2em);
     }
-    \draw[color=blue] (1)--(3)--(5)--(8)--(3);
-    \draw [color=red] ($(3)!(5)!(8)$) -- node[right] {$\varepsilon$} (5);
+    \draw[color=cyan] (1)--(3)--(5)--(8)--(3);
+    \draw [color=orange] ($(3)!(5)!(8)$) -- node[left, yshift=-0.5em] {$\varepsilon <$} (5);
   \end{scope}
 
   % Third elimination
   \begin{scope}[transform canvas={yshift = -240}]
-    \draw[color=blue,style=dashed] (1)--(2)--(3)--(4)--(5)--(6)--(7)--(8);
+    \draw[color=cyan,style=dashed] (1)--(2)--(3)--(4)--(5)--(6)--(7)--(8);
     \foreach \i in {1,2,...,8}{
-      \draw[fill=blue,draw=none] (\i) circle (0.2em);
+      \draw[fill=cyan,draw=none] (\i) circle (0.2em);
     }
-    \draw[color=blue] (1)--(3)--(5)--(8)--(7)--(5);
-    \draw [color=red] ($(5)!(7)!(8)$) -- node[right] {$\varepsilon$} (7);
+    \draw[color=cyan] (1)--(3)--(5)--(8)--(7)--(5);
+    \draw [color=orange] ($(5)!(7)!(8)$) -- node[right] {$> \varepsilon$} (7);
   \end{scope}
 
   % Final line
