@@ -1,0 +1,41 @@
+\begin{tikzpicture}[scale=0.035]
+  \tikzmath{
+    \tile=64;
+    \bboxwidth=2.25 * \tile;
+    \collectionwidth=3 * \tile;
+    \bboxheight=1.25 * \tile;
+    \collectionheight=2 * \tile;
+    \offset = 0.375 * \tile;
+    \shift = 5;
+  }
+  \draw (0, 0) grid[step=\tile] (\collectionwidth, \collectionheight);
+
+  % Show tile dimensions
+  \draw[decoration={brace}, decorate]
+    (-\shift, 0) -- node[above left] {$\SI{64}{\metre}~$} node[below left] {$\SI{256}{\pixel}$} (-\shift, \tile);
+
+  \draw[decoration={brace,mirror}, decorate]
+    (0, -\shift) -- node[below=2pt, align=center] {$\SI{64}{\metre}$ \\ $\SI{256}{\pixel}$} (\tile, -\shift);
+
+  % Show dimensions of tile collection
+  \draw[decoration={brace,mirror}, decorate]
+    (\collectionwidth + \shift, 0) 
+    --
+    node[right=2pt]{$h^*$}
+    (\collectionwidth + \shift, \collectionheight);
+  \draw[decoration={brace}, decorate]
+    (0, \collectionheight + \shift) 
+    --
+    node[above=2pt]{$w^*$}
+    (\collectionwidth, \collectionheight + \shift);
+
+  % Arrows showing growth of bounding box
+  \tikzset{>=latex}
+  \draw (\bboxwidth + \offset + 1, \offset - 1) edge[->, thick, dashed] (\collectionwidth - 1, 1);
+  \draw (\bboxwidth + \offset + 1, \bboxheight + \offset + 1) edge[->, thick, dashed] (\collectionwidth - 1, \collectionheight - 1);
+  \draw (\offset - 1, \bboxheight + \offset + 1) edge[->, thick, dashed] (1, \collectionheight);
+  \draw (\offset - 1, \offset - 1) edge[->, thick, dashed] (1, 1);
+
+  % Draw original bounding box
+  \draw[dotted, thick, color=cadastralcolor, fill=cadastralcolor!10, fill opacity = 0.9] (0 + \offset, 0 + \offset) rectangle (\bboxwidth + \offset, \bboxheight + \offset);
+\end{tikzpicture}

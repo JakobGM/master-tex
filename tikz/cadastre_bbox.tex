@@ -1,0 +1,26 @@
+\begin{tikzpicture}[scale=0.035]
+  \tikzmath{
+    \xmin=0;
+    \xmax=100;
+    \ymin=0;
+    \ymax=100;
+    \xmid=0.5 * \xmin + 0.5 * \xmax;
+    \ymid=0.5 * \ymin + 0.5 * \ymax;
+  }
+  \coordinate (lr) at (\xmax, \ymin);
+  \coordinate (ul) at (\xmin, \ymax);
+
+  \draw[dashed, color=cadastralcolor, fill=cadastralcolor!10] (\xmin, \ymin) rectangle (\xmax, \ymax);
+  \filldraw[orange, draw=black] (50, \ymin) -- (62.5, 12.5) -- (25, 50) -- (\xmax, 50) -- (50, \ymax) -- (0, 50) -- cycle;
+
+  \draw (ul) node[above] {$(x_{\mathrm{min}}, y_{\mathrm{max}})$};
+  \fill[cadastralcolor] (ul) circle [radius=1];
+
+  \draw (lr) node[below] {$(x_{\mathrm{max}}, y_{\mathrm{min}})$};
+  \fill[cadastralcolor] (lr) circle [radius=1];
+
+  \draw (\xmid, \ymax) node[above] {$\hspace{3em}w = x_{\mathrm{max}} - x_{\mathrm{min}}$};
+  \draw (\xmax, \ymid) node[above, rotate=-90] {$\hspace{-3em}h = y_{\mathrm{max}} - y_{\mathrm{min}}$};
+
+  \draw (\xmid, 65) node[scale=1, black] {\textsf{CADASTRAL}};
+\end{tikzpicture}

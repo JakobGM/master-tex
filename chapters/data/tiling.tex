@@ -1,0 +1,111 @@
+The data sets provided to us are in a state unsuitable for direct use by machine learning frameworks.
+For this reason we need to develop a preprocessing pipeline that transforms the data into a more customary format.
+The data preprocessing should be generalizable to different regions, data formats, data types (vector vs.\ raster), coordinate systems, and so on.
+The goal is to implement a modelling pipeline that can be applied to other geographic regions in the future.
+
+Our data sets are defined over a single, contiguous geographic area, and we must therefore define a \textit{sample space} which allows us to split the data into training-, validation-, and test-sets.
+The collection of all cadastral plots in a given region is a suitable sample space since cadastral plots are non-overlapping regions of relatively small size and have a high probability of containing one or more buildings.
+A large raster dataset covering a sparsely populated region can therefore be substantially reduced in size before training.
+An alternative approach is to split the entire data set into regularly sized tiles and use this tile collection as the sample space.
+A tiled sample space, for anything other than densely populated areas, will suffer from class imbalances due to low building densities in most tiles.
+
+Given a specific geographic region, defined by the extent of the cadastral plot, we must retrieve the raster which covers the region of interest.
+The simplest approach is to calculate the \textit{axis-aligned bounding box} of the plot, the minimum-area enclosing rectangle of the given plot.
+A bounding box is uniquely defined by its centroid $\vec{c} = [\nicefrac{1}{2}(x_{\mathrm{\min}} + x_{\mathrm{\max}}), \nicefrac{1}{2}(y_{\mathrm{\min}} + y_{\mathrm{\max}})]$, width $w = x_{\mathrm{\max}} - x_{\mathrm{\min}}$, and height $h = y_{\mathrm{\max}} - y_{\mathrm{\min}}$, and we will denote it by $B(\vec{c}, w, h)$.
+This is shown in \cref{fig:cadastral-bbox}.
+
+\begin{figure}[htb]
+  \captionsetup[subfigure]{position=b}
+  \centering
+  \subcaptionbox{
+    Bounding box calculation for a given cadastral.
+    The cadastral is shown in \textcolor{orange}{orange},
+    and the resulting bounding box is annotated with \textcolor{blue}{blue} dashed lines.%
+    \label{fig:cadastral-bbox}
+  }{
+    \input{tikz/cadastre_bbox.tex}
+  }
+  \hspace{2em}
+  \subcaptionbox{
+    Figure showing the difference between a regular bounding box shown in
+    \textcolor{blue}{blue}, and a minimum rotated rectangle shown in
+    \textcolor{red}{red}.
+    Angle of rectangle rotation denoted by $\phi$.%
+    \label{fig:rotated-bbox}
+  }{
+    \input{tikz/bbox_method.tex}
+  }
+  \caption{Comparison of bounding box methods.}
+\end{figure}
+
+The edges of the bounding box is by definition oriented parallel to the coordinate axes.
+An alternative method is to calculate the \textit{arbitrarily oriented minimum bounding box} (AOMBB), a rectangle rotated by $\phi$ degrees w.r.t.\ the $x$-axis, as shown in \cref{fig:rotated-bbox}.
+
+While AOMBB yields regions with less superfluous raster data, it requires warping of the original raw raster whenever $\phi$ is not a multiple of \SI{90}{\degree}, i.e.\ $\phi \not\in \{ \SI{0}{\degree}, \SI{90}{\degree}, \SI{180}{\degree}, \SI{270}{\degree} \}$.
+Such warping requires data interpolation of the original raster data due to the rotation of the coordinate system, and may introduce artifacts to the warped raster without careful parameter tuning.
+AOMBB is therefore not a viable approach during the preprocessing stage, and we will therefore use axis-aligned minimum bounding boxes instead, from now on simply referred to as \textit{bounding boxes}.
+
+Calculating bounding boxes for the cadastral plots in our data sets will yield rectangles of variable dimensions.
+Variable input sizes will cause issues for model architectures which require predefined input dimensions.
+Convolutional neural networks do handle variable input sizes, but dimensions off all images in a \textit{single} training batch must be of the same size.
+It is therefore preferable to normalize the size of each bounding box.
+
+The distributions of the bounding box widths ($w$), heights ($h$), and maximal dimensions ($m = \max \{w, h\}$) are shown in \cref{fig:bbox-stats}.
+
+\begin{figure}[htb]
+  \includegraphics[width=\linewidth]{bbox_stats}
+  \caption{%
+    Distribution of bounding box widths $w$ (left), heights $h$ (middle), and largest dimension $m = \max \{w, h\}$ (right).
+    The cut-off value of $\SI{64}{\meter}$ is shown by \textcolor{red}{red} dotted vertical lines.
+    The fraction of bounding boxes with dimension $\leq \SI{64}{m}$ is annotated as well.
+    The $x$-axis has been cut off at the 90th percentile.
+    \textit{Dataset: Trondheim cadastre}.
+  }%
+  \label{fig:bbox-stats}
+\end{figure}
+
+As can be seen in \cref{fig:bbox-stats}, the distributions of $h$ and $w$ are quite similar, as expected.
+A square $1:1$ aspect ratio is therefore suitable for the normalized bounding box size.
+Specifically, a $\SI{64}{\meter} \times \SI{64}{\meter}$ bounding box will be of sufficient size to contain $\approx \SI{85}{\percent}$ of all cadastre plots in a single tile.
+With a LiDAR resolution of $\SI{0.2}{\meter}$, this results in a final image resolution of $\SI{256}{\pixel} \times \SI{256}{\pixel}$.
+This resolution has the added benefit of being a common resolution for CNNs.
+
+How should the bounding boxes be normalized to to $\SI{256}{\pixel} \times \SI{256}{\pixel}$?
+A common technique is to resize the original image by use of methods such as bilinear interpolation or Lanczos resampling.
+While this is tolerable for normal photographs, where each pixel has a variable surface area mapping, it is an especially lossy transformation for remote sensing data.
+In the Trondheim 2017 LiDAR data set, for instance, each pixel represents a $\SI{0.2}{\meter} \times \SI{0.2}{\meter}$ real world area.
+If the highly variable extent of each bounding box is scaled to $\SI{256}{\pixel} \times \SI{256}{\pixel}$, the real world area of each pixel will differ greatly between cadastral plots.
+Resized images will also become distorted whenever the original aspect ratio is not $1:1$.
+
+A better method utilizes the fact that the remote sensing data covers a continuous geographic region, which allows us to expand the feature space beyond the original region of interest.
+The original bounding box is denoted as $B(\vec{c}, w, h)$.
+Now, define the following \enquote{enlarged} width and height:
+%
+\begin{align*}
+  h^* &:= \ceil{\frac{h}{\SI{64}{\meter}}} \cdot \SI{64}{\meter},
+  \hspace{3em}
+  w^* := \ceil{\frac{w}{\SI{64}{\meter}}} \cdot \SI{64}{\meter}
+\end{align*}
+%
+The new bounding box, $B(\vec{c}, w^*, h^*)$, covers the original bounding box and is divisible by \SI{256}{\pixel} in both dimensions.
+In other words, the original bounding box is grown in all directions until both the width and height are multiples of \SI{64}{\meter} (\SI{256}{\pixel}).
+This is demonstrated in \cref{fig:bbox-growing}.
+
+\begin{figure}[H]
+  \centering
+  \input{tikz/bbox_growing.tex}
+  \caption{%
+    Bounding box of width $2.25 \cdot \SI{64}{\meter} = \SI{144}{\meter}$ and height $1.25 \cdot \SI{64}{\meter} = \SI{80}{\meter}$.
+    The bounding box is grown until it is 3 tiles wide and 2 tiles tall, i.e. $\SI{192}{\meter} \times \SI{128}{\meter}$.
+  }%
+  \label{fig:bbox-growing}
+\end{figure}
+
+The resulting bounding box can now be divided into $w^*h^* / 64^2$ tiled images of resolution $\SI{256}{\pixel} \times \SI{256}{\pixel}$, every pixel representing a $\SI{0.2}{\meter} \times \SI{0.2}{\meter}$ surface area, and no spatial information has been lost in the process.
+Each tile's geographic extent is uniquely defined by the coordinate of the upper left corner (\textit{tile origin}), since the tile dimensions are identical.
+An affine transformation from the UTM zone into the tile's discretized coordinate system can be constructed from the tile origin.
+
+The additional area, $B(\vec{c}, w, h) \setminus B(\vec{c}, w^*, h^*)$, is filled with real raster data and respective target masks, and therefore may cause expanded bounding boxes to partially overlap.
+This will result in certain cadastral plots to share features, and must therefore be carefully dealt with in order to prevent data leakage across training, validation, and test splits.
+Another approach is to fill in the additional area with zero-values, effectively preventing all data leakage between cadastral plots.
+A disadvantage with this approach is that all models are now required to learn to ignore this additional, fake data, and this could result in reduced predictive performance and/or longer training times.

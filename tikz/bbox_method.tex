@@ -1,0 +1,32 @@
+\begin{tikzpicture}[scale=0.035]
+  \tikzmath{
+    \xmin=0;
+    \xmax=100;
+    \ymin=0;
+    \ymax=100;
+    \xmid=0.5 * \xmin + 0.5 * \xmax;
+    \ymid=0.5 * \ymin + 0.5 * \ymax;
+  }
+  \coordinate (lr) at (\xmax, \ymin);
+  \coordinate (ul) at (\xmin, \ymax);
+
+  \draw[dashed, color=cadastralcolor, fill=cadastralcolor!10] (\xmin, \ymin) rectangle (\xmax, \ymax);
+  \draw[dashed, color=red, fill=red!20, fill opacity=1] (\xmin, 50) -- (50, \ymin) -- (\xmax, 50) -- (50, \ymax) -- cycle; 
+  \filldraw[orange, draw=black] (50, \ymin) -- (62.5, 12.5) -- (25, 50) -- (\xmax, 50) -- (50, \ymax) -- (0, 50) -- cycle;
+  \draw[dashed, thick, color=red] (\xmin, 50) -- (50, \ymin) -- (\xmax, 50) -- (50, \ymax) -- cycle; 
+
+  \fill[cadastralcolor] (ul) circle [radius=1];
+  \fill[cadastralcolor] (lr) circle [radius=1];
+
+  \fill[red] (\xmin, 50) circle [radius=1];
+  \fill[red] (\xmax, 50) circle [radius=1];
+
+  % Draw angle of rotation
+  \draw[black] (\xmid + 20, \ymax) arc [start angle=0, end angle=-45, radius=20] node[midway, right] {$\phi$};
+
+  % The following is added such that the resulting figure has the same dimensions as cadastre_bbox
+  \draw (ul) node[above] {$(x_{\mathrm{min}}, y_{\mathrm{max}})$};
+  \fill[cadastralcolor] (ul) circle [radius=1];
+  \draw (lr) node[below] {$(x_{\mathrm{max}}, y_{\mathrm{min}})$};
+  \fill[cadastralcolor] (lr) circle [radius=1];
+\end{tikzpicture}
