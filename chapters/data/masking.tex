@@ -1,0 +1,46 @@
+In order to create a ground truth segmentation mask we must convert the vector-formatted mask polygons, building outlines in our case, into the same rasterized format as the remote sensing data.
+The construction of discretized segmentation masks from vectorized mask polygons is performed by \cref{alg:masking}.
+
+\begin{algorithm}{Discretized masking}{alg:masking}
+  \item Transform the mask polygons into the pixel coordinate system of the raster tile, using the affine transformation defined by the tile origin.
+  \item Superimpose the polygon on the discretized pixel grid and crop polygons outside the pixel region $(0, 255) \times (0, 255)$.
+  \item Fill in the value $1$ for any pixel contained by the polygon exterior hulls, while not contained by any interior hull.
+  \item Set remaining values to $0$.
+\end{algorithm}
+
+A problem arises when pixels are partially contained by a polygon exterior and interior, i.e.\ when the pixel overlaps the polygon's boundary.
+The pixel must be rather arbitrarily considered as either contained (decision rule A) or not contained (decision rule B) by the polygon.
+Both decision rules are shown in \cref{fig:pixel-containment}.
+
+\begin{figure}[H]
+  \centering
+  \input{tikz/touching_mask.tex}
+  \hspace{2em}
+  \input{tikz/non_touching_mask.tex}
+  \caption{%
+    The same polygon discretized to a raster grid using two different techniques.
+    In the left figure, all pixels being \textit{touched} by the interior of the polygon
+    are considered a part of the polygon (decision rule A), while in the left figure, only pixels
+    entirely \textit{contained} within the interior are considered being part
+    of the polygon (decision rule B).
+  }%
+  \label{fig:pixel-containment}
+\end{figure}
+
+An alternative is to average the two masks, resulting in mask values of $0.5$ where the two decision rules disagree.
+Approximately \SI{9.2}{\percent} of mask pixels of value $1$ are situated along the boundary of a discretized mask polygon (\SI{1.7}{\percent} of \textit{all} pixels regardless of value) and may therefore be affected by this decision.
+We have opted for decision rule A.
+The distribution of the mask class balance across all produced tiles is shown in \cref{fig:mask-class-balance}.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics{mask-balance}
+  \caption{%
+    Distribution of \textit{building density} across all produced tiles in Trondheim.
+    Building density is defined by number of pixels positioned on top of buildings divided by total number of pixels.
+  }%
+  \label{fig:mask-class-balance}
+\end{figure}
+
+The average tile has a building density of approximately \SI{17}{\percent}, that is \SI{700}{\meter\squared} of \SI{4096}{\meter\squared} is occupied by buildings.
+Of all the produced tiles approximately \SI{8.32}{\percent} end up having no positive mask pixels, i.e.\ no buildings are situated within these tiles.

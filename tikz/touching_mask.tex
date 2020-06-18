@@ -1,0 +1,32 @@
+\begin{tikzpicture}[every node/.style={minimum size=0.6*1.3cm-\pgflinewidth, outer sep=0pt, fill=orange!80, fill opacity=0.4}, scale=0.6*1.3]
+  \tikzmath{
+    \gridheight=4;
+    \gridwidth=4;
+  }
+
+  \def\cells{
+    (0.5,0.5),
+    (1.5,1.5),
+    (2.5,2.5),
+    (3.5,3.5),
+    (3.5,2.5),
+    (3.5,1.5),
+    (3.5,0.5),
+    (2.5,0.5),
+    (1.5,0.5),
+    (2.5,1.5),
+    (2.5,3.5),
+    (1.5,2.5)
+  };
+  \coordinate (offset) at (0.5, 0.5);
+  \foreach \cell in \cells {
+    \node at ($(\cell$) {};
+  }
+
+  \draw[step=1,color=black,draw opacity=0.6] (0,0) grid (\gridwidth,\gridheight);
+  \draw[thick, orange, line width=0.1cm] (0.5, 0)
+    -- (3.33, \gridheight)
+    -- (\gridwidth, \gridheight)
+    -- (\gridwidth, 0)
+    -- cycle;
+\end{tikzpicture}

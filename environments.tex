@@ -1,21 +1,3 @@
-% Custom algorithm environment
-\newcounter{algorithm}
-\renewcommand*{\thealgorithm}{Algorithm \arabic{algorithm}}
-\newcommand*{\systemautorefname}{algorithm}
-\newenvironment{algorithm}[3]
-{%
-  \refstepcounter{algorithm}\label{#2}
-  \begin{titled-frame}{\textbf{\thealgorithm:~}\texttt{#1}}\noindent
-  \textbf{Input:}\hspace{1em}\begin{minipage}{\dimexpr\textwidth-3cm}#3\end{minipage}.
-  \begin{enumerate}[label=\textbf{\arabic*},leftmargin=0.5cm]%
-}
-{%
-  \end{enumerate}\end{titled-frame}\vspace{0.5em}%
-}
-
-% Reference custom algorithm environment
-\newcommand{\algref}[1]{\ref{#1}}
-
 % Quick and dirty pseudocode which does not deserve the algorithm environment
 \newenvironment{pseudocode}[0]
 {%
@@ -45,3 +27,10 @@
   \end{pseudoloop}
   \end{pseudocode}
 }
+
+% Custom algorithm environment
+\newcounter{algorithm}
+\newcommand*{\systemautorefname}{algorithm}
+\newenvironment{algorithm}[2]
+{\vspace{0.75em}\noindent\refstepcounter{algorithm}\begin{minipage}{\textwidth}\begin{framed}\label{#2}\textbf{Algorithm \thealgorithm:} \texttt{#1}\begin{enumerate}[label=\textbf{\arabic*}]}
+  {\end{enumerate}\end{framed}\end{minipage}\vspace{0.75em}}
