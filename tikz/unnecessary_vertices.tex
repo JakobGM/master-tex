@@ -1,0 +1,33 @@
+\begin{tikzpicture}[scale=1]
+  \coordinate (ll) at (0, 0);
+  \coordinate (lm) at (2, 0);
+  \coordinate (lr) at (4, 0);
+  \coordinate (ur) at (4, 1);
+  \coordinate (um) at (2, 1);
+  \coordinate (Um) at (2, 2);
+  \coordinate (ul) at (0, 1);
+  \draw[fill=orange]
+    (ll) node[below] {$\vec{p}_0$}
+    -- (lm) node[below] {$\vec{p}_1$}
+    -- (lr) node[below] {$\vec{p}_2$}
+    -- (ur) node[above] {$\vec{p}_3$}
+    -- (um) node[above right] {$\vec{p}_4$}
+    -- (Um) node[above] {$\vec{p}_5$}
+    -- (um) node[above left] {$\vec{p}_6$}
+    -- (ul) node[above] {$\vec{p}_7$}
+    -- cycle;
+  \foreach \n in {ll,lm,lr,ur,um,Um,um,ul}
+    \node at (\n)[circle,fill,inner sep=1.5pt]{};
+
+   \draw (4.9, 0.5) edge[->, thick] node[above] {\texttt{buffer(0.0)}} (7.1, 0.5);
+
+  \coordinate (offset) at (8, 0);
+  \draw[fill=orange]
+    ($ (ll) + (offset) $) node[below] {$\vec{p}_0$}
+    -- ($ (lr) + (offset) $) node[below] {$\vec{p}_1$}
+    -- ($ (ur) + (offset) $) node[above] {$\vec{p}_2$}
+    -- ($ (ul) + (offset) $) node[above] {$\vec{p}_3$}
+    -- cycle;
+  \foreach \n in {ll,lr,ur,ul}
+    \node at ($ (\n) + (offset) $)[circle,fill,inner sep=1.5pt]{};
+\end{tikzpicture}

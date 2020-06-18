@@ -1,0 +1,44 @@
+A \textit{line string} is an ordered collection of geographic points $(\vec{p}_0, \ldots, \vec{p}_n)$ defining a path which connects each consecutive point by a straight line.
+The points are therefore necessarily order dependent.
+A \textit{simple} line string is a path which does \textit{not} intersect itself, while a \textit{complex} line string is one that does.
+When the first and last points of a line string are identical it is considered a \textit{linear ring}, i.e.\ $l = (\vec{p}_0, \ldots, \vec{p}_n, \vec{p}_0)$.
+A \textit{polygon} can therefore be represented by a simple linear ring which defines its \textit{exterior hull} and any number of simple linear strings which defines its \textit{interior hulls}.
+\Cref{fig:polygon-representation} illustrates these concepts for polygons with and without interior hulls. % chktex 2
+
+\begin{figure}[H]
+  \centering
+  \input{tikz/simple_polygon.tex}
+  \textcolor{gray}{\vrule}
+  \hspace{0.01\linewidth}
+  \input{tikz/interior_hull.tex}
+  \caption{%
+    Simple polygon with four unique vertices is shown on the left hand side.
+    A complex polygon with an outer hull
+    and an interior hull is shown on the right hand side for comparison.
+  }%
+  \label{fig:polygon-representation}
+\end{figure}
+
+A polygon is considered invalid if one or more of its linear rings are self-intersecting, i.e.\ if any of its rings is considered to be complex.
+Data providers frequently provide polygons in invalid states and such polygons must be corrected since they are often not processable by common GIS tools.
+Zero-buffering invalid polygons (growing the polygon in all directions by zero units) fixes such problems, as can be seen in \cref{fig:complex-zero-buffer}.
+
+\begin{figure}[H]
+  \centering
+  \input{tikz/self_intersecting_polygon.tex}
+  \caption{Illustration of how zero-buffering an invalid polygon corrects self-intersecting polygons.}%
+  \label{fig:complex-zero-buffer}
+\end{figure}
+
+Zero-buffering polygons has the added benefit of normalizing vector data by re-ordering the polygon vertices in an anti-clockwise manner and removing redundant vertices as shown in \cref{fig:redundant-zero-buffer}.
+
+\begin{figure}[H]
+  \centering
+  \input{tikz/unnecessary_vertices.tex}
+  \caption{Illustration of how zero-buffering polygons removes redundant vertices.}%
+  \label{fig:redundant-zero-buffer}.
+\end{figure}
+
+This allows you to apply simpler similarity measures for comparing polygons, and reduces computational costs when processing the polygons.
+Technical details for applying zero-buffers to vector data is provided in \cref{app:zero-buffer}.
+We will come back to how to combine vector and raster datasets by \textit{rasterization} in \cref{sec:masking-algorithm} where it will also become clear why the removal of redundant vertices is of importance.

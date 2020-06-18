@@ -1,0 +1,29 @@
+\begin{tikzpicture}[scale=1]
+  \coordinate (ll) at (0, 0);
+  \coordinate (mid) at (2, 1);
+  \coordinate (lr) at (4, 0);
+  \coordinate (ur) at (4, 2);
+  \coordinate (ul) at (0, 2);
+  \draw[fill=orange]
+    (ll) node[left] {$\vec{p}_0$}
+    -- (ur) node[right] {$\vec{p}_1$}
+    -- (lr) node[right] {$\vec{p}_2$}
+    -- (ul) node[left] {$\vec{p}_3$}
+    -- cycle;
+  \foreach \n in {ll,ur,lr,ul}
+    \node at (\n)[circle,fill,inner sep=1.5pt]{};
+
+   \draw (4.4, 1) edge[->, thick] node[above] {\texttt{buffer(0.0)}} (6.6, 1);
+
+  \coordinate (offset) at (7, 0);
+  \draw[fill=orange]
+    ($ (ll) + (offset) $) node[left] {$\vec{p}_0$}
+    -- ($ (mid) + (offset) $) node[below] {$\vec{p}_1$}
+    -- ($ (lr) + (offset) $) node[right] {$\vec{p}_2$}
+    -- ($ (ur) + (offset) $) node[right] {$\vec{p}_3$}
+    -- ($ (mid) + (offset) $) node[above] {$\vec{p}_4$}
+    -- ($ (ul) + (offset) $) node[left] {$\vec{p}_5$}
+    -- cycle;
+  \foreach \n in {ll,mid,lr,ur,mid,ul}
+    \node at ($ (\n) + (offset) $)[circle,fill,inner sep=1.5pt]{};
+\end{tikzpicture}
