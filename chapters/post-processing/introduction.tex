@@ -9,7 +9,7 @@ These two models could conceivably be sub-models of a \emph{single} multi-task m
   \label{fig:multitask-prediction}
 \end{figure}
 \noindent
-As discussed in \cref{sec:surface-rasterization} -- \enquote{\nameref{sec:surface-rasterization}}, the goal is to convert these two model predictions which belong to the surface \emph{raster} domain $R$ back to the \emph{vector} polygon domain $V$ by constructing a suitable pseudoinverse mapping $m^{\dagger}: R \rightarrow V$ as illustrated in \cref{fig:pseudoinverse}.
+As discussed in \cref{sec:surface-rasterization} -- \enquote{\nameref{sec:surface-rasterization}}, the goal is to convert these two model predictions belonging to the surface \emph{raster} domain $R$ back to the \emph{vector} polygon domain $V$ by constructing a suitable pseudoinverse mapping $m^{\dagger}: R \rightarrow V$ as illustrated in \cref{fig:pseudoinverse}.
 \begin{figure}[H]
   \centering
   \includegraphics{pseudoinverse.tikz}
@@ -52,14 +52,14 @@ A pseudoinverse mapping which performs badly under this \enquote{round-trip metr
 \newpage
 
 In the following sections we will present a pseudoinverse mapping which is considered highly suitable for producing roof surface polygons, a mapping which encodes our specific domain knowledge about the general geometric properties of roof surfaces.
-Our main idea is to use the predicted surface normal raster in order to \textit{partition} the \textit{semantic} segmentation map into an \textit{instance} segmentation map.
-The instance segmentation map can subsequently be used in order to construct enclosing polygons for each instance, and the three-dimensional orientation of each polygon is inferred from the predicted surface normals in conjunction with the original LiDAR data.
+Our main idea is to use the predicted surface normal raster in order to \textit{partition} the \textit{semantic} segmentation map into an \textit{instance} segmentation map, where the instance segmentation map can subsequently be used in order to construct enclosing vector polygons for each instance.
+The three-dimensional orientation of each polygon can finally be inferred from the predicted surface normals in conjunction with the original LiDAR data.
 
 Our implementation applies a divide-and-conquer approach to the problem by dividing the semantic segmentation map into mutually disjunct sub-regions and partitioning these sub-regions entirely independent of each other.
 This first-pass partitioning is described in \cref{sec:connected-region-labeling} -- \enquote{\nameref{sec:connected-region-labeling}}.
 A second-pass partitioning is performed by grouping together connected regions which share the same normal vector orientation.
 The task of determining which pixels $(i, j)$ which share the same values for $N_{i, j}$ is formulated as a \textit{clustering problem}, the solution of which will be presented in \cref{sec:instance-clustering}.
-A final conversion of classified pixels to vector polygons will be described in \cref{sec:vectorization}.
+A final conversion of instance segmentation maps to vector polygons will be described in \cref{sec:vectorization}.
 
 Before delving into the details of the implementation, we begin by summarizing the entire post-processing algorithm in conceptual terms:
 

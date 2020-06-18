@@ -1,12 +1,12 @@
-The clustering performed in the previous section has produced an instance segmentation map, $\predinstraster$.
-Lets denote the total number of identified clusters across all roof partitions as $C$ such that $\predinstraster \in \{0, 1, 2, \ldots, C\}^{H \times W \times 1}$.
+The clustering described in the previous section results in a rasterized instance segmentation map which we will denote as $\predinstraster$.
+Denote the total number of identified clusters across all roof partitions as $C$ such that $\predinstraster \in \{0, 1, 2, \ldots, C\}^{H \times W \times 1}$.
 Here $\predinstraster_{i,j} = 0$ indicates that the pixel location $(i,j)$ does not contain any surface polygon, i.e.\ $\predsegraster_{i,j} = 0$.
-This section will describe how to convert this two-dimensional instance segmentation raster map into a set of at least $C$ vectorized three-dimensional polygons $\predpolygons$.
+This section will describe how to convert this two-dimensional instance segmentation raster map into a set of vectorized three-dimensional polygons $\predpolygons$.
 
 \subsection{Two-dimensional polygonization}
 
-As previously described in \cref{sec:connected-region-labeling}, we can use connected region labeling in order to group together all neighbouring pixels with equal values for $\predinstraster_{i,j}$.
-Each connected sub-region can be naively converted to polygons by drawing line segments along pixel borders, resulting in a fine-grained polygon for each instance\footnote{This functionality is implemented in \texttt{GDALPolygonize} in the GDAL library. The \texttt{rasterio} python package wraps this GDAL function in \texttt{rasterio.features.shapes}.}.
+Connected region labeling can be used in order to group together all neighbouring pixels with equal values for $\predinstraster_{i,j}$ as previously described in \cref{sec:connected-region-labeling}.
+Each connected sub-region can be converted to polygons by simply drawing line segments along the pixel borders, resulting in a fine-grained polygon for each instance\footnote{This functionality is implemented in \texttt{GDALPolygonize} in the GDAL C-library. The \texttt{rasterio} python package wraps this GDAL function in \texttt{rasterio.features.shapes}.}.
 Denote the resulting set of two-dimensional polygons as $\predpolygons$, an example of which is shown in \cref{fig:polygonization}.
 \begin{figure}[H]
   \centering
@@ -15,19 +15,19 @@ Denote the resulting set of two-dimensional polygons as $\predpolygons$, an exam
   \label{fig:polygonization}
 \end{figure}
 \noindent
-As can be seen in \cref{fig:polygonization}, the resulting polygons $\predpolygon \in \predpolygons$ show a high degree of \enquote{rasterization}, having edges which are exclusively oriented along the east-west or north-south axis (\enquote{Manhattan edges}).
-Depending on the application of the predicted polygons, it may be preferable to simplify these edges to some degree in order to represent diagonal edges in a better way.
+As can be seen in \cref{fig:polygonization}, the resulting polygons show a high degree of \enquote{rasterization}, having edges which are exclusively oriented along the east-west or north-south axis (\enquote{Manhattan edges} if you will).
+Depending on the application of the predicted polygons, it may be preferable to smooth these edges in order to represent diagonal edges more accurately.
 The following section will describe such a simplification.
 \newpage
 
 \subsection{Simplification}%
 \label{sec:simplification}
 
-A vectorized polygon is, as previously mentioned, simply a collection of line segments which start and end at the same point (a so-called linear ring).
+A vectorized polygon is, as previously described, simply a collection of line segments which start and end at the same point (a so-called linear ring).
 The simplification of vectorized line segments is a well researched area with many proposed algorithms.
 The most common approach is to select a subsequence of the original linear ring while minimizing some loss criterion.
-Methods for preserving areas \cite{ls-area-preserving}, distances \cite{ls-distance-preserving}, and angles \cite{ls-angle-preserving} have been proposed.
-\citeauthor{ls-vw} proposes an area-based progressive algorithm in \cite{ls-vw}\footnote{The Visvalingam-Whyatt polygon simplification method has been implemented and newly released on the Python Package Index (PyPI) under the name \texttt{visvalingamwyatt}.}.
+Methods for preserving areas~\cite{ls-area-preserving}, distances~\cite{ls-distance-preserving}, and angles~\cite{ls-angle-preserving} have been proposed.
+\citeauthor{ls-vw} proposes an area-based progressive algorithm in~\cite{ls-vw}\footnote{The Visvalingam-Whyatt polygon simplification method has been implemented and newly released on the Python Package Index (PyPI) under the name \texttt{visvalingamwyatt}.}.
 Another common simplification guideline is the \textit{bandwidth criterion}, stating that a simplified line is acceptable as long as it is within an $\varepsilon$-neighbourhood of the original line segment.
 The task is then to select the minimum number of vertices which still satisfies this criterion.
 The \textit{Ramer-Douglas-Peucker} (RDP) algorithm\cite{ls-rdp} is one such method, a recursive algorithm which is implemented along the following lines:
@@ -59,16 +59,16 @@ The result of applying RDP on the vectorized polygons $\predpolygons$ with $\var
   \label{fig:rdp-algorithm}
 \end{figure}
 
-\subsection{Three-dimensional fitting}
+\subsection{Three-dimensional reconstruction}
 
-As discussed in \cref{sec:surface-normal-raster-format}, any planar three-dimensional polygon $P \in \polygons$ can be decomposed into, and reconstructed from, two sub-components,
+As discussed in \cref{sec:surface-normal-raster-format}, any planar three-dimensional polygon $P$ can be decomposed into, and reconstructed from, two sub-components
 \begin{enumerate}[nosep]
   \item the two-dimensional projection $\project{P}$, \dots
   \item and the parametric equation of the plane $\planar{P} = [\beta_0, \beta_x, \beta_y]$.
 \end{enumerate}
 The first sub-component has now been approximated by the simplified polygons $\simplifiedpolygons$.
 We must now try to approximate $\planar{P}$ before we can reconstruct the three-dimensional polygons.
-Start by noticing that $\beta_x$ and $\beta_y$ can be expressed in terms of the normal vector of the plane, $\vec{n} = {[n_x, n_y, n_z]}^T$, because of how it was constructed in \cref{eq:normalplanar} on \cpageref{eq:normalplanar},
+Start by noticing that $\beta_x$ and $\beta_y$ can be expressed in terms of the normal vector of the plane, $\vec{n} = {[n_x, n_y, n_z]}^T$, by construction
 \begin{equation*}
   \begin{bmatrix}
     n_x\\
@@ -96,9 +96,8 @@ Start by noticing that $\beta_x$ and $\beta_y$ can be expressed in terms of the 
 \end{equation*}
 With other words, if we are able to construct a good estimate for the normal vector of the plane $\normalplanar{P}$, we can also estimate $\beta_x$ and $\beta_y$.
 Now, each polygon $P \in \simplifiedpolygons$ has an associated cluster label value $l$ in the instance segmentation map $\predinstraster$.
-The corresponding raster index set can be reconstructed as $\mathcal{I}_P \defeq \{(i, j) \mid \predinstraster_{i,j} = l \}$.
-All the predicted normal vectors associated to the polygon $P$ can be retrieved from the predicted surface normal vector raster as $\mathcal{N}_{P} \defeq \{\predsegnormraster_{i,j} \mid (i,j) \in \mathcal{I}_P \}$.
-Now we can construct a predictor for $\normalplanar{P}$ from the associated normal vector set $\mathcal{N}_P$, for example the \textit{normalized vector average}, defined as
+The corresponding raster index for the given polygon $P$ is then defined as $\mathcal{I}_P \defeq \{(i, j) \mid \predinstraster_{i,j} = l \}$, and the predicted normal vectors associated to the polygon $P$ can therefore be retrieved from the predicted surface normal vector raster as $\mathcal{N}_{P} \defeq \{\predsegnormraster_{i,j} \mid (i,j) \in \mathcal{I}_P \}$.
+We can now construct a predictor for $\normalplanar{P}$ from the associated normal vector set $\mathcal{N}_P$, for example the \textit{normalized vector average}, defined as
 \begin{equation*}
   \overline{\vec{n}}
   =
@@ -114,10 +113,10 @@ Now we can construct a predictor for $\normalplanar{P}$ from the associated norm
     \norm{\sum_{\predsegnormraster_{i,j} \in \mathcal{N}_P} \predsegnormraster_{i,j}}_2
   }.
 \end{equation*}
-In order to construct an even more robust estimation of the surface normal vectors, we can remove the DBSCAN-identified noise from the normal vector set, that is, if the polygon $P$ belongs to roof partition $r$, we use $\mathcal{N}_{P}^* \defeq \{\predsegnormraster_{i,j} \mid (i,j) \in (\mathcal{I}_P \setminus \mathcal{I}_r^*) \}$ instead.
-We can now construct estimators for $\beta_x$, $\hat{\beta}_x = -\overline{n}_x / \overline{n}_z$, and $\beta_y$, $\hat{\beta}_y = -\overline{n}_y / \overline{n}_z$.
-The remaining task is now to construct a estimator for the final planar parameter, $\beta_0$, which we will denote as $\hat{\beta}_0$.
-Since the surface normal raster is entirely independent of elevation of the plane, we must use the LiDAR input data in order to construct an estimator $\hat{\beta}_0$ for $\beta_0$.
+It is also possible to remove the DBSCAN-identified noise from the normal vector set in order to construct an even more robust estimator, that is, if the polygon $P$ belongs to roof partition $r$, we use $\mathcal{N}_{P}^* \defeq \{\predsegnormraster_{i,j} \mid (i,j) \in (\mathcal{I}_P \setminus \mathcal{I}_r^*) \}$ instead.
+We can now construct estimators for $\beta_x$, $\hat{\beta}_x \defeq -\overline{n}_x / \overline{n}_z$, and $\beta_y$, $\hat{\beta}_y \defeq -\overline{n}_y / \overline{n}_z$.
+The remaining task is now to construct an estimator for the final planar parameter $\beta_0$.
+Since the surface normal raster is entirely independent of the elevation of the plane, we must use the LiDAR input data in order to construct an estimator $\hat{\beta}_0$ for $\beta_0$.
 The idea is to formulate the search for $\hat{\beta}_0$ such that the \textit{LiDAR residuals} (see \cref{sec:non-planar-fix}) are minimized.
 Given a distance metric $d$, we can construct the predictor as
 \begin{align*}
@@ -126,12 +125,12 @@ Given a distance metric $d$, we can construct the predictor as
   \argmin_{\beta_0 \in \mathbb{R}}
   \sum_{(i,j) \in \mathcal{I}_P}
   d\left(
-    \lidarraster_{i,j},
+    \lidarraster_{i,j},~
     \beta_0 + \hat{\beta}_x x + \hat{\beta}_y y
   \right),
 \end{align*}
 where ${[x, y]}^T \defeq \pixtogeo{i}{j}$ and $H_{i,j}$ is the LiDAR measurement at pixel location $(i,j)$.
-If we specify the square distance $d(x, y) = (x - y)^2$, we have an ordinary least squares regression.
+If we specify the square distance metric $d(x, y) = (x - y)^2$, then we have an ordinary least squares regression with just one regression parameter.
 Due to the nature of LiDAR measurement errors, the absolute distance $d(x, y) = |x - y|$ has been shown to produce more robust estimators for $\beta_0$.
 
 We can now reconstruct the predicted set of simplified, three-dimensional polygons:
@@ -139,9 +138,9 @@ We can now reconstruct the predicted set of simplified, three-dimensional polygo
   P_{\mathrm{3D}}
   =
   \left[
-    (x, y, \hat{\beta}_0 + \hat{\beta}_x x + \beta_y y)
+    (x, y, \hat{\beta}_0 + \hat{\beta}_x x + \hat{\beta}_y y)
     \mid
-    \text{ for vertex } (x, y) \in P
+    \text{ for vertex } (x, y) \text{ representing } P
   \right],
   \text{ for } P \in \simplifiedpolygons.
 \end{equation*}

@@ -1,7 +1,7 @@
-We now intend to subdivide each roof partition into constituent surface partitions, creating a instance segmentation map as a result.
+We now intend to subdivide each roof partition into constituent surface partitions, creating an instance segmentation map as a result.
 Each partition should be constructed such that all pixels $(i, j)$ in a given surface partition share the same normal vector orientation, $\normraster_{i,j}$.
 A complicating factor is that the predicted surface normal raster $\predsegnormraster$ is not perfect, that is, the predicted normal vectors $\predsegnormraster_{i,j}$ are spatially distributed across some neighbourhood around the ground truth surface normal vector $\normraster_{i,j}$.
-The distribution of the cosine similarity between the predicted normal vectors and the ground truth normal vectors for one of the trained surface normal model $\normmodel$ is shown in \cref{fig:cosine-similarity-distribution}.
+The distribution of the cosine similarity between the predicted normal vectors and the ground truth normal vectors, $1 - \predsegnormraster_{i,j} \cdot \normraster_{i,j}$, for one of the trained surface normal model $\normmodel$ is shown in \cref{fig:cosine-similarity-distribution}.
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.7\textwidth]{cosine-similarity-distribution}
@@ -10,20 +10,24 @@ The distribution of the cosine similarity between the predicted normal vectors a
   }%
   \label{fig:cosine-similarity-distribution}
 \end{figure}
-\begin{wrapfigure}{r}{0.35\textwidth}
+\begin{wrapfigure}[16]{r}{0.35\textwidth}
   \begin{center}
     \includegraphics[width=0.35\textwidth]{tile-data/130-0/surface_normals_3+segmented_normals_2/polar_normals_true_labels.pdf}
   \end{center}
-  \caption{Ground truth labeling of predicted normal vectors.}%
+  \appcaption{%
+    Ground truth labeling of predicted normal vectors.
+  }{%
+    Azimuth = \SI{0}{\degree} indicates true north.
+  }%
   \label{fig:polar-normal-true-labels}
 \end{wrapfigure}
 \noindent
-Denote the index set of a given roof partition as $\mathcal{I}_{r} = \{(i_{r,1}, j_{r,1}), (i_{r,2}, j_{r,2}), \ldots\}$.
-As an example, let us focus on roof partition $r=D$ as labeled in \cref{fig:mask-iteration}.
-We can construct a set of surface normal vector observations defined over the given roof partition, $\mathcal{N}_{D} \defeq \{\predsegnormraster_{i,j} \mid (i, j) \in \mathcal{I}_{D}\}$.
-The spatial distribution of $\mathcal{N}_{D}$ is shown in \cref{fig:polar-normal-true-labels}, each normal vector being represented as a scatter point.
-Now, the region defined by roof partition $D$ contains four ground truth roof surface polygons, and each scatter point $N_{i,j}$ has been color annotated according to which polygon that overlaps at pixel location $(i, j)$.
-Each ground truth roof surface polygon has an associated ground truth normal vector, and these are annotated as black crosses ($\times$) in \cref{fig:polar-normal-true-labels}.
+Denote the index set of a given roof partition $r$ as $\mathcal{I}_{r} = \{(i_{r,1}, j_{r,1}), (i_{r,2}, j_{r,2}), \ldots\}$.
+We will specifically focus on roof partition $r=D$ as labeled in \cref{fig:mask-iteration} in the following example plots.
+Start by constructing a set of surface normal vector observations defined over the given roof partition, $\mathcal{N}_{r} \defeq \{\predsegnormraster_{i,j} \mid (i, j) \in \mathcal{I}_{r}\}$.
+The spatial distribution of $\mathcal{N}_{D}$ is shown in \cref{fig:polar-normal-true-labels}, each normal vector being represented as a scatter point on the projected $xy$-plane.
+Now, the region defined by roof partition $D$ contains four ground truth roof surface polygons, and each scatter point $\predsegnormraster_{i,j}$ has been color annotated according to which polygon that overlaps at pixel location $(i, j)$.
+Each ground truth roof surface polygon has an associated ground truth normal vector as well, and these are annotated as black crosses ($\times$) in \cref{fig:polar-normal-true-labels}.
 The task is now to assign a cluster label $l \in \{1, 2, \ldots, C\}$ to each observation in $\mathcal{N}_D$ such that those observations which share the same label also can be considered to share the same normal vector.
 In our example, where the ground truth is available, we know that the number of clusters $C$ should ideally be equal to four, i.e.\ the number of unique roof surfaces.
 In practice, however, it is important to notice that the number of roof surfaces in a given roof partition is not known \textit{a priori}, and $C$ therefore needs to be inferred from the spatial distribution of $\mathcal{N}_{D}$.
@@ -31,9 +35,9 @@ It is therefore important that the clustering algorithm we chose does not requir
 
 Our clustering procedure utilizes two different clustering algorithms applied in succession, first \textit{density-based spatial clustering of applications with noise} (DBSCAN) and then \textit{$k$-nearest neighbours} (k-NN).
 DBSCAN has the benefit of being able to infer $C$ from $\mathcal{N}_D$, a value which can then be passed forwards to the k-NN clustering algorithm which requires it \textit{a priori}.
-Additionally, DBSCAN has the ability to label observations as \enquote{noise} whenever the cluster they belong in not entirely clear.
-This allows us to use the conservative non-noisy labels produced by DBSCAN to estimate the ground truth normal vectors, while applying k-NN (which encodes a greater degree of our domain knowledge) on the remaining noisy observations.
-These two clustering algorithms will now be explained in more detail.
+Additionally, DBSCAN has the ability to label observations as \enquote{noise} whenever the cluster they belong to is not entirely clear.
+This allows us to use the conservative non-noisy labels produced by DBSCAN to estimate the ground truth normal vectors, while applying k-NN (which encodes a greater degree of our domain knowledge about roof surfaces) on the remaining noisy observations.
+The application of these two clustering algorithms will now be explained in more detail.
 
 \subsection{DBSCAN}
 
@@ -48,20 +52,24 @@ These two clustering algorithms will now be explained in more detail.
   }%
   \label{fig:polar-normal-dbscan-labels}
 \end{wrapfigure}
-DBSCAN is a non-parametric clustering algorithm (that is $C$ does not need to be specified) first proposed by \citeauthor{dbscan} in \citeyear{dbscan} \cite{dbscan}.
-Consider the normal vector observations $\predsegnormraster_{i,j} \in \mathcal{N}_r$ that should be clustered, and define some distance metric between normal vectors $\predsegnormraster_1$ and $\predsegnormraster_2$, $d(\predsegnormraster_1, \predsegnormraster_2)$.
-A distance metric could for instance be the cosine distance between two normalized vectors of length 1: $d(\predsegnormraster_1, \predsegnormraster_2) = 1 - \predsegnormraster_1 \cdot \predsegnormraster_2$.
+DBSCAN is a non-parametric clustering algorithm (that is $C$ does not need to be specified) first proposed by \citeauthor{dbscan} in \citeyear{dbscan}\cite{dbscan}.
+Consider the normal vector observations $\predsegnormraster_{i,j} \in \mathcal{N}_r$ to be clustered, and define some distance metric between two normal vectors $N_1$ and $N_2$, $d(N_1, N_2)$.
+The distance metric could be chosen to be the cosine distance between two normalized vectors of length 1: $d(N_1, N_2) = 1 - N_1 \cdot N_2$\footnote{Using cosine distance as the distance metric during clustering is especially suitable when $\normmodel$ is trained by using cosine distance as the loss function. The same can be said of other cluster distance metric / model loss combinations.}.
 Given parameters $\varepsilon > 0$ and $\texttt{MinPts} \in \mathbb{Z}^+$, DBSCAN annotates each normal vector in $\predsegnormraster \in \mathcal{N}_r$ as either a \textit{core point}, \textit{reachable point}, or as a noisy \textit{outlier}.
-A normal vector $\predsegnormraster \in \mathcal{N}_r$ is considered a core point if there exists at least \texttt{MinPts} normal vectors $\predsegnormraster^* \in (\mathcal{N}_{r} \setminus \predsegnormraster)$ where $d(\predsegnormraster, \predsegnormraster^*) < \varepsilon$.
+A normal vector $\predsegnormraster \in \mathcal{N}_r$ is considered to be a core point if there exists at least \texttt{MinPts} normal vectors $\predsegnormraster^* \in (\mathcal{N}_{r} \setminus \predsegnormraster)$ where $d(\predsegnormraster, \predsegnormraster^*) < \varepsilon$.
 DBSCAN then creates a graph of all identified core points and draws edges between core point nodes $\predsegnormraster_1$ and $\predsegnormraster_2$ whenever $d(\predsegnormraster_1, \predsegnormraster_2) < \varepsilon$.
-All \textit{connected components} of this core point neighbourhood graph are now considered to be clusters, thus inferring the total number of clusters $C$.
-Any non-core normal vector is assigned to a nearby cluster as long as it is within $\varepsilon$ distance of normal vector within that cluster.
-All remaining normal vectors are finally considered as noisy outliers.
+All \textit{connected components} of this core point neighbourhood graph are considered to be clusters, thus automatically inferring the total number of clusters $C$.
+Any non-core normal vector is assigned to a nearby cluster as long as it is within $\varepsilon$ distance of a normal vector within that cluster.
+All remaining normal vectors are finally considered noisy outliers.
 
-\Cref{fig:polar-normal-dbscan-labels} shows the result of DBSCAN when applied on the predicted surface normal vectors $\mathcal{N}_D$ belonging to roof partition $D$ as annotated in \cref{fig:mask-iteration} (\cpageref{fig:mask-iteration}).
-The parametrization of DBSCAN is set as $\varepsilon = \num{2.5e-6}$ and $\texttt{MinPts} = 25$, and the cosine similarity distance metric has been used.
+\Cref{fig:polar-normal-dbscan-labels} on the previous page shows the result of DBSCAN when applied on the predicted surface normal vectors $\mathcal{N}_D$ belonging to roof partition $D$ as annotated in \cref{fig:mask-iteration} (\cpageref{fig:mask-iteration}).
+The parametrization of DBSCAN is set as $\varepsilon = \num{2.5e-6}$ and $\texttt{MinPts} = 25$, where the cosine distance metric has been used.
 Of the non-noisy labels produced by DBSCAN in \cref{fig:polar-normal-dbscan-labels}, \SI[round-mode=places,round-precision=1]{99.78233830845771}{\percent} are labeled correctly.
-The remaining noisy normal vectors are shown as gray scatter points in \cref{fig:polar-normal-dbscan-labels}.
+The remaining noisy normal vectors are shown as gray scatter points.
+
+\Cref{fig:dbscan-tile} shows the result of applying DBSCAN on all four roof partitions ($A$, $B$, $C$, and $D$ as presented in \cref{fig:mask-iteration}).
+The normal vectors labeled as noise by DBSCAN, marked as black pixels, are frequently situated along the border between roof surfaces.
+Protruding roof segments have also been observed as a common location for noisy normal vectors.
 \begin{figure}[H]
   \centering
   \includegraphics{dbscan.tikz}
@@ -74,14 +82,18 @@ The remaining noisy normal vectors are shown as gray scatter points in \cref{fig
   \label{fig:dbscan-tile}
 \end{figure}
 \noindent
-\Cref{fig:dbscan-tile} shows the result of applying DBSCAN on all four roof partitions ($A$, $B$, $C$, and $D$ as presented in \cref{fig:mask-iteration}).
-The normal vectors labeled as noise by DBSCAN, marked as black pixels in \cref{fig:dbscan-tile}, are frequently situated along the border between roof surfaces.
-Protruding roof segments have also been observed as a common location for noisy normal vectors.
 The labeling of the remaining noisy normal vectors will now be discussed.
 
 \subsection{\texorpdfstring{$k$}{k}-nearest neighbour noise classification}
 
-\begin{wrapfigure}[16]{r}{0.35\textwidth}
+Denote the index set of the DBSCAN-identified noise for roof partition $r$ as $\mathcal{I}_r^*$.
+The set of noisy normal vectors $\mathcal{N}_r^* = \{\predsegnormraster_{i,j} \mid (i, j) \in \mathcal{I}_r^*\}$ is now considered insufficient for further clustering, as they are likely insufficiently close to their ground truth normal vectors in addition to being spuriously distributed in the normal vector feature space.
+Until now, the geographic location ${[x, y]}^T = \pixtogeo{i}{j}$ corresponding to each predicted normal vector $\predsegnormraster_{i,j}$ has been entirely ignored.
+The idea is to use this spatial information in order to assign labels to the remaining noise, while utilizing the clustering already performed by DBSCAN.
+The \textit{$k$-nearest neighbours} (k-NN) algorithm~\cite{knn} is a conceptually simple algorithm highly suitable for this task.
+Start by constructing two geographic location sets, first one for the noisy coordinates $\mathcal{R}_b^* \defeq \{\pixtogeo{i}{j} \mid (i, j) \in \mathcal{I}_r^* \}$, and a second one for the successfully labeled coordinates $\mathcal{R}_b \defeq \{\pixtogeo{i}{j} \mid (i, j) \in (\mathcal{I}_r \setminus \mathcal{I}_r^*)\}$.
+\begin{wrapfigure}[15]{r}{0.35\textwidth}
+  \vspace{-2em}
   \begin{center}
     \includegraphics[width=0.35\textwidth]{tile-data/130-0/surface_normals_3+segmented_normals_2/polar_normals_knn_labels.pdf}
   \end{center}
@@ -92,18 +104,13 @@ The labeling of the remaining noisy normal vectors will now be discussed.
   }%
   \label{fig:polar-normal-knn-labels}
 \end{wrapfigure}
-Denote the index set of the noisy labels for roof partition $r$ as $\mathcal{I}_r^*$.
-The set of noisy normal vectors $\mathcal{N}_r^* = \{\predsegnormraster_{i,j} \mid (i, j) \in \mathcal{I}_r^*\}$ are now considered bad features for further clustering, as they are likely insufficiently close to their ground truth normal vectors and spuriously distributed.
-Until now, the actual geographic location ${[x, y]}^T = \pixtogeo{i}{j}$ corresponding to each predicted normal vector $\predsegnormraster_{i,j}$ has been entirely ignored.
-The idea is to use this spatial information in order to assign labels to the remaining noise, while utilizing the clustering already performed by DBSCAN.
-The \textit{$k$-nearest neighbours} (k-NN) algorithm introduced by \citeauthor{knn} in \citeyear{knn} \cite{knn} is a conceptually simple algorithm highly suitable for this task.
-Start by constructing two geographic location sets, the noisy coordinates $\mathcal{R}_b^* \defeq \{\pixtogeo{i}{j} \mid (i, j) \in \mathcal{I}_r^* \}$, and the successfully labeled coordinates $\mathcal{R}_b \defeq \{\pixtogeo{i}{j} \mid (i, j) \in (\mathcal{I}_r \setminus \mathcal{I}_r^*)\}$.
-For each geographic point $p^* \in \mathcal{R}_b^*$ find the $k$ nearest neighbours $\{p_1, p_2, \ldots, p_k\}$ in the labeled set $\mathcal{R}_b$ according to some distance metric.
-The label assigned to $p^*$ is determined by a plurality vote of the labels of the neighbours $\{p_1, p_2, \ldots, p_k\}$.
+For each geographic point marked as noise by DBSCAN, $p^* \in \mathcal{R}_b^*$, find the $k$ nearest neighbours $\{p_1, p_2, \ldots, p_k\}$ in the labeled set $\mathcal{R}_b$ according to some distance metric.
+The label assigned to $p^*$ is then determined by a plurality vote of the labels of the neighbours $\{p_1, p_2, \ldots, p_k\}$.
 We will specifically set $k = 1$ and use the Euclidean norm ($\ell^2$-norm), that is, assigning the label of the geographically closest DBSCAN label, the result of which is presented in \cref{fig:polar-normal-knn-labels}.
 Of the noisy normal vectors labeled by k-NN in \cref{fig:polar-normal-knn-labels}, \SI[round-mode=places,round-precision=1]{76.86832740213523}{\percent} end up being labeled correctly.
 This yields a final clustering accuracy of roof partition $D$ of \SI[round-mode=places,round-precision=1]{97.94109236488419}{\percent}.
-\Cref{fig:polar-normal-knn-labels} does not plot the features actually used by the k-NN clustering method, but is intended to be compared against \cref{fig:polar-normal-dbscan-labels}.
+We should note that \cref{fig:polar-normal-knn-labels} does not plot the features actually used by the k-NN clustering method, as it shows $\predsegnormraster_{i,j}$ and not $\pixtogeo{i}{j}$.
+The figure is intended to be compared against \cref{fig:polar-normal-dbscan-labels}.
 The geographic features of the k-NN processed noise labels are shown in \cref{fig:knn-tile}.
 \begin{figure}[H]
   \centering
@@ -112,6 +119,7 @@ The geographic features of the k-NN processed noise labels are shown in \cref{fi
   \label{fig:knn-tile}
 \end{figure}
 \noindent
-As shown in \cref{fig:knn-tile} produces relative straight decision boundaries, which is important for roof surfaces.
-The result is an instance segmentation map which must further be vectorized into polygons.
+As shown in \cref{fig:knn-tile} the k-NN clustering produces relative straight decision boundaries, which is important for roof surfaces.
+The result is a rasterized instance segmentation map which must be processed further in order to convert each instance to a vectorized polygon.
+This is the topic of the upcoming section.
 \newpage

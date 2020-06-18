@@ -15,6 +15,6 @@
   \end{scope}
 
   \node[above=0 of simplification.north] {$\simplifiedpolygons$};
-  \draw[->, thick] (polygons.east) -- node[midway, above]{\texttt{RDP}} (simplification.west);
+  \draw[->, thick] (polygons.east) -- node[midway, above]{\texttt{RDP}} node[midway, below]{\footnotesize $\varepsilon = \SI{0.75}{\meter}$} (simplification.west);
   \node[above=0 of glassarea] {\small Simplified edges};
 \end{tikzpicture}

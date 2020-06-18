@@ -15,11 +15,15 @@ The process of thresholding has been illustrated in \cref{fig:activation-thresho
 \begin{figure}[H]
   \centering
   \resizebox{0.68\textwidth}{!}{\includegraphics{activation-thresholding.tikz}}
-  \caption{Thresholding a probabilistic segmentation prediction in order to create a \textit{binary} segmentation map.}%
+  \appcaption{
+    Thresholding a probabilistic segmentation prediction in order to create a \textit{binary} segmentation map.
+  }{%
+    Here $\texttt{TOL} = 0.5$ has been used.
+  }%
   \label{fig:activation-thresholding}
 \end{figure}
 \noindent
-This binary segmentation map can now be used in order to segment the predicted surface normal raster as well, producing what we will refer to as a \textit{segmented surface normals}.
+This binary segmentation map can now be used in order to segment the predicted surface normal raster as well, producing what we will refer to as \textit{segmented surface normals}.
 The segmented surface normal raster, $\predsegnormraster$, is constructed by taking the element-wise product of the predicted surface normal raster and the thresholded binary segmentation map, which we will denote as $\predbinarysegraster \odot \prednormraster$ and formally define as
 \begin{equation*}
   \predsegnormraster \defeq \predbinarysegraster \odot \prednormraster
@@ -39,17 +43,21 @@ The segmentation of the predicted surface normal raster is illustrated in \cref{
   \label{fig:normal-segmentation}
 \end{figure}
 \noindent
-These segmented normals $\predsegnormraster$ are intended to be used in order to partition the semantic segmentation map $\predbinarysegraster$ into an instance segmentation map, where each instance is considered to be a projected roof surface polygon.
-A simple first-pass partitioning of the segmentation map into regions which are entirely connected can be performed, with other words the partitioning into entire roofs rather than single roof surfaces.
-The identification of connected sub-regions can be performed by a so-called \textit{connected region labeling} algorithm as described in \cite{sklabel1,sklabel2}, and has been implemented by the \texttt{skimage} python package in \texttt{skimage.measure.label}.
+These segmented normals $\predsegnormraster$ are intended to be used in order to partition the semantic segmentation map $\predbinarysegraster$ into an instance segmentation map, where each instance is considered to be a two-dimensionally projected roof surface polygon.
+A simple first-pass partitioning of the segmentation map into regions which are completely connected can be performed, with other words the partitioning into entire roofs rather than single roof surfaces.
+The identification of connected sub-regions can be performed by a so-called \textit{connected region labeling} algorithm as described in \cite{sklabel1,sklabel2}\footnote{A connected region labeling algorithm is implemented by the \texttt{skimage} python package in \texttt{skimage.measure.label}}.
 \begin{figure}[H]
   \centering
   \includegraphics{mask-iteration.tikz}
-  \caption{The result of \texttt{skimage.measure.label} applied on a binary segmentation map.}%
+  \appcaption{%
+    The result of \texttt{skimage.measure.label} applied on a binary segmentation map.
+  }{%
+    Four separate sub-regions, marked as $A$, $B$, $C$, and $D$, have been identified.
+  }%
   \label{fig:mask-iteration}
 \end{figure}
 \noindent
-A dynamic programming programming approach can be subsequently applied in order to subdivide these \textit{roof partitions} into \textit{surface partitions}.
+A dynamic programming programming approach can be subsequently applied in order to independently subdivide these \textit{roof partitions} into \textit{surface partitions}.
 The example presented in \cref{fig:mask-iteration} shows that there exists four separate connected regions ($A$, $B$, $C$, and $D$) in the predicted semantic segmentation raster.
-Provided that the predicted segmentation map is sufficiently correct, then we can conclude that any polygon belonging to any one of these regions will not belong to any other region.
+Provided that the predicted segmentation map is sufficiently correct, we can conclude that any polygon belonging to any one of these regions will not belong to any other region.
 We can therefore formulate the partitioning of each region as entirely independent tasks, the solution of which will be presented in the next section.

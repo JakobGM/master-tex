@@ -4,7 +4,7 @@
   \def\halfoffset{7em}
   \node[anchor=south west,inner sep=0](image1) at (0, 0) {\includegraphics[scale=\gs]{tile-data/130-0/segmented_normals_2/predicted_mask}};
   \node[anchor=south west,inner sep=0, right=of image1](image2) {\includegraphics[scale=\gs]{tile-data/130-0/surface_normals_3+segmented_normals_2/predicted_segmented_normals}};
-  \foreach \i / \arrowcolor in {0/white, 0.524\linewidth/black}{
+  \foreach \i / \arrowcolor in {0/white, 0.524\linewidth/white}{
   \begin{scope}[
       x={(image1.south east)},
       y={(image1.north west)},

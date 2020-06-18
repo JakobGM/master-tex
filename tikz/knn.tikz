@@ -15,6 +15,6 @@
   \end{scope}
 
   \node[above=0 of knn.north] {$\texttt{KNN}(\texttt{DBSCAN}(\predsegnormraster))$};
-  \draw[->, thick] (dbscan.east) -- node[midway, above]{\texttt{KNN}} (knn.west);
+  \draw[->, thick] (dbscan.east) -- node[midway, above]{\texttt{k-NN}} node[midway, below]{$k = 1$} (knn.west);
   \node[above=0 of glassarea] {\small Classified noise};
 \end{tikzpicture}
