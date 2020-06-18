@@ -1,0 +1,85 @@
+We will use the \enquote{Ortofoto Trondheim 2017}\footnote{Product specification for \enquote{Ortofoto Trondheim 2017} can be found here:\\ \url{https://kartkatalog.geonorge.no/metadata/cd105955-6507-416f-86d2-6d95c1b74278}.} aerial photography dataset from 2017 which requires \SI{161}{\giga\byte} of storage space.
+The real image resolution is \SIrange{0.04}{0.15}{\meter}, but is provided with an upsampled resolution of \SI{0.1}{\meter} for consistency.
+The reported accuracy is \SI{\pm 0.35}{\meter}~\cite{trondheim_ortophoto_2017}, although the exact type of this accuracy is not specified.
+An exemplified region is visualized in \cref{fig:rgb-example}.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.75\linewidth]{data/rgb-example}
+  \appcaption{%
+    Visualization of the \enquote{Ortofoto Trondheim 2017} aerial photography dataset.
+  }{%
+    \copyright{Kartverket}.
+  }%
+  \label{fig:rgb-example}
+\end{figure}
+
+An \textit{orthophoto} is an image where the geographic scale is uniform over the entire image.
+Proper orthophotos are expensive to manufacture and are therefore seldomly available for most geographic regions~\cite{ortofoto_in_norway_2003}, including Trondheim.
+Aerial photography which has not been properly \enquote{ortho-rectified} may impede location-based inference as there exists no exact one-to-one mapping between image pixels and geographic coordinates.
+This problem is best understood by an example, as shown in \cref{fig:non-orthophoto-example}.
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}
+    \node[anchor=south west,inner sep=0] (image) at (0,0) {\includegraphics[width=0.75\linewidth]{data/non-orthophoto-example}};
+    \begin{scope}[x={(image.south east)},y={(image.north west)}]
+      \draw[orange, ultra thick, fill=orange!50, fill opacity=0.25]
+        (0.34, 0.3) --
+        (0.615, 0.55) --
+        (0.61, 0.69) --
+        (0.33, 0.445) --
+        cycle;
+    \end{scope}
+  \end{tikzpicture}
+  \appcaption{%
+    Example of nonproper orthophoto.
+  }{%
+    The building centered in the image is 14 stories tall.
+    The orange area annotates a clearly visible building wall.
+    \copyright{Kartverket}.
+  }%
+  \label{fig:non-orthophoto-example}
+\end{figure}
+
+As can be seen in \cref{fig:non-orthophoto-example}, the \enquote{Ortofoto Trondheim 2017} dataset clearly shows one side of a building due to the perspective of the plane capturing the image.
+An ideal orthophoto would capture all vertical building walls as single, straight lines, no matter the perspective.
+The effect of this \enquote{parallax error} on segmentation predictions will be investigated in \cref{sec:experiments}\todo{Should we have a specific RGB experiment and reference to it here?}.
+
+The LiDAR dataset used is \enquote{Høydedata Trondheim 5pkt 2017}\footnote{Product specification for \enquote{Høydedata Trondheim 5pkt 2017} can be found here:\\ \url{https://kartkatalog.geonorge.no/metadata/bec4616f-9a62-4ecc-95b0-c0a4c29401dc}.} from \date{2017-10-10} and requires \SI{25}{\giga\byte} of storage space.
+The resolution is \SI{0.2}{\meter} and has a reported standard deviation of \SI{0.02}{\meter}~\cite{trondheim_lidar_2017}.
+LiDAR visualized as a grayscale image over the same region as in \cref{fig:rgb-example} is presented in \cref{fig:lidar-example}.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.7125\linewidth]{data/lidar-example}
+  \caption[Visualization of LiDAR data from Trondheim.]{%
+    Visualization of the \enquote{Høydedata Trondheim 5pkt 2017} LiDAR dataset.
+    \copyright{Kartverket}.
+  }%
+  \label{fig:lidar-example}
+\end{figure}
+
+The LiDAR dataset is partially incomplete due to measurement errors, and certain pixels are therefore filled in with \texttt{nodata} placeholder values as explained in \cref{sec:data-types}.
+\cref{tab:lidar-point-density} shows the frequency of such \texttt{nodata} values in the dataset.
+The table has been produced by moving a rolling window of size $\SI{10}{\meter} \times \SI{10}{\meter}$ over the entire coverage area and calculating the proportion of pixels with valid values within each non-overlapping window.
+
+\begin{table}[htb]
+  \centering
+  \begin{tabular}{cc}
+    \toprule
+    {Point density (\si{\per\meter\squared})} & {Proportion (\%)} \\
+    \midrule
+    $> 100\%$ & 97.7 \\
+    \SIrange{85}{100}{\percent} & 1.2 \\
+    \SIrange{60}{85}{\percent} & 1.1 \\
+    \bottomrule
+  \end{tabular}
+  \caption[Control of point cloud LiDAR density.]{%
+    Control of point cloud density for the Trondheim 2017 LiDAR dataset.
+    The densities are calculated within rolling windows of size $\SI{10}{\meter} \times \SI{10}{\meter}$~\cite{trondheim_lidar_2017}.
+  }%
+  \label{tab:lidar-point-density}
+\end{table}
+
+% \SI{70.77}{\percent} of all pixels are valid, probably due to lower resolution than the actual resolution.  Elevation data is in domain $(-9.390, 569.050)$.

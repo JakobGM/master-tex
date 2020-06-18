@@ -101,6 +101,11 @@
 ]{biblatex}
 % Make \fullcite show all authors irrespectively of maxcitenames
 \preto\fullcite{\AtNextCite{\defcounter{maxnames}{99}}}
+% Be more aggressive when it comes to breaking up URLs in the bibliography
+% https://tex.stackexchange.com/a/422888
+\setcounter{biburllcpenalty}{7000}
+\setcounter{biburlucpenalty}{7000}
+\setcounter{biburlnumpenalty}{7000}
 
 % Tables from csv files
 \usepackage{csvsimple}
