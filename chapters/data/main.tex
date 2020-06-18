@@ -1,19 +1,44 @@
 \chapter{Data and Pre-Processing}%
 \label{sec:data}
 
-\section{Coordinate Systems}
+\input{chapters/data/introduction}
 
-\section{Data Types}
+\section{Coordinate Systems}%
+\label{sec:coordinate-systems}
+\input{chapters/data/coordinate-systems}
+
+\section{Data Types}%
+\label{sec:data-types}
+
+We will provide a brief overview of the two main categories of GIS data, namely \textit{vector data} and \textit{raster data}, and how to prepare these data types for machine learning purposes.
+
 \subsection{Vector data}
-\subsection{Raster data}
+\input{chapters/data/vector-data}
 
-\section{Datasets}
+\subsection{Raster data}%
+\label{sec:raster-data}
+\input{chapters/data/raster-data}
+
+\section{Datasets}%
+\label{sec:data-sets}
+
+The modelling results presented in \cref{sec:experiments} are trained on GIS data covering the Norwegian municipality of Trondheim.
+All data sets have been made available by the \enquote{Norge digitalt}-partnership and have been downloaded from \url{https://geonorge.no}, an online service hosted by \textit{Norwegian Mapping and Cadastre Authority} (\textit{Statens Kartverk}).
+All data, unless otherwise stated, are licenced under the \enquote{Norge digitalt}-licence\footnote{Information regarding the \enquote{Norge digitalt}-licence can be found here: \url{https://www.geonorge.no/Geodataarbeid/Norge-digitalt/Avtaler-og-maler/Norge-digitalt-lisens/}.} which restricts the use to non-commercial purposes.
+
 \subsection{Raster datasets}
+\input{chapters/data/raster-datasets}
+
 \subsection{Vector datasets}
+\input{chapters/data/vector-datasets}
 
-\section{Tiling Algorithm}
+\section{Tiling Algorithm}%
+\label{sec:tiling-algorithm}
+\input{chapters/data/tiling}
 
-\section{Masking Algorithm}
+\section{Masking Algorithm}%
+\label{sec:masking-algorithm}
+\input{chapters/data/masking}
 
 \newpage
 \section{Surface Rasterization Algorithm}%

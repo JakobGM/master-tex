@@ -1,0 +1,25 @@
+digraph G {
+  vd [shape=record, label="{𝑽𝒆𝒄𝒕𝒐𝒓 𝒅𝒂𝒕𝒂|Cadastral plots|Building outlines}"];
+  gpkg [label="Convert to\nGeoPackage\n(.gpkg)"];
+  vd_utm_trans [label="Project into\nUTM zone"];
+  buffer [label="Zero-buffer"];
+  pvd [shape=record, label="{𝑷𝒓𝒐𝒄𝒆𝒔𝒔𝒆𝒅 𝒗𝒆𝒄𝒕𝒐𝒓 𝒅𝒂𝒕𝒂|<cp>Cadastral plots|<bo>Building outlines}"];
+  vd -> gpkg -> vd_utm_trans -> buffer -> pvd;
+
+  raster [shape=record, label="{𝑹𝒂𝒔𝒕𝒆𝒓 𝒅𝒂𝒕𝒂|Aerial Photography (RGB)|Elevation data (LiDAR)}"];
+  raster_utm_trans [label="Project into UTM zone"];
+  vrt [label="Construct merged\nVRT dataset"];
+  raster -> raster_utm_trans -> vrt;
+
+  tiling [label="Tiling algorithm"];
+  masking [label="Masking algorithm"];
+  tiles [shape=record, label="{𝑹𝒂𝒔𝒕𝒆𝒓 𝒕𝒊𝒍𝒆𝒔|<rgb> RGB|<z> LiDAR|<bm> Buildings}"];
+  vrt -> tiling;
+  pvd:cp -> tiling;
+  tiling -> tiles:rgb;
+  tiling -> tiles:z;
+  pvd:bo -> masking -> tiles:bm;
+
+  disk [label="Disk cache", shape=cylinder];
+  tiles -> disk;
+}
