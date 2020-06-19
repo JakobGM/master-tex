@@ -1,22 +1,41 @@
 \chapter{Modelling}
 
-\section{Problem Description}
+\section{Problem Description}%
+\label{sec:segmentation-description}
 \subsection{Semantic segmentation}
+\input{chapters/modelling/description/semantic-segmentation.tex}
 \subsection{Surface raster prediction}
+\input{chapters/modelling/description/surface-raster.tex}
 
-\section{Convolutional Neural Networks}
+\section{Convolutional Neural Networks (CNNs)}%
+\label{sec:cnn}
+\input{chapters/modelling/cnn/introduction.tex}
 \subsection{Convolution}
+\input{chapters/modelling/cnn/convolution.tex}
 \subsection{Activation functions}
+\input{chapters/modelling/cnn/activation-functions.tex}
 \subsection{Pooling}
+\input{chapters/modelling/cnn/pooling.tex}
 \subsection{Batch normalization}
+\input{chapters/modelling/cnn/batch-normalization.tex}
 \subsection{Dropout}
+\input{chapters/modelling/cnn/dropout.tex}
+
 
 \section{Semantic Segmentation}
+\input{chapters/modelling/semantic-segmentation/introduction.tex}
 \subsection{Accuracy, sensitivity, and specificity}
+\input{chapters/modelling/semantic-segmentation/accuracy-sensitivity-specificity.tex}
 \subsection{Intersection over union and dice coefficient}
+\input{chapters/modelling/semantic-segmentation/iou-dice-loss.tex}
 \subsection{Binary cross-entropy and soft losses}
-\subsection{State-of-the-art}
-\subsection{The U-Net model architecture}
+\input{chapters/modelling/semantic-segmentation/losses.tex}
+\subsection{State-of-the-art}%
+\label{sec:segmentation-state-of-the-art}
+\input{chapters/modelling/semantic-segmentation/state-of-the-art.tex}
+\subsection{The U-Net model architecture}%
+\label{sec:unet}
+\input{chapters/modelling/semantic-segmentation/unet.tex}
 
 \section{Surface Raster Model}
 \subsection{State-of-the-art}
@@ -24,7 +43,7 @@
 \subsection{Normal losses}
 
 \section{Optimization}
-\subsection{Multitask learning}
+\input{chapters/modelling/optimization.tex}
 
 \section{Raster Normalization}%
 \label{sec:raster-normalization}
