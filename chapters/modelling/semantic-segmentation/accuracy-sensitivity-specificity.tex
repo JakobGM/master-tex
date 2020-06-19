@@ -1,0 +1,76 @@
+In order to describe segmentation metrics, it is useful to define the following quantities:
+
+\begin{center}
+  \fbox{%
+    \parbox{0.9\linewidth}{%
+      \begin{description}[leftmargin=1cm, before={\renewcommand\makelabel[1]{\bfseries ##1:}}]
+        \item[Condition Positive (P)]
+          Number of object class pixels in ground truth mask.
+        \item[Condition Negative (N)]
+          Number of non-object class pixels in ground truth mask.
+        \item[True Positive (TP)]
+          Number of pixels correctly predicted as being part of object class (correctly identified).
+        \item[True Negative (TN)]
+          Number of pixels correctly predicted as \textit{not} being part of object class (correctly rejected).
+        \item[False Positive (FP)]
+          Number of pixel incorrectly predicted as being part of object class (incorrectly identified).
+        \item[False Negative (FN)]
+          Number of pixel incorrectly predicted as \textit{not} being part of object class (incorrectly rejected).
+      \end{description}
+    }
+  }
+\end{center}
+
+False positives (FP) are often knows as \textit{type I errors} in statistics, and false negatives (FN) as \textit{Type II errors}.
+The greater the values of TP and TN, the better, and the smaller the values of FP and FN, the better.
+A visual representation of these classifications is given in \cref{fig:confusions}.
+
+\begin{figure}[H]
+  \includegraphics[width=\linewidth]{confusions}
+  \caption{%
+    Binary segmentation problem of size $256 \times 256$.
+    The ground truth, a rectangle of size $120 \times 80$ is shown on the left.
+    The \enquote{predicted} mask, shown in the middle, is of the same size, but offset by $(-30, -30)$.
+    The right figure shows the visual equivalent of a confusion matrix.
+    True positives are shown in \textcolor{tp}{dark blue}, true negatives in \textcolor{gray}{light gray}, false positives in \textcolor{fp}{green}, and false negatives in \textcolor{fn}{red}.
+  }%
+  \label{fig:confusions}
+\end{figure}
+
+The simplest metric for semantic segmentation is the \textit{pixel accuracy} metric.
+This metric simply reports the percentage of pixels that were correctly classified.
+More formally, it can be defined as:
+
+\begin{equation*}
+    \textbf{accuracy} = \frac{TP + TN}{TP + TN + FP + FN} = \frac{TP + TN}{P + N}
+\end{equation*}
+
+The problem with the pixel-wise accuracy metric is that it does not take class imbalances into account.
+Consider a problem where 95\% of all pixels are considered to be of class $0$, and the remaining 5\% of class $1$.
+If we construct a model which predicts $0$ regardless of the feature inputs provided to the model, the model will achieve a 95\% accuracy score.
+This makes pixel-wise accuracy scores hard to interpret when you do not know the class balance of the respective dataset and the accuracy grouped by class.
+This is why it is often replaced by other metrics which take imbalances into account.
+A pair of such metrics are \textit{sensitivity} and \textit{specificity}, formally defined as:
+
+\begin{small}
+\begin{align*}
+    \textbf{sensitivity}
+    &=
+    \frac{\text{number of true positives}}{\text{number of true positives + number of false negatives}}
+    =
+    \frac{TP}{TP + FN}
+    =
+    \frac{TP}{P}
+    \\
+    \textbf{specificity}
+    &=
+    \frac{\text{number of true negatives}}{\text{number of true negatives + number of false positives}}
+    =
+    \frac{TN}{TN + FP}
+    =
+    \frac{TN}{N}
+\end{align*}
+\end{small}
+
+The \textit{sensitivity} is therefore a measure of how good a given model prediction is able to identify positives as a relative, fractional value.
+Likewise, the \textit{specificity} is a measure of how good a given model prediction is able to identify negatives.
