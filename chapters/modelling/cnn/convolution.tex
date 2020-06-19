@@ -1,0 +1,106 @@
+As the name implies, a central concept of convolutional neural networks is the \textit{convolution operator}.
+Let the \textit{kernel}, $w$, be a $H_k \times W_k$ real matrix, and denote the activation of the previous layer at position $(x, y)$ as $a_{x, y}$.
+The \textit{convolution operator}, $\circledast$, is then defined as
+%
+\begin{align*}
+  w \circledast a_{x, y} = \sum_{i} \sum_{j} w_{i, j} ~ a_{x - i, y - j},
+  \hspace{3em}
+    a_{x, y} \in \mathbb{R},~
+    w \in \mathbb{R}^{H_k \times W_k},
+\end{align*}
+%
+where $(i, j)$ spans the index set of the kernel.
+The region around $a_{x,y}$ which is involved in the convolution is referred to as the \textit{receptive field}.
+We can generate a \textit{filtered image} by moving this receptive field over the entire input image.
+The step size used when moving the receptive field is referred to as the \textit{stride size} of the convolution.
+Such a \textit{moving convolution} is illustrated in \cref{fig:convolution}.
+
+\begin{figure}[htb]
+  \input{tikz/convolution.tex}
+  \caption{
+    Visualization of a kernel convolution with a $3 \times 3$ kernel over an image of size $4 \times 4$ with additional zero-padding and stride size of $1 \times 1$.
+    The \textit{receptive field} is shown in \textcolor{orange}{orange}, the respective kernel weights in \textcolor{blue}{blue}, and the resulting convolution output in \textcolor{green}{green}.
+    The zero padding of the input image is shown in gray.
+  }%
+  \label{fig:convolution}
+\end{figure}
+
+In the case of input images or activations comprised of more than one channel, independent two-dimensional kernels are constructed for each channel and the convolved outputs are finally summed in order to attain a single feature map.
+The concept of a \textit{kernel} predates neural networks as it has been used for feature extraction in the field of image processing for many years~\cite[p.~11]{computer_vision_history}.
+The kernel weights determine the type of features being extracted from the given input image, some common interpretable kernels are given below.
+
+\begin{footnotesize}\begin{align*}
+  \underbracket[0.6pt][7pt]{
+    w_1 =
+    \begin{bmatrix}
+      0 & 0 & 0 \\
+      0 & 1 & 0 \\
+      0 & 0 & 0 \\
+    \end{bmatrix}
+  }_{\text{Identity kernel}},
+  &&
+  \underbracket[0.6pt][7pt]{
+    w_2 =
+    \begin{bmatrix}
+      -1 & -1 & -1 \\
+      -1 & 8 & -1 \\
+      -1 & -1 & -1 \\
+    \end{bmatrix}
+  }_{\text{Edge detection kernel}},
+  &&
+  \underbracket[0.6pt][7pt]{
+    w_3 =
+    \frac{1}{9}
+    \begin{bmatrix}
+      1 & 1 & 1 \\
+      1 & 1 & 1 \\
+      1 & 1 & 1 \\
+    \end{bmatrix}
+  }_{\text{Normalized box blur kernel}},
+  &&
+  \underbracket[0.6pt][7pt]{
+    w_4 =
+    \frac{1}{16}
+    \begin{bmatrix}
+      1 & 2 & 1 \\
+      2 & 4 & 2 \\
+      1 & 2 & 1 \\
+    \end{bmatrix}
+  }_{\text{Gaussian blur kernel}}.
+\end{align*}\end{footnotesize}
+
+It is important to notice that kernel convolution has the additional effect of reducing the dimensionality of the input image.
+Firstly, pixels along the image border are partially ignored since the receptive field can not be properly centered on these pixel.
+Secondly, a horizontal stride of $W_k > 1$ or a vertical stride of $H_k > 1$ will cause additional dimensional reduction.
+For an image of size $H \times W$ and a kernel of size $H_k \times W_k$, the input image is reduced to size
+%
+\begin{equation*}
+  \floor{(H - H_k + H_s) / H_s}
+  \times
+  \floor{(W - W_k + W_s) / W_s}.
+\end{equation*}
+%
+as shown by~\cite{dive-into-deep-learning}.
+The reduction in dimensionality when using stride sizes of one is often undesirable, and for this reason it is common to add a \textit{padding} filled with zero-values along the edges of the input image.
+Applying a padding of height $H_p$ at the horizontal borders and a padding of width $W_p$ at the vertical borders results in a feature map of size
+%
+\begin{equation*}
+  \floor{(H - H_k + H_s + \mathbf{H_p}) / H_s}
+  \times
+  \floor{(W - W_k + W_s + \mathbf{W_p}) / W_s}.
+\end{equation*}
+%
+If we assume the input height and width to be divisible by the stride height and width respectively, we can set $H_p = H_k - 1$ and $W_p = W_k - 1$ in order to attain an output shape of $(H / H_s) \times (W / W_s)$~\cite{dive-into-deep-learning}.
+Such a padding is shown in gray in \cref{fig:convolution}.
+
+CNNs apply multiple different convolutions to the same input, resulting in a set of differently filtered outputs.
+After having applied the layer's activation function to the output (see upcoming section about \enquote{activation functions}) and the activations have been downsampled (see upcoming \enquote{pooling} section), the filtered outputs are passed onto the next layer.
+The number of filters are usually increased as you move deeper into the network where the resolution has been increasingly downsampled.
+Unlike classical image processing, where kernel weights are carefully selected in order to construct an intended type of feature extraction, CNNs let each kernel weight be a trainable parameter.
+As the network is trained each kernel learns to extract features which are of use for the subsequent layers.
+
+An important aspect of convolution is that the kernel weights remain unchanged as the receptive field is moved over the input image.
+This \textit{parameter sharing} results in regions being treated identically no matter where in the image they are situated~\cite{visint-cnn}.
+The sharing of parameters has the benefit of reducing the parametric complexity of the network, thus decreasing the computational cost of training it.
+Finally, compared to a more classical \textit{fully connected feedforward network}, which operates over flattened vectors, a fully convolutional neural network operates over images in matrix form, thus taking the spatial relationship between pixels into account.
+\raggedbottom

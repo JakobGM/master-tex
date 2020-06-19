@@ -1,0 +1,67 @@
+%%%%%%%%%%%%%%%%%%% Local functions %%%%%%%%%%%%%%%%%%%
+%% -- Draw marks
+\newbox\dumbox% chktex 1
+\newcommand{\mymark}[2]{%
+  \setbox\dumbox=\hbox{#2}%
+  \hbox to \wd\dumbox{\hss% chktex 1
+    \tikz[overlay,remember picture,baseline=(#1.base)]{ \node (#1) {\box\dumbox}; }% chktex 36
+    \hss}%
+}
+
+%%%%%%%%%%%%%%%%%%% Local functions %%%%%%%%%%%%%%%%%%%
+
+\[
+\underbracket[0.6pt][7pt]{
+\left[\begin{array}{ccccccc}
+  \mymark{TL3}{0} & 0 & 0 & 0 & 0 & \mymark{TR3}{0} \\
+  0 & 1 & \mymark{TL1}{2} & 0 & \mymark{TR1}{0} & 0 \\
+  0 & 5 & 3 &               0 & 4 &               0 \\
+  0 & 0 & \mymark{BL1}{0} & 0 & \mymark{BR1}{7} & 0 \\
+  0 & 9 & 3 & 0 & 0 & 0 \\
+  \mymark{BL3}{0} & 0 & 0 & 0 & 0 & \mymark{BR3}{0} \\
+\end{array}\right]
+}_{\text{Zero-padded input}}
+*
+\underbracket[0.6pt][7pt]{
+\left[\begin{array}{ccc}
+  \mymark{TL2}{1} & 1 & \mymark{TR2}{1}\\
+  1  & 1 &              0 \\
+  \mymark{BL2}{1} & 0 & \mymark{BR2}{0}
+\end{array}\right]
+}_{\text{Kernel}}
+=
+\underbracket[0.6pt][7pt]{
+\left[\begin{array}{ccccccc}
+  1 & 8 & 5 & 0 \\
+  8 & 11 & \mymark{C}{5} & 4 \\
+  8 & 17 & 10 & 11 \\
+  9 & 12 & 10 & 7 \\
+\end{array}\right]
+}_{\text{Convolved output}}
+\]
+
+\begin{tikzpicture}[overlay, remember picture,
+    myedge1/.style={thin, opacity=.3, blue},
+    myedge2/.style={thin, opacity=.3, green!40!black}]
+
+  %% Draw boxes
+  \draw[orange, fill=orange, fill opacity=.1]   (TL1.north west) rectangle (BR1.south east);
+  \draw[blue, fill=blue, fill opacity=.1] (TL2.north west) rectangle (BR2.south east);
+  \draw[green!60!black, fill=green, fill opacity=.1] (C.north west) rectangle (C.south east);
+
+  %% Draw blue lines
+  \draw[myedge1] (TL1.north west) -- (TL2.north west);
+  \draw[myedge1] (BL1.south west) -- (BL2.south west);
+  \draw[myedge1] (TR1.north east) -- (TR2.north east);
+  \draw[myedge1] (BR1.south east) -- (BR2.south east);
+
+  %% Draw green lines
+  \draw[myedge2] (TL2.north west) -- (C.north west);
+  \draw[myedge2] (BL2.south west) -- (C.south west);
+  \draw[myedge2] (TR2.north east) -- (C.north east);
+  \draw[myedge2] (BR2.south east) -- (C.south east);
+
+  \fill[gray, fill opacity = 0.1, even odd rule]
+    (TL3.north west) rectangle (BR3.south east)
+    (TL3.south east) rectangle (BR3.north west);
+\end{tikzpicture}
