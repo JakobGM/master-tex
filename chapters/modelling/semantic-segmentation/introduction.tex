@@ -1,0 +1,11 @@
+\todo{Make this introduction make sense after not only being about metrics, losses, and optimization.}
+Metrics and losses are of central importance when training and evaluating machine learning models.
+Denote the parametrization of a given machine learning model, $\hat{f}$, as $\vec{\theta}$, the input features as $X$, and the corresponding \textit{ground truth} labels as $Y$.
+In order to evaluate the performance of a given model parametrization, we must formulate a cost- or performance-\textit{metric}, $P(\hat{f}(X; \theta); Y)$, which we intend to respectively minimize or maximize.
+The performance metric encodes our notion of what constitutes as a good model fit.
+
+While the performance metric is what we really want to optimize, it may not be suitable for numerical optimization, for example due to being non-differentiable or too computationally costly.
+Machine learning optimization differs from classical optimization in that the performance metric is indirectly maximized through the optimization of a surrogate \textit{loss} function~\cite[p.~272]{goodfellow}, $\mathcal{L}(\hat{f}(X; \vec{\theta});  Y)$.
+The loss metric is minimized in the hope of improving the performance metric indirectly, and it is therefore of vital importance that there is a strong relationship between performing well on the loss function and performing well on the performance metric.
+
+We will provide a summary of popular losses and metrics for single-class semantic segmentation.
