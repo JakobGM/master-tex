@@ -1,0 +1,34 @@
+The reparametrization of earlier layers when training deep neural networks results in a distributional change in the feature layer forwarded to the next layers.
+This forces all subsequent layers to adapt to the new \enquote{distributional circumstances}, which in turn impedes the convergence of the optimization.
+This phenomenon, referred to as \textit{internal covariate shift}, was first identified in a paper~\cite{batch-normalization} by \citeauthor{batch-normalization}~(\citeyear{batch-normalization}) where they propose a method called \textit{batch normalization} in order to counter this phenomenon.
+Suppose we have a layer activation $\vec{a}$ consisting of $d$ dimensions, i.e. $\vec{a} = (a^{(1)}, \ldots, a^{(d)})$.
+First we standardize each feature dimension, $k$, independently
+
+\begin{equation*}
+  \widehat{a}^{(k)}
+  =
+  \frac{
+    a^{(k)} - \E{a^{(k)}}
+  }{
+    \sqrt{\Var{a^{(k)}} + \epsilon}
+  },
+  \tag{Batch standardization}
+\end{equation*}
+
+where $\E{\cdot}$ and $\Var{\cdot}$ are respectively sample means and sample variances over the current mini-batch, and $\epsilon$ is added for numerical stability.
+The result of this standardization is a feature map where all filters have mean $0$ and variance $1$ for every mini-batch.
+The internal covariate shift has been practically eliminated as a result.
+
+This type of normalization alone may not be optimal in all cases, though, and is best explained by constructing a somewhat contrived pathological example.
+Assume a set of pooled layer activations $\vec{a}$ to be symmetrically distributed, and assume the subsequent convolution layer to preserve this symmetry.
+After standardizing the output, 50\% of the values are expected to be negative, and all of these values will be truncated to $0$ if ReLU is the activation function of choice.
+This informational loss may be suboptimal for the given network layer and must be accounted for.
+That is to say, $\E{a} =  0$ and $\Var{a}$ may be an unsuitable domain for the given activation function.
+For this reason, we introduce two additional trainable parameters for each feature dimension, $\gamma^{(k)}$ and $\beta^{(k)}$, and apply a second normalization step
+
+\begin{equation*}
+  y^{(k)} = \gamma^{(k)} \widehat{a}^{(k)} + \beta^{(k)}.
+  \tag{Trainable normalization}
+\end{equation*}
+
+The intent is to learn the values for the shift, $\beta^{(k)}$, and scaler, $\gamma^{(k)}$, which restores the representative power of the given layer \textit{after} the batch standardization.
