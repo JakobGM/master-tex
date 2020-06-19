@@ -1,0 +1,73 @@
+So far we have only discussed metrics which are discrete, non-differentiable functions, thus making them unsuitable for direct optimization.
+As discussed earlier, we need to introduce a differentiable surrogate loss function which can be optimized.
+The key \enquote{trick} is to define a loss function over the continuous probability domain before it is discretized to the classification domain by thresholding.
+In order to formulate proper loss functions, we will start by establishing some notation.
+Denote the ground truth binary classification mask as $Y \in \mathbb{B}^{H \times W}$ and the corresponding features as $X \in \mathbb{R}^{H \times W \times C}$.
+Assume a model $\hat{f}$ parametrized according to $\vec{\theta}$ which provides a probability estimate for $Y$, the probability estimate denoted as $P = \hat{f}(X; \vec{\theta}) \in [0, 1]^{H \times W}$.
+For notational convenience we will use a linear index in order to denote single matrix elements, for instance $P_i \in [0, 1]$ for $i = 1, \ldots, HW$.
+
+The most common loss function for binary classification tasks is the \textit{binary cross entropy} (BCE) loss function defined as
+%
+\begin{equation}
+  \mathcal{L}_{\mathrm{BCE}}(P; Y)
+  =
+  - \sum\limits_{i = 1}^{HW}
+  Y_i \log{(P_i)}
+  +
+  (1 - Y_i) \log{(1 - P_i)}.
+  \label{eq:binary-cross-entropy}
+\end{equation}
+%
+However, there are several issues with using the BCE as the loss function for segmentation tasks.
+Firstly, it does not take class imbalances into account.
+The \textit{weighted binary cross entropy} (wBCE) is one attempt at accounting for class imbalances, but weighting is highly task-dependent and has been shown to have negligible performance improvement over BCE~\cite[p.~98]{soft-losses}.
+Another issue with BCE and wBCE is that they are poor surrogates for the segmentation metrics introduced in the previous subsection.
+The solution is to introduce differentiable approximations of these discrete segmentation metrics.
+Such an approximation for the IoU metric is the \textit{soft Jaccard loss} also known as the \textit{Jaccard distance}~\cite{jaccard-loss-with-equation}, defined by
+%
+\begin{equation}
+  \mathcal{L}_{\mathrm{SJL}}(P; Y)
+  =
+  1
+  -
+  \frac{%
+    \sum\limits_{i = 1}^{HW}
+    P_i Y_i
+  }{%
+    \sum\limits_{i = 1}^{HW} \left(
+      P_i
+      +
+      Y_i
+      -
+      P_i Y_i
+    \right)
+  }
+  \approx
+  1 - \mathrm{IoU}
+  \label{eq:soft-jaccard-loss}
+\end{equation}
+%
+Notice that if $P_i$ is restricted to only take values in $\{0, 1\}$ then $\mathcal{L}_{\mathrm{SJL}}$ becomes equal to $1 - \mathrm{IoU}$.
+Other variants exists, and it is also common to add a smoothing factor by adding a value $\delta$ to both the numerator and denominator and multiplying the entire loss with the same value.
+A similar differentiable approximation of the dice coefficient, called \textit{soft dice loss}, has also been derived~\cite{original-soft-dice-loss}.
+
+\begin{equation}
+  \mathcal{L}_{\mathrm{SDL}}(P; Y)
+  =
+  \frac{%
+    2 \sum\limits_{i = 1}^{HW}
+    P_i Y_i
+  }{%
+    \sum\limits_{i = 1}^{HW} P_i^2
+    +
+    \sum\limits_{i = 1}^{HW}  Y_i^2
+  }
+  \approx
+  1 - F_1
+  \label{eq:soft-dice-loss}
+\end{equation}
+
+
+Optimizing these two metric-sensitive losses have been shown theoretically and empirically to indirectly maximize their respective surrogate metrics~\cite{soft-losses}.
+You would think that if the dice coefficient has been chosen as the metric of interest for a given problem, the soft dice loss should be used instead of soft Jaccard loss.
+However, \citeauthor{soft-losses} have shown~\cite{soft-losses} that these two metric-sensitive losses are equally good surrogates for each others metrics, and the choice is therefore mainly a preferential one.
