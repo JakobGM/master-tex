@@ -12,7 +12,7 @@ The distribution of the cosine similarity between the predicted normal vectors a
 \end{figure}
 \begin{wrapfigure}[16]{r}{0.35\textwidth}
   \begin{center}
-    \includegraphics[width=0.35\textwidth]{tile-data/130-0/surface_normals_3+segmented_normals_2/polar_normals_true_labels.pdf}
+    \includegraphics[width=\textwidth]{tile-data/130-0/surface_normals_3+segmented_normals_2/polar_normals_true_labels.pdf}
   \end{center}
   \appcaption{%
     Ground truth labeling of predicted normal vectors.
@@ -43,7 +43,7 @@ The application of these two clustering algorithms will now be explained in more
 
 \begin{wrapfigure}{r}{0.35\textwidth}
   \begin{center}
-    \includegraphics[width=0.35\textwidth]{tile-data/130-0/surface_normals_3+segmented_normals_2/polar_normals_dbscan_labels.pdf}
+    \includegraphics[width=\textwidth]{tile-data/130-0/surface_normals_3+segmented_normals_2/polar_normals_dbscan_labels.pdf}
   \end{center}
   \appcaption{%
     DBSCAN labeling of predicted normal vectors.
@@ -85,18 +85,10 @@ Protruding roof segments have also been observed as a common location for noisy 
 The labeling of the remaining noisy normal vectors will now be discussed.
 
 \subsection{\texorpdfstring{$k$}{k}-nearest neighbour noise classification}
-
-Denote the index set of the DBSCAN-identified noise for roof partition $r$ as $\mathcal{I}_r^*$.
-The set of noisy normal vectors $\mathcal{N}_r^* = \{\predsegnormraster_{i,j} \mid (i, j) \in \mathcal{I}_r^*\}$ is now considered insufficient for further clustering, as they are likely insufficiently close to their ground truth normal vectors in addition to being spuriously distributed in the normal vector feature space.
-Until now, the geographic location ${[x, y]}^T = \pixtogeo{i}{j}$ corresponding to each predicted normal vector $\predsegnormraster_{i,j}$ has been entirely ignored.
-The idea is to use this spatial information in order to assign labels to the remaining noise, while utilizing the clustering already performed by DBSCAN.
-The \textit{$k$-nearest neighbours} (k-NN) algorithm~\cite{knn} is a conceptually simple algorithm highly suitable for this task.
-Start by constructing two geographic location sets, first one for the noisy coordinates $\mathcal{R}_b^* \defeq \{\pixtogeo{i}{j} \mid (i, j) \in \mathcal{I}_r^* \}$, and a second one for the successfully labeled coordinates $\mathcal{R}_b \defeq \{\pixtogeo{i}{j} \mid (i, j) \in (\mathcal{I}_r \setminus \mathcal{I}_r^*)\}$.
-\begin{wrapfigure}[15]{r}{0.35\textwidth}
-  \vspace{-2em}
-  \begin{center}
-    \includegraphics[width=0.35\textwidth]{tile-data/130-0/surface_normals_3+segmented_normals_2/polar_normals_knn_labels.pdf}
-  \end{center}
+\begin{wrapfigure}[11]{r}{0.35\textwidth}
+  \vspace{-3em}
+  \centering
+  \includegraphics[width=\textwidth]{tile-data/130-0/surface_normals_3+segmented_normals_2/polar_normals_knn_labels.pdf}
   \appcaption{%
     k-NN labeling of remaining DBSCAN noise.
   }{%
@@ -104,6 +96,12 @@ Start by constructing two geographic location sets, first one for the noisy coor
   }%
   \label{fig:polar-normal-knn-labels}
 \end{wrapfigure}
+Denote the index set of the DBSCAN-identified noise for roof partition $r$ as $\mathcal{I}_r^*$.
+The set of noisy normal vectors $\mathcal{N}_r^* = \{\predsegnormraster_{i,j} \mid (i, j) \in \mathcal{I}_r^*\}$ is now considered insufficient for further clustering, as they are likely insufficiently close to their ground truth normal vectors in addition to being spuriously distributed in the normal vector feature space.
+Until now, the geographic location ${[x, y]}^T = \pixtogeo{i}{j}$ corresponding to each predicted normal vector $\predsegnormraster_{i,j}$ has been entirely ignored.
+The idea is to use this spatial information in order to assign labels to the remaining noise, while utilizing the clustering already performed by DBSCAN.
+The \textit{$k$-nearest neighbours} (k-NN) algorithm~\cite{knn} is a conceptually simple algorithm highly suitable for this task.
+Start by constructing two geographic location sets, first one for the noisy coordinates $\mathcal{R}_b^* \defeq \{\pixtogeo{i}{j} \mid (i, j) \in \mathcal{I}_r^* \}$, and a second one for the successfully labeled coordinates $\mathcal{R}_b \defeq \{\pixtogeo{i}{j} \mid (i, j) \in (\mathcal{I}_r \setminus \mathcal{I}_r^*)\}$.
 For each geographic point marked as noise by DBSCAN, $p^* \in \mathcal{R}_b^*$, find the $k$ nearest neighbours $\{p_1, p_2, \ldots, p_k\}$ in the labeled set $\mathcal{R}_b$ according to some distance metric.
 The label assigned to $p^*$ is then determined by a plurality vote of the labels of the neighbours $\{p_1, p_2, \ldots, p_k\}$.
 We will specifically set $k = 1$ and use the Euclidean norm ($\ell^2$-norm), that is, assigning the label of the geographically closest DBSCAN label, the result of which is presented in \cref{fig:polar-normal-knn-labels}.

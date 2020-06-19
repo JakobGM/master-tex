@@ -34,7 +34,6 @@ The careful formulation and construction of this surface raster format is consid
   \begin{center}
     \includegraphics{invertible-rasterization.tikz}
   \end{center}
-  \vspace{-1.5em}
   \caption{Invertible rasterization.}
   \label{fig:invertible-rasterization}
   \vspace{-1.5em}
@@ -73,6 +72,7 @@ We can now define the surface raster properties of representativeness and target
     It can therefore be concluded that no such invertible mapping exists.
     For this reason we introduce the concept of a \textit{pseudoinverse}, $m^{\dagger}$, a function which minimizes $d(m^{\dagger}(m(\mathcal{P})),~\mathcal{P})$ for all $\mathcal{P} \in V$.
     A raster domain (and an associated mapping and pseudoinvertible mapping) which produces negligible distance metrics after a round-trip mapping of arbitrary polygon sets is considered to be \textit{representative}.
+    \newpage
   \item[Targetable] 
     \textit{A raster format which is feasible as a modelling target for a machine learning architecture.}
     \\

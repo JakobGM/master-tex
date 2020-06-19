@@ -1,0 +1,217 @@
+Input data normalization has been found to be of vital importance when training neural networks, in certain cases reducing predictive errors by several orders of magnitude and training times by one order of magnitude~\cite{input_normalization_1997}.
+How to normalize input data depends on distribution of the feature space, which will be investigated here.
+
+\subsection{RGB rasters}
+
+A given RGB pixel is an unsigned 8-bit integer and therefore takes values in a bounded, integer domain
+%
+\begin{equation*}
+  I_{i,j,c} \in \{0, 1, \ldots, 255\}, \text{ for } c \in \{r, g, b\}.
+\end{equation*}
+%
+The distribution of each color channel over the entire coverage area of the Trondheim aerial photography data set is shown in \cref{fig:rgb-density}, and aggregate statistics for each channel are listed in \cref{tab:rgb-statistics}.
+
+\begin{figure}[H]
+  \begin{floatrow}
+    \ffigbox[8.5cm]{%
+      \includegraphics[width=\linewidth]{rgb-density}
+    }{%
+      \caption{%
+        \newline
+        Distribution density for all three color channels in the aerial photography data set covering Trondheim municipality (2017).%
+        \label{fig:rgb-density}
+        %Peak at 64 and 191.
+      }%
+    }
+    \hspace{-2.5em}
+    \inlinetable{%
+      \scalebox{0.85}{%
+        \begin{tabular}{%
+          l
+          S[round-mode=places, round-precision=1]
+          S[round-mode=places, round-precision=1]
+        }
+          \toprule
+          {Channel} & {Mean [1]} & {SD [1]} \\
+          \midrule
+          \textcolor{red}{Red} & 101.60925940814 & 55.010463592563 \\
+          \textcolor{green}{Green} & 102.67104002891 & 48.740409963323 \\
+          \textcolor{blue}{Blue} & 91.286001382234 & 37.216349915699 \\
+          \bottomrule
+        \end{tabular}
+      }
+      \vspace{5em}
+    }{%
+      \caption{%
+        \newline
+        Aggregate statistics for each image channel distribution for the aerial photography data set covering Trondheim municipality (2017).%
+        \label{tab:rgb-statistics}
+      }%
+    }
+  \end{floatrow}
+\end{figure}
+
+The image channels can be easily normalized to the domain $[0, 1]$ by dividing by $255$ across all three image channels.
+This is in essence a lossless transformation, since the normalization function $f(x) = x/255$ is trivially invertible, and thus no information is lost by this normalization.
+
+\subsection{LiDAR rasters}
+
+The \enquote{$z$ channel} represents elevation data from the respective digital surface model.
+Elevation measurements are represented by 32-bit, single-precision floating point numbers, and can theoretically take values in the domain $I_{i,j,z} \in (\SI{-3.4e38}{\meter},\allowbreak\SI{3.4e8}{\meter})$.
+In practice, the measurements are bounded by the regional extrema, $(\SI{-433}{\meter},~\SI{8848}{\meter})$ for dry land globally, and $(\SI{-9}{\meter},~\SI{569}{\meter})$ for the Trondheim region.
+The distribution of $z$ channel values for the Trondheim region is shown in \cref{fig:elevation-density}, and aggregate statistics are listed in \cref{tab:elevation-statistics}.
+
+\begin{figure}[H]
+  \begin{floatrow}
+    \ffigbox[8cm]{%
+      \includegraphics[width=\linewidth]{elevation-density}
+    }{%
+      \caption{%
+        Distribution density for elevation data set covering Trondheim municipality (2017).
+        Outlier values $(\SI{0}{\meter}, \SI{2.74}{\percent})$ and $(\SI{148}{\meter}, \SI{1.93}{\percent})$ have been cropped.
+      }%
+      \label{fig:elevation-density}
+    }
+    \hspace{-1.8em}
+    \inlinetable{%
+      \scalebox{0.70}{%
+        \begin{tabular}{%
+          l
+          S[round-mode=places, round-precision=1]
+          S[round-mode=places, round-precision=1]
+        }
+          \toprule
+          {Channel} & {Mean [m]} & {SD [m]} \\
+          \midrule
+          Elevation & 155.36339532445 & 116.52777315076 \\
+          \bottomrule
+        \end{tabular}
+      }
+      \vspace{7em}
+    }{%
+      \caption{%
+        Aggregate statistics for elevation data set covering municipality of Trondheim (2017).
+      }%
+      \label{tab:elevation-statistics}
+    }
+  \end{floatrow}
+\end{figure}
+
+A normalization technique analogue to the RGB min-max scaling for elevation tile number $k$, denoted as $Z^{(k)}$, would therefore be
+\begin{align*}
+  \hat{Z}_{i,j}^{(k)}
+  &=
+  \frac{%
+    Z_{i,j}^{(k)} - \underset{t \in \mathrm{TRD}}{\min}~Z^{(t)}
+  }{%
+    \underset{t \in \mathrm{TRD}}{\max}~Z^{(t)} - \underset{t \in \mathrm{TRD}}{\min}~Z^{(t)}
+  }
+  \tag{Global min-max normalization}
+  \\
+  &=
+  \frac{%
+    Z_{i,j}^{(k)} + \SI{9}{\meter}
+  }{%
+    \SI{578}{\meter}
+  },%
+\end{align*}
+
+where $\mathrm{TRD}$ is the index set of all tiles belonging to the Trondheim region.
+The normalized raster elevation values in $\hat{Z}^{(k)}$ are guaranteed to be bounded to the interval $[0, 1]$, as with the RGB raster.
+In order to evaluate if this will properly normalize the $z$ raster channel across tiles, we plot the \enquote{tile-by-tile} $z$ channel statistics in \cref{fig:elevation-spread}.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{elevation-spread}
+  \caption{%
+    Elevation value statistics for a tile subset of sample size $n = \num{10000}$.
+    The left figure shows the minimum, mean, and maximum elevation, sorted by increasing mean from left to right.
+    The right figure shows the histogram of the tile elevation \textit{ranges} (difference between maximum elevation and minimum elevation within tile).
+  }%
+  \label{fig:elevation-spread}
+\end{figure}
+
+While the global elevation range is $\SI{569}{\meter} - (\SI{-9}{\meter}) = \SI{578}{\meter}$, the elevation range within each respective tile is on average approximately $\SI{22}{\meter} \pm \SI{8}{\meter} (\mathrm{SD})$, that is, much less than \SI{578}{\meter}.
+Coupled with the fact that the tile elevation \textit{means} are somewhat uniformly distributed between \SI{0}{\meter} and \SI{200}{\meter}, ignoring the right tail, a global normalization will yield tile elevation values with small standard deviations and highly variable means.
+We can therefore conclude that global min-max scaling is not suitable for the elevation image channel.
+A proposed solution to this problem is to scale each tile independently to the domain $[0, 1]$, what we will refer to as \enquote{local min-max normalization}.
+%
+\begin{align*}
+  \hat{Z}_{i,j}^{(k)}
+  &=
+  \frac{%
+    Z_{i,j}^{(k)} - \min~Z^{(k)}
+  }{%
+    \max~Z^{(k)} - \min~Z^{(k)}
+  }%
+  \tag{Local min-max normalization} % chktex 35
+  \\
+  &=
+  \frac{%
+    Z_{i,j}^{(k)} - \beta
+  }{%
+    \alpha - \beta
+  },%
+  &\text{where }\alpha \defeq \max~Z^{(k)},~\beta \defeq \min~Z^{(k)}.
+\end{align*}
+
+The scaling factor $\alpha - \beta$ is constructed such that the normalized tile minimum becomes 0 and maximum becomes 1 for all tiles.
+
+Any elevation normalization method must account for the fact that missing data values are replaced by a pre-defined \texttt{nodata} placeholder value, usually \SI{-3.4e38}{\meter}.
+Otherwise a large negative bias is introduced for all tiles with any missing data.
+Leaving \texttt{nodata} values unnormalized with such extreme values will heavily influence the weighted sum calculated by nodes in any neural network, and must therefore filled in with values from the normalized domain.
+Filling in $0$ values for all \texttt{nodata} indices has been shown to work well in most cases.
+The \enquote{\texttt{nodata}-aware} min-max normalization algorithm used for preprocessing elevation input data is given in \cref{alg:local-min-max-scaling}.
+
+\begin{algorithm}{Nodata-aware local min-max normalization}{alg:local-min-max-scaling}
+  \item Calculate the valid index set defined by $\mathcal{V} = \{(i, j): Z_{i,j} \neq \texttt{nodata}\}$.
+  \item Calculate $\alpha = \underset{(i,j) \in \mathcal{V}}{\max} Z_{i,j}$ and $\beta = \underset{(i,j) \in \mathcal{V}}{\min} Z_{i,j}$.
+  \item Construct normalized raster defined by
+    \begin{equation*}
+        \hat{Z}_{i,j} = \begin{cases}
+          \frac{Z_{i,j} - \beta}{\alpha - \beta}, & \text{if } (i,j) \in \mathcal{V}, \\
+          0, & \text{otherwise.}
+        \end{cases}
+    \end{equation*}
+\end{algorithm}
+
+One of the core issues with local min-max normalization is that it is essentially a lossy operation.
+As each tile is independently scaled, it is no way to accurately reconstruct the original elevation map in metric units.
+One way to determine if a roof-like surface belongs to a proper building or a shed, for instance, is to inspect its relative height, which becomes impossible without knowing the relative scaling of each tile with respect to each other.
+We therefore hypothesize that the variable scaling imposed by local min-max normalization could impede the performance of models trained on such data.
+An alternative normalization method is therefore proposed where the scaling factor $\alpha - \beta$ is replaced by a predefined \textit{constant} scaler $\gamma > 0$.
+The translation $\beta$ is kept as-is since there is no reason to distinguish between cadastral plots situated at sea-level and other altitudes when it comes to building outline detection.
+This \enquote{metric normalization} is therefore defined as:
+
+\begin{equation*}
+  \hat{Z}_{i,j}^{(k)}
+  =
+  f\left(Z_{i,j}^{(k)}\right)
+  =
+  \frac{%
+    Z_{i,j}^{(k)} - \min~Z^{(k)}
+  }{%
+    \gamma
+  },%
+  \hspace{2em} \gamma > 0.
+  \tag{Metric normalization} % chktex 35
+  \label{test}
+\end{equation*}
+
+Elevation values in the $z$ channel now have a consistent physical interpretation given in units $\si{\meter} / \gamma$ across all tiles.
+The modified metric normalization method is provided in~\algref{alg:metric-normalization}.
+
+\begin{algorithm}{Nodata-aware metric normalization}{alg:metric-normalization}
+  \item Calculate the valid index set defined by $\mathcal{V} = \{(i, j): Z_{i,j} \neq \texttt{nodata}\}$.
+  \item Calculate $\beta = \underset{(i,j) \in \mathcal{V}}{\min} Z_{i,j}$ and define a global scaler $\gamma > 0$.
+  \item Construct normalized raster defined by
+    \begin{equation*}
+        \hat{Z}_{i,j,z} = \begin{cases}
+          \frac{Z_{i,j} - \beta}{\gamma}, & \text{if } (i,j) \in \mathcal{V}, \\
+          0, & \text{otherwise.}
+        \end{cases}
+    \end{equation*}
+\end{algorithm}
+
+A comparison of these two normalization methods, \cref{alg:local-min-max-scaling} and \cref{alg:metric-normalization} that is, will be provided in \cref{sec:normalization-experiment}.\todo{Will this still be true?}
+
