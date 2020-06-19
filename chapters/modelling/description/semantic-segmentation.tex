@@ -1,0 +1,59 @@
+Image recognition seeks to answer three questions for any given image~\cite{image_recognition}:
+
+\begin{enumerate}[]
+  \item \textbf{Identification:} Does the image contain any object of interest?
+  \item \textbf{Localization:} Where in the image are the objects situated?
+  \item \textbf{Classification:} To which categories do the objects belong to?
+\end{enumerate}
+
+We will concern ourselves with only one object category (class) at any time, that class being building footprints, and will simplify the following theory accordingly with this simplification in mind.
+The localization and classification of objects in a given image can be performed at different granularity levels, as shown in \cref{fig:segmentation-types}.
+
+\begin{figure}[htb]
+  \includegraphics[width=\linewidth,trim={0 4cm 0 3.4cm},clip]{segmentation-types}
+  \appcaption{%
+    Different granularities for single-class building localization, using the Trondheim 2017 data set.
+  }{%
+    Bounding box regression is shown on the left, semantic segmentation in the middle, and instance segmentation on the right.
+  }%
+  \label{fig:segmentation-types}
+\end{figure}
+
+\textit{Bounding box regression} concerns itself with finding the smallest possible rectangles which envelopes the objects of interest.
+The sides of the rectangles may either by oriented parallel to the axis directions, or rotated in order to attain the smallest possible envelope.
+The bounding box will therefore necessarily contain pixels that are not part of the object itself whenever the object shape is not perfectly rectangular.
+
+\textit{Semantic segmentation} rectifies this issue by classifying each pixel in the image independently, i.e. \textit{pixel-wise} classification, producing a so-called classification \textit{mask}.
+\textit{Instance segmentation} distinguishes between pixels belonging to different objects of the same class, while \textit{semantic segmentation} does not make this distinction.
+Since a bounding box can be directly derived from a semantic segmentation mask, and a semantic segmentation mask can be directly derived from instance segmentation mask; the problem complexity of these tasks are as follows:
+%
+\begin{equation*}
+  \text{Bounding box regression}
+  <
+  \text{Semantic segmentation}
+  <
+  \text{Instance segmentation}
+\end{equation*}
+%
+An image of width $W$ and height $H$ consisting of $C$ channels is represented by a $W \times H \times C$ tensor, $X \in \mathbb{R}^{W \times H \times C}$.
+This is somewhat simplified, but we will give a more nuanced description in \cref{sec:raster-data}.
+Single-class semantic segmentation can therefore be formalized as constructing a binary predictor $\tilde{f}$ of the form:
+%
+\begin{equation*}
+  \tilde{f}: \mathbb{R}^{W \times H \times C} \rightarrow \mathbb{B}^{W \times H}, \hspace{2em} \mathbb{B} \defeq \{0, 1\}.
+\end{equation*}
+%
+Where $\mathbb{B}^{W \times H}$ denotes a boolean matrix, $1$ indicating that the pixel is part of the object class of interest, and $0$ indicates the opposite.
+In practice, however, statistical models will often predict a pixel-wise class \textit{confidence} in the continuous domain $[0, 1]$,
+%
+\begin{equation*}
+  \hat{f}: \mathbb{R}^{W \times H \times C} \rightarrow {[0, 1]}^{W \times H},
+\end{equation*}
+%
+but a binary predictor can be easily constructed by choosing a suitable threshold, $T$, for which to distinguish positive predictions from negative ones
+%
+\begin{equation*}
+  \tilde{f}(X) = \hat{f}(X) > T, \hspace{2em} X \in \mathbb{R}^{W \times H \times C}.
+\end{equation*}
+%
+The choice of the threshold value $T$ will affect the resulting \textit{sensitivity} and \textit{specificity} metrics of the model predictions, metrics which will be explained in the upcoming \cref{sec:semantic-segmentation}.
