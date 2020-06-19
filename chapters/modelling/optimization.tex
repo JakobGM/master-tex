@@ -1,1 +1,55 @@
+So far we have only mentioned that we must define a loss function to be optimized for a given neural network, but we have not mentioned exactly how this optimization is performed.
+Deep learning optimization is a huge field of research, and for the sake of brevity we will glance over a lot of detail and focus on the techniques applied in our models presented in \cref{sec:experiments}.
+
+For \textit{supervised} machine learning we start with a labeled data set, $\mathcal{D}$, containing $n$ observations:
+%
+\begin{equation*}
+  \mathcal{D} = \{(X_1, Y_1), (X_2, Y_2), \ldots, (X_n, Y_n)\}
+\end{equation*}
+%
+This data set is then partitioned into three disjunctive subsets, referred to as the \textit{training}, \textit{validation}, and \textit{test} splits.
+%
+\begin{align*}
+  \mathcal{D}_{\mathrm{train}} \cup \mathcal{D}_{\mathrm{validation}} \cup \mathcal{D}_{\mathrm{test}} &= \mathcal{D}\\
+  \mathcal{D}_i \cap \mathcal{D}_j &= \emptyset,~~~\text{ for } i \neq j
+\end{align*}
+%
+A common method is to shuffle the data and then allocate 70\% of the original data as training data and 15\% for the two remaining splits.
+Now, as the name implies, the training split $\mathcal{D}_{\mathrm{train}}$ is used for training the neural network, one of the simplest optimization algorithms being iterated \textit{gradient descent}.
+At training step $s$ the network parametrization $\vec{\theta}$ is updated according to
+%
+\begin{align*}
+  \vec{\theta}^{(s + 1)}
+  =
+    \vec{\vec{\theta}}^{(s)}
+    -
+    \alpha \nabla_{\theta}
+      \sum_{X_i, Y_i \in \mathcal{D}_{\mathrm{train}}}
+      \mathcal{L}(\hat{f}(X_i; \vec{\theta}^{(s)}); Y_i)
+  ,
+\end{align*}
+%
+where $\alpha$ is the learning rate.
+Efficient calculation of the gradient $\nabla_{\vec{\theta}}$ for nonlinear networks of arbitrary connectivity is enabled by a method called \textit{backpropagation}~\cite{backpropagation}.
+For each training step, the input data is passed forward through the neural network in order to calculate new predictions.
+Errors are then subsequently propagated backwards through the network in order to efficiently calculate the partial derivatives of the loss function with respect to each parameter $\theta_i$.
+The initial parametrization, $\vec{\theta}^{(0)}$, is not simply filled with zeroes or random values as that can cause certain problems.
+We will initialize the weights with the \textit{He normal} method devised by \citeauthor{he-normal} which draws values from a truncated normal distribution.
+More details can be found in the original paper~\cite{he-normal}.
+
+A common modification to this scheme is the so-called \textit{mini-batch gradient descent} algorithm~\cite{gradient-descent}.
+The training set is yet again partitioned into even smaller splits called \textit{batches}, and during training gradient descent is applied iteratively over each batch.
+After each \textit{epoch}, when all batches have been evaluated, the training split is shuffled and a new batch partition is formed.
+For sufficiently large batch sizes the feature distribution of each batch can be considered a good approximation of the entire sample space, while still having decreased the computational cost of each training step.
+
+The validation split is used for hyperparameter tuning such as the selection of the number of training epochs by \textit{early stopping}~\cite{early-stopping}.
+After each epoch, a given validation loss or metric is evaluated over the validation split.
+As soon as the validation split has not improved for a given number of epochs, referred to as the early stopping \textit{patience}, the training is stopped and model parametrization corresponding to the best validation metric is chosen as the final model.
+Early stopping is intended to prevent overfitting the model on the training data by using the validation metric as an indication of generalizability.
+The test split, in contrast to the training and validation splits, is completely isolated from the model training procedure, and is solely kept for a final evaluation of the trained model.
+
+The \textit{Adam optimizer} published in 2015~\cite{adam-optimizer} has become a popular gradient-based optimization algorithm for machine learning problems.
+The algorithm has relatively low computational and memory requirements, copes well with large data sets and parameter spaces, and is relatively well-behaved when faced with noisy and sparse gradients.
+This is the optimization algorithm we will use for our model training experiments, the results being presented in \cref{sec:experiments}.
+
 \subsection{Multitask learning}
