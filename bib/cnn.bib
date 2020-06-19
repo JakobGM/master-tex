@@ -114,3 +114,65 @@
   archivePrefix={arXiv},
   primaryClass={cs.LG}
 }
+
+% --- Dropout ---
+% Can be used to cite the introduction of dropout as a concept
+% https://arxiv.org/pdf/1207.0580.pdf
+@article{dropout-original-paper,
+    title={Improving neural networks by preventing co-adaptation of feature detectors},
+    author={Geoffrey E. Hinton and Nitish Srivastava and Alex Krizhevsky and Ilya Sutskever and Ruslan R. Salakhutdinov},
+    year={2012},
+    eprint={1207.0580},
+    journal={arXiv preprint arXiv:1207.0580},
+    archivePrefix={arXiv},
+    primaryClass={cs.NE}
+}
+% Overview of dropout techniques. Also describes dropout in CNNs.
+% Describes that batch normalization is considered a regularization technique as well.
+% https://arxiv.org/pdf/1904.13310.pdf
+@article{dropout-cnn,
+    title={Survey of Dropout Methods for Deep Neural Networks},
+    author={Alex Labach and Hojjat Salehinejad and Shahrokh Valaee},
+    year={2019},
+    eprint={1904.13310},
+    journal={arXiv preprint arXiv:1904.13310},
+    archivePrefix={arXiv},
+    primaryClass={cs.NE}
+}
+% CNN dropout technique, removing part of input image
+% https://arxiv.org/pdf/1708.04552.pdf
+@article{dropout-cutout,
+    title={Improved Regularization of Convolutional Neural Networks with Cutout},
+    author={Terrance DeVries and Graham W. Taylor},
+    year={2017},
+    eprint={1708.04552},
+    archivePrefix={arXiv},
+    primaryClass={cs.CV}
+}
+% CNN dropout technique, dropping entire layers such that they simple forward their output
+@InProceedings{dropout-stochastic-depth,
+    author="Huang, Gao and Sun, Yu and Liu, Zhuang and Sedra, Daniel and Weinberger, Kilian Q.",
+    editor="Leibe, Bastian and Matas, Jiri and Sebe, Nicu and Welling, Max",
+    title="Deep Networks with Stochastic Depth",
+    booktitle="Computer Vision -- ECCV 2016",
+    year="2016",
+    publisher="Springer International Publishing",
+    address="Cham",
+    pages="646--661",
+    isbn="978-3-319-46493-0"
+}
+% Paper starting work on dropout in convolutional layers, introducing max-pooling dropout,
+% a.k.a. probabilistic weighted pooling
+% https://www.sciencedirect.com/science/article/pii/S0893608015001446
+@article{max-pooling-dropout,
+    title = "Towards dropout training for convolutional neural networks",
+    journal = "Neural Networks",
+    volume = "71",
+    pages = "1--10",
+    year = "2015",
+    issn = "0893-6080",
+    doi = "https://doi.org/10.1016/j.neunet.2015.07.007",
+    url = "http://www.sciencedirect.com/science/article/pii/S0893608015001446",
+    author = "Haibing Wu and Xiaodong Gu",
+    keywords = "Deep learning, Convolutional neural networks, Max-pooling dropout"
+}
