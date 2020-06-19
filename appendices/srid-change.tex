@@ -1,0 +1,13 @@
+\texttt{GDAL} provides the \texttt{gdaltransform} utility for transforming GIS data between coordinate systems, for example converting from latitude and longitude to UTM \texttt{32V} here:
+%
+\begin{listing}[H]
+  \caption{Coordinate system transformation using \texttt{gdaltransform}.}
+  \begin{shellcode}
+  $ gdaltransform \
+      -s_srs EPSG:4236 \
+      -t_srs EPSG:25832 \
+      ${source_data} ${target}
+  \end{shellcode}
+\end{listing}
+\noindent
+Where \texttt{\$} indicates a shell, such as \texttt{bash}, where \texttt{GDAL} has been installed and is available in the \texttt{PATH}.

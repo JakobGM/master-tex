@@ -1,0 +1,15 @@
+\Cref{sec:data-types} discusses irregular vector data and how such vector features can be corrected by applying a zero buffer.
+The \texttt{ST\_buffer()} PostGIS function can be applied to arbitrary geometric data with the \texttt{ogr2ogr} utility like so:
+%
+\begin{listing}[H]
+  \caption{Zero-buffering vector dataset using \textt{ogr2ogr}.}
+  \begin{shellcode}
+  $ ogr2ogr -f "GPKG" ${output_file} ${input_file} \
+      -sql "select ST_buffer(Geometry, 0.0)"
+  \end{shellcode}
+\end{listing}
+\noindent
+Here we have also converted the given vector data file to the \textit{GeoPackage} format.
+While geographic data providers use a wide array of file formats, most commonly GeoJSON, ESRI Shapefiles, and GML, we convert all files to the modern GeoPackage format.
+GeoPackage supports unicode characters and has no length limit on data fields, and is therefore considered the best format for modern GIS pipelines~\cite{hame_shapefile_2019}.
+\texttt{ogr2ogr} supports file conversions between most common vector file formats, which makes the data pipeline generalizable data sourced from different providers.

@@ -11,27 +11,6 @@
 % Monospace font (for code)
 \usepackage[scaled=.82]{DejaVuSansMono}
 
-% Verbatim source code environment (code listing)
-\usepackage{listings}
-% Formatting of code listings
-\lstset{%
-    frame=single,
-    basicstyle=\fontsize{9}{10}\ttfamily,
-    keywordstyle=\color{thesisblue}\bfseries,
-    stringstyle=\color{thesisred},
-    commentstyle=\color{thesisgreen},
-    identifierstyle=\color{black},
-    numberstyle=\fontsize{7}{8}\selectfont
-}
-% Renew \lstlistoflistings command to avoid issues with incorrect headers for long lists
-% Uses unnumbered chapter instead of a float like in the original source code.
-% Based on source code for listings package https://ctan.uib.no/macros/latex/contrib/listings/listings.dtx line: 14635
-\renewcommand*{\lstlistoflistings}{%
-       \chapter*{\lstlistlistingname}%
-       \parskip\z@\parindent\z@\parfillskip \z@ \@plus 1fil%
-       \@starttoc{lol}%
-       }%
-
 % Consistent language in different packages, such as double quotes with \enquote and
 % American-style hyphenation.
 \usepackage[american]{babel}
@@ -172,6 +151,29 @@
 
 % Lots of small micro-typographical improvements
 \usepackage{microtype}
+
+% For including source code with syntax highlighting.
+% Docs: https://github.com/gpoore/minted/blob/master/source/minted.pdf
+% newfloat disables loading of the float package, which is in conflict with floatrow
+% See: https://tex.stackexchange.com/questions/378563/minted-and-floatrow-incompatible
+\usepackage[newfloat]{minted}
+% Change default listing environments
+\definecolor{bgshell}{rgb}{0.95,0.95,0.95}
+\setminted{
+  fontsize=\fontsize{9}{10},
+  fontfamily=tt,
+  bgcolor=bgshell,
+  gobble=2
+}
+% Enables the use of \begin{pythoncode}
+\newminted{python}{python3=true}
+% Enables the use of \begin{shellcode}
+\newminted{shell}{}
+% Enables the use of \begin{xmlcode}
+\newminted{xml}{}
+% Listig float environment: Listing -> Code listing
+% \listoflistings: List of Listings -> Code Listings
+\SetupFloatingEnvironment{listing}{name=Code listing,listname=Code Listings}
 
 % NB! Should be the last packages defined
 % Interactive cross references
