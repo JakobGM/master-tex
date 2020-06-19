@@ -2,7 +2,7 @@
 The \texttt{ST\_buffer()} PostGIS function can be applied to arbitrary geometric data with the \texttt{ogr2ogr} utility like so:
 %
 \begin{listing}[H]
-  \caption{Zero-buffering vector dataset using \textt{ogr2ogr}.}
+  \caption{Zero-buffering vector dataset using \texttt{ogr2ogr}.}
   \begin{shellcode}
   $ ogr2ogr -f "GPKG" ${output_file} ${input_file} \
       -sql "select ST_buffer(Geometry, 0.0)"

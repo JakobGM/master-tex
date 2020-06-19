@@ -60,10 +60,6 @@
 % Empty pages should be blank
 \usepackage{emptypage}
 
-% Recommended for BibLaTeX
-% Correctly formatted quotation marks with \enquote{text}
-\usepackage{csquotes}                   
-
 % Sitation management.
 % Docs: http://ctan.uib.no/macros/latex/contrib/biblatex/doc/biblatex.pdf
 % Tutorial: https://www.overleaf.com/learn/latex/Articles/Getting_started_with_BibLaTeX
@@ -171,10 +167,18 @@
 % \listoflistings: List of Listings -> Code Listings
 \SetupFloatingEnvironment{listing}{name=Code listing,listname=Code Listings}
 
+% NB! Must be specified after minted
+% Recommended for BibLaTeX
+% Correctly formatted quotation marks with \enquote{text}
+\usepackage{csquotes}                   
+
 % Enables [H] position specifier for figures
 % Used to position tables besides figures
 \usepackage{floatrow}
 \newfloatcommand{inlinetable}{table}[][\FBwidth]
+
+% Fixes too wide roman letters in TOC causing overful hbox
+\usepackage{tocloft}
 
 % NB! Should be the last packages defined
 % Interactive cross references

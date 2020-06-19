@@ -1,10 +1,6 @@
 % No double spacing between sentences
 \frenchspacing
 
-\renewcommand{\lstlistingname}{Code listing}
-\renewcommand{\lstlistlistingname}{Code Listings}
-\crefname{listing}{Code listing}{Code listings}
-
 \addto\captionsamerican{
 \renewcommand{\contentsname}{Contents}
 \renewcommand{\listfigurename}{Figures}
@@ -17,3 +13,9 @@
          at = ($(#1)!0.5!(#2)$)
     }
 }
+
+% How cleverref should refer to code listings
+\crefname{listing}{Code listing}{Code listings}
+
+% https://tex.stackexchange.com/a/78020
+\pdfsuppresswarningpagegroup=1
