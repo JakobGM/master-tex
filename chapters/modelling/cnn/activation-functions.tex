@@ -1,0 +1,25 @@
+So far we have only explained how a convolutional neural network consists of a set of parametrized linear operations.
+Such a network, if left unaltered, is therefore restricted to only approximating linear functions.
+The solution to this predicament is to introduce the concept of an \textit{activation function}, a nonlinear function applied to the output from the convolutional layers.
+These activation functions were originally inspired by the neuroscientific understanding of biological neurons~\cite[p.~165]{goodfellow}, but have since been shown to be a theoretical prerequisite of the \textit{universal approximation} property of artificial neural networks~\cite{uat-sigmoid,uat-nonpolynomial}.
+The \textit{logistic sigmoid} function, with its deep roots in probability theory, has been a popular choice of activation function for neural networks since the inception of the field~\cite{rosenblatt-perceptron-1958}, and is defined by
+%
+\begin{equation*}
+  \sigma(x) = \frac{1}{1 + e^{-x}} = \frac{e^x}{e^x + 1}.
+  \tag{Sigmoid activation function}
+\end{equation*}
+%
+Observe that $\lim_{x \to -\infty} \sigma(x) = 0$ and $\lim_{x \to +\infty} \sigma(x) = 1$, and that its derivative is positive over the entire real number line. This makes it a bounded, differentiable, monotonic function, and is therefore suitable for mapping the weighted output of an artificial neuron in the domain $(-\infty, \infty)$ into the range $(0, 1)$.
+This makes it especially suitable for the final layer in neural networks intended for predicting binary 0/1-responses.
+
+Although the sigmoid activation function has strong biological~\cite{rosenblatt-perceptron-1958} and theoretical~\cite{uat-sigmoid} underpinnings, it often suffers from the phenomenon of \textit{vanishing gradients} for network architectures consisting of three or more layers, which in turn severely inhibits training.
+As an alternative to the sigmoid activation function, the \textit{rectified linear unit} (ReLU) was introduced in a paper~\cite{relu-original-paper} by \citeauthor{relu-original-paper} in year \citeyear{relu-original-paper}.
+It is defined as
+%
+\begin{equation*}
+  \mathrm{ReLU}(x) = x^+ = \max(0, x).
+  \tag{ReLU activation function}
+\end{equation*}
+%
+The ReLU activation function has become the dominant activation function for use in neural networks in recent years~\cite[p.~438]{relu-popularity} as it has been empirically shown to adapt well to deeper neural networks~\cite{relu-better-than-sigmoid}.
+\raggedbottom
