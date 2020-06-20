@@ -36,7 +36,7 @@ Such models can then be applied in other regions where only low-fidelity data is
 The goal of my specialization project~\cite{specialization-project} from \citedate{specialization-project} was to infer two-\linebreak{}dimensional \textit{building outlines} from aerial photography and LiDAR elevation measurements.
 A \textit{building outline} is a two-dimensional representation of building \enquote{footprint}.
 Such data can be used for map annotations, flood risk analysis, and population density estimates, amongst other applications.
-The identification of building outlines from remote sensing data is considered to be medium-fidelity target inference by using low-fidelity features, and can be formulated as a so-called \textit{semantic segmentation} task.
+The identification of building outlines from remote sensing data is considered to be medium-fidelity target inference by using low-fidelity features, and can be formulated as a so-called \textit{semantic segmentation} task\footnote{The concepts \enquote{semantic segmentation} and \enquote{instance segmentation} will be formally defined in \cref{sec:segmentation-description}.}.
 
 This master's thesis concerns itself with the reconstruction of three-dimensional \textit{roof surface polygons} from remote sensing data.
 Roof surface polygons are completely flat geometries, which when combined form the spatial shape of entire roof structures.
@@ -79,3 +79,9 @@ That is, the machine learning model's raster predictions should be converted to 
 Answering this last research question will require the development of additional post-processing methods.
 
 \subsection*{Thesis disposition}
+
+We will start by providing an introduction to the world of \textit{Geographic Information Systems} (GIS); the field which concerns itself with representing geographic data, in \cref{sec:data}.
+We will also describe how to pre-process such geographic data in order to produce rasters which are suitable for training accurate machine learning models.
+An overview of the problem domain of image segmentation and the methods currently being applied in the field will be provided in \cref{sec:modeling}, a chapter which will also describe the specific model architectures which consume and produce the data formats described in the previous chapter.
+The post-processing required in order to produce vectorized surface polygons from predicted rasters will be described in \cref{chap:post-processing}.
+Finally, the training procedure and experimental results will be presented and discussed in \cref{sec:experiments}.
