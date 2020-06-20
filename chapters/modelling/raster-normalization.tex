@@ -17,7 +17,6 @@ The distribution of each color channel over the entire coverage area of the Tron
       \includegraphics[width=\linewidth]{rgb-density}
     }{%
       \caption{%
-        \newline
         Distribution density for all three color channels in the aerial photography data set covering Trondheim municipality (2017).%
         \label{fig:rgb-density}
         %Peak at 64 and 191.
@@ -43,7 +42,6 @@ The distribution of each color channel over the entire coverage area of the Tron
       \vspace{5em}
     }{%
       \caption{%
-        \newline
         Aggregate statistics for each image channel distribution for the aerial photography data set covering Trondheim municipality (2017).%
         \label{tab:rgb-statistics}
       }%
@@ -66,8 +64,9 @@ The distribution of $z$ channel values for the Trondheim region is shown in \cre
     \ffigbox[8cm]{%
       \includegraphics[width=\linewidth]{elevation-density}
     }{%
-      \caption{%
+      \appcaption{%
         Distribution density for elevation data set covering Trondheim municipality (2017).
+      }{%
         Outlier values $(\SI{0}{\meter}, \SI{2.74}{\percent})$ and $(\SI{148}{\meter}, \SI{1.93}{\percent})$ have been cropped.
       }%
       \label{fig:elevation-density}
@@ -123,8 +122,9 @@ In order to evaluate if this will properly normalize the $z$ raster channel acro
 \begin{figure}[H]
   \centering
   \includegraphics[width=\linewidth]{elevation-spread}
-  \caption{%
+  \appcaption{%
     Elevation value statistics for a tile subset of sample size $n = \num{10000}$.
+  }{%
     The left figure shows the minimum, mean, and maximum elevation, sorted by increasing mean from left to right.
     The right figure shows the histogram of the tile elevation \textit{ranges} (difference between maximum elevation and minimum elevation within tile).
   }%

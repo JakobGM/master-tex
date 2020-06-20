@@ -54,7 +54,7 @@ The distributions of the bounding box widths ($w$), heights ($h$), and maximal d
 
 \begin{figure}[htb]
   \includegraphics[width=\linewidth]{bbox_stats}
-  \caption{%
+  \caption[Distribution of bounding box dimensions.]{%
     Distribution of bounding box widths $w$ (left), heights $h$ (middle), and largest dimension $m = \max \{w, h\}$ (right).
     The cut-off value of $\SI{64}{\meter}$ is shown by \textcolor{red}{red} dotted vertical lines.
     The fraction of bounding boxes with dimension $\leq \SI{64}{m}$ is annotated as well.
@@ -94,7 +94,7 @@ This is demonstrated in \cref{fig:bbox-growing}.
 \begin{figure}[H]
   \centering
   \input{tikz/bbox_growing.tex}
-  \caption{%
+  \caption[Illustration of bounding box growing.]{%
     Bounding box of width $2.25 \cdot \SI{64}{\meter} = \SI{144}{\meter}$ and height $1.25 \cdot \SI{64}{\meter} = \SI{80}{\meter}$.
     The bounding box is grown until it is 3 tiles wide and 2 tiles tall, i.e. $\SI{192}{\meter} \times \SI{128}{\meter}$.
   }%
