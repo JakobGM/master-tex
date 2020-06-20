@@ -40,9 +40,9 @@ The identification of building outlines from remote sensing data is considered t
 
 This master's thesis concerns itself with the reconstruction of three-dimensional \textit{roof surface polygons} from remote sensing data.
 Roof surface polygons are completely flat geometries, which when combined form the spatial shape of entire roof structures.
+The detection of roof surface polygons is formulated as an \textit{instance segmentation} problem, a task which produces high-fidelity targets.
 Three-dimensional representations of roof structures can for example be used for urban planning purposes.
 Another application, which incidentally prompted my interest in this topic, is the use of roof surface geometries to estimate the potential energy production of roof-mounted solar panel installations.
-The detection of roof surface polygons is formulated as an \textit{instance segmentation} problem, a task which produces high-fidelity targets.
 
 The topic of this master's thesis is a natural extension of much of the work already presented in my specialization project.
 A sequential two-step method has been developed in order to detect roof surface polygons,
@@ -53,34 +53,29 @@ A sequential two-step method has been developed in order to detect roof surface 
 The first step is essentially a minor reformulation of the task already solved in my specialization project.
 For this reason, much of the theory, general methods, and specific source code from my specialization project has been incorporated into this work.
 
-\subsubsection*{Research questions}
+\subsection*{Research questions}
 
-The identification of building outlines from remote sensing data can be formulated as a \textit{semantic segmentation task}, a heavily researched topic which has had many advances in the last decade.
-Geographic data, such as building outlines, are formatted in an unsuitable way for direct machine learning, and must therefore be purposefully transformed and pre-processed.
+Geographic data, such as building outlines and roof surfaces, are formatted in an unsuitable way for direct machine learning, and must therefore be purposefully transformed and pre-processed.
 The development of a data pipeline for geographic data is the first topic of research in this thesis.
-
+%
 \begin{description}
-  \item[RQ1] How can geographic data representation be transformed into a format suitable for machine learning?
+  \item[RQ1] How can geographic data representations be transformed into suitable formats for machine learning?
 \end{description}
-
-After having developed such a pipeline, the focus will be to develop a segmentation model for identifying building footprints with data from this pipeline.
+%
+After having developed such a pipeline, the focus will be to develop an instance segmentation model for identifying roof surfaces with \emph{raster} data from this pipeline.
 The use of aerial photography and LiDAR data from the Norwegian municipality of Trondheim will be investigated, as well as the combination of these two data sources.
-
+%
 \begin{description}
-  \item[RQ2] How can aerial photography and/or LiDAR data be used to predict accurate building outlines?
+  \item[RQ2] How can aerial photography and/or LiDAR data be used in order to infer accurate roof surface instance segmentation maps?
 \end{description}
-
-\subsubsection*{Thesis disposition}
-
-Reference my original specialization project \cite{specialization-project}.
-
-\section{Research Questions}
+%
+The resulting instance segmentation map, which represents rasterized roof surfaces in two dimensions, should be \emph{vectorized}.
+That is, the machine learning model's raster predictions should be converted to three-dimensional vector polygons, a data format which is more usable for the most common applications of roof surface geometries.
+%
 \begin{description}
-  \item[RQ1] How can geographic data representation be transformed into a format suitable for machine learning?
+  \item[RQ3] How can three-dimensional roof surface \emph{polygons} be produced from predicted instance segmentation \emph{raster} maps.
 \end{description}
+%
+Answering this last research question will require the development of additional post-processing methods.
 
-Solved partially in project thesis, but now for three-dimensional polygons as well.
-
-\section{Thesis Disposition}
-
-\subsection{Work taken from specialization project}
+\subsection*{Thesis disposition}
