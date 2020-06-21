@@ -86,3 +86,11 @@ We will also describe how to pre-process such geographic data in order to produc
 An overview of the problem domain of image segmentation and the methods currently being applied in the field will be provided in \cref{sec:modeling}, a chapter which will also describe the specific model architectures which consume and produce the data formats described in the previous chapter.
 The post-processing required in order to produce vectorized surface polygons from predicted rasters will be described in \cref{chap:post-processing}.
 Finally, the training procedure and experimental results will be presented and discussed in \cref{sec:experiments}.
+
+The chapter describing geospatial data structures and how they are pre-\linebreak{}processed (\cref{sec:data}) has been placed \emph{before} the chapter about model architectures and techniques related to image segmentation (\cref{sec:modeling}), since the choice of model architecture is highly dependent on how the ground truth target rasters have been constructed.
+In order to provide some additional context before describing the pre-processing of our geospatial datasets, we start by giving a formal overview of the problem domains involved in this thesis.
+This upcoming section should strictly belong to \cref{sec:modeling}, but the information is still considered essential in order to understand what motivates the decisions made during the pre-processing of the original raw geospatial data.
+
+\section*{Problem description}%
+\label{sec:segmentation-description}
+\input{chapters/introduction/problem-description.tex}
