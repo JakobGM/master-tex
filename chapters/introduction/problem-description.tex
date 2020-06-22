@@ -1,20 +1,24 @@
 Image recognition seeks to answer three questions for any given image~\cite{image_recognition}:
-
+%
 \begin{enumerate}[]
   \item \textbf{Identification:} Does the image contain any object of interest?
   \item \textbf{Localization:} Where in the image are the objects situated?
   \item \textbf{Classification:} To which categories do the objects belong to?
 \end{enumerate}
-
-We will concern ourselves with only one object category (class) at any time, that class being building footprints, and will simplify the following theory accordingly with this simplification in mind.
-The localization and classification of objects in a given image can be performed at different granularity levels, as shown in \cref{fig:segmentation-types}.
+%
+We will concern ourselves with only one object category (class) at any time, that class being roof surfaces, and will simplify the upcoming theory accordingly with this simplification in mind.
+The localization and classification of objects in a given image can be performed at different granularity levels, as shown by the \emph{columns} in \cref{fig:segmentation-types}.
+The \emph{rows} of \cref{fig:segmentation-types} show how the specific definition of what exactly constitutes an object influences the problem to be solved, where the top row considers entire building to be single objects, while the bottom row considers each individual roof surface to be distinct objects.
+It is the latter definition which is of interest in this work.
 
 \begin{figure}[htb]
-  \includegraphics[width=\linewidth,trim={0 4cm 0 3.4cm},clip]{segmentation-types}
+  \includegraphics[width=\linewidth]{segmentation-types}
+  \includegraphics[width=\linewidth]{surface-segmentation-types}
   \appcaption{%
-    Different granularities for single-class building localization, using the Trondheim 2017 data set.
+    Different granularities for single-class construction localization, using the Trondheim 2017 data set.
   }{%
     Bounding box regression is shown on the left, semantic segmentation in the middle, and instance segmentation on the right.
+    The top row defines entire buildings as the objects of interest, while the bottom row considers each individual roof surface as distinct objects.
   }%
   \label{fig:segmentation-types}
 \end{figure}
@@ -32,7 +36,7 @@ Since a bounding box can be directly derived from a semantic segmentation mask, 
   <
   \text{Semantic segmentation}
   <
-  \text{Instance segmentation}
+  \text{Instance segmentation}.
 \end{equation*}
 %
 An image of width $W$ and height $H$ consisting of $C$ channels is represented by a $W \times H \times C$ tensor, $X \in \mathbb{R}^{W \times H \times C}$.
@@ -56,4 +60,34 @@ but a binary predictor can be easily constructed by choosing a suitable threshol
   \tilde{f}(X) = \hat{f}(X) > T, \hspace{2em} X \in \mathbb{R}^{W \times H \times C}.
 \end{equation*}
 %
-The choice of the threshold value $T$ will affect the resulting \textit{sensitivity} and \textit{specificity} metrics of the model predictions, metrics which will be explained in the upcoming \cref{sec:semantic-segmentation}.
+The choice of the threshold value $T$ will affect the resulting \textit{sensitivity} and \textit{specificity} metrics of the model predictions, metrics which will be explained in \cref{sec:semantic-segmentation}.
+
+When performing single-class \emph{instance} segmentation, a binary prediction mask is not sufficiently expressive.
+Assuming that no more than $m$ individual instances can be simultaneously represented by any given input tensor X, the task is to assign an instance label $l \in \{0, 1, 2, \dots, m\}$ to every single pixel in the input tensor.
+The assignment of $l = 0$ means that no object overlaps the given pixel.
+An instance predictor $\hat{f}_{\predinstraster}$ is therefore a function producing a label array $\predinstraster$ of the form
+\begin{equation*}
+  \hat{f}_{\predinstraster}: \mathbb{R}^{W \times H \times C}
+  \rightarrow
+  \left\{
+    0, 1, 2, \dots, m
+  \right\}^{W \times H \times C}.
+\end{equation*}
+
+Instead of representing each predicted instance as a set of \emph{raster} pixels which share the same label value $l$ in $\predinstraster$, they can be represented as two-dimensional \emph{vectorized} polygons which enclose each given instance instead (\textit{polygon segmentation}).
+The specific data format used in order to represent vectorized polygons is presented in \cref{sec:vector-data}.
+For the case of three-dimensional objects, the instance polygons can be constructed to be three-dimensional as well, sometimes referred to as \textit{surface segmentation}~\cite{surface-segmentation-1,surface-segmentation-2}.
+Since the three-dimensional polygons in a surface segmentation can be projected into a two-dimensional plane in order to produce a polygon segmentation map, and since two-dimensional polygons can be \textit{rasterized} in order to create an instance segmentation map, the problem complexity of these tasks are as follows:
+%
+\begin{equation*}
+  \text{Instance segmentation}
+  <
+  \text{Polygon segmentation}
+  <
+  \text{Surface segmentation}.
+\end{equation*}
+
+This thesis presents a machine learning pipeline which produces vectorized surface polygon segmentations from remote sensing data.
+The pipeline does this by first predicting a semantic segmentation map, which is then partitioned into an instance segmentation map.
+This instance segmentation map is then vectorized in order to produce a polygon segmentation map.
+Finally, the three dimensional elevation and orientation of each polygon is inferred from the original LiDAR data in order to produce a surface segmentation map.
