@@ -1,9 +1,9 @@
 digraph G {
-  vd [shape=record, label="{𝑽𝒆𝒄𝒕𝒐𝒓 𝒅𝒂𝒕𝒂|Cadastral plots|Building outlines}"];
+  vd [shape=record, label="{𝑽𝒆𝒄𝒕𝒐𝒓 𝒅𝒂𝒕𝒂|Cadastral plots|Roof surfaces}"];
   gpkg [label="Convert to\nGeoPackage\n(.gpkg)"];
   vd_utm_trans [label="Project into\nUTM zone"];
   buffer [label="Zero-buffer"];
-  pvd [shape=record, label="{𝑷𝒓𝒐𝒄𝒆𝒔𝒔𝒆𝒅 𝒗𝒆𝒄𝒕𝒐𝒓 𝒅𝒂𝒕𝒂|<cp>Cadastral plots|<bo>Building outlines}"];
+  pvd [shape=record, label="{𝑷𝒓𝒐𝒄𝒆𝒔𝒔𝒆𝒅 𝒗𝒆𝒄𝒕𝒐𝒓 𝒅𝒂𝒕𝒂|<cp>Cadastral plots|<bo>Roof surfaces}"];
   vd -> gpkg -> vd_utm_trans -> buffer -> pvd;
 
   raster [shape=record, label="{𝑹𝒂𝒔𝒕𝒆𝒓 𝒅𝒂𝒕𝒂|Aerial Photography (RGB)|Elevation data (LiDAR)}"];
@@ -13,12 +13,18 @@ digraph G {
 
   tiling [label="Tiling algorithm"];
   masking [label="Masking algorithm"];
-  tiles [shape=record, label="{𝑹𝒂𝒔𝒕𝒆𝒓 𝒕𝒊𝒍𝒆𝒔|<rgb> RGB|<z> LiDAR|<bm> Buildings}"];
+  projection [label="Two-dimensional projection"];
+  rasterization [label="Surface rasterization"];
+  tiles [shape=record, label="{𝑹𝒂𝒔𝒕𝒆𝒓 𝒕𝒊𝒍𝒆𝒔|<rgb> RGB|<z> LiDAR|<bm> Semantic segmentation|<instances> Instance segmentation|<normals> Surface normals|<h> Surface elevation}"];
   vrt -> tiling;
   pvd:cp -> tiling;
   tiling -> tiles:rgb;
   tiling -> tiles:z;
-  pvd:bo -> masking -> tiles:bm;
+  pvd:bo -> projection -> masking -> tiles:bm;
+  pvd:bo -> rasterization;
+  rasterization -> tiles:instances;
+  rasterization -> tiles:normals;
+  rasterization -> tiles:h;
 
   disk [label="Disk cache", shape=cylinder];
   tiles -> disk;
