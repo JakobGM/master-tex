@@ -2,95 +2,15 @@
 \label{sec:introduction}
 \pagenumbering{arabic}
 
-\textit{Remote sensing} is the process of gathering information about an object without making physical contact, one such technology being \textit{aerial photography}.
-Although aerial RGB photography is intuitively interpretable for humans, it is fundamentally two-dimensional.
-\textit{LiDAR}, another remote sensing technology, is able to measure distances to object surfaces by directing a beam of light and measuring the time of arrival and wavelength of the ensuing reflection.
-The resulting data can therefore be used to construct a three-dimensional spatial representation of the object of interest.
-LiDAR has been applied in a wide array of fields such as meteorology~\cite{lidar_meteorology_1966}, forestry analysis~\cite{lidar_forestry_2000}, urban flood modelling~\cite{lidar_flood_2013}, and autonomous driving systems~\cite{lidar_self_driving_2018}.
+\input{chapters/introduction/motivation.tex}
 
-One of the applications of LiDAR technology is the construction of \textit{digital surface models} (DSMs).
-DSMs are grayscale images representing the earth's surface including all above-surface objects such as natural canopy and human-made objects.
-In contrast, \textit{digital terrain models} (DTMs) represent the elevation of the \textit{bare} ground where all above-surface objects have been artificially removed.
-While DTMs are often used in geographic and cartographic applications, DSMs can be used for localization and classification of objects above ground.
+\section{Research questions}
+\input{chapters/introduction/research-questions.tex}
 
-LiDAR data and aerial photography is usually provided by the respective cadastral authority in a given country.
-Cadastral authorities are also responsible for keeping records of cadastral data such as cadastral plots, roads, and buildings.
-The exact type and quality of this data varies substantially between countries and sometimes even between administrative regions in the same country.
-This raises the question: \enquote{Can high-fidelity insights be inferred from otherwise low-fidelity geographic data?}.
-\Cref{fig:data-enchancement} shows an outline of the possible \enquote{data enhancements} which are of interest within this domain. %chktex 2
-
-\begin{figure}
-  \includegraphics[width=\linewidth]{data-enchancement}
-  \appcaption{%
-    Classification of geographic data quality.
-  }{%
-    The classifications reflect a general observed trend in data sets, and a given region may therefore not fit into exactly one of these categories.
-    Some of the data types mentioned here will be described in \cref{sec:data}.
-  }%
-  \label{fig:data-enchancement}
-\end{figure}
-
-The \textit{Norwegian Mapping and Cadastre Authority} (\textit{Statens Kartverk}) provides geographic data of uniquely high quality for the entirety of Norway.
-This offers an opportunity to train supervised machine learning models on lower fidelity data in order to infer higher fidelity features.
-Such models can then be applied in other regions where only low-fidelity data is available as a method of data enhancement.
-
-The goal of my specialization project~\cite{specialization-project} from \citedate{specialization-project} was to infer two-\linebreak{}dimensional \textit{building outlines} from aerial photography and LiDAR elevation measurements.
-A \textit{building outline} is a two-dimensional representation of building \enquote{footprint}.
-Such data can be used for map annotations, flood risk analysis, and population density estimates, amongst other applications.
-The identification of building outlines from remote sensing data is considered to be medium-fidelity target inference by using low-fidelity features, and can be formulated as a so-called \textit{semantic segmentation} task\footnote{The concepts \enquote{semantic segmentation} and \enquote{instance segmentation} will be formally defined in \cref{sec:segmentation-description}.}.
-
-This master's thesis concerns itself with the reconstruction of three-dimensional \textit{roof surface polygons} from remote sensing data.
-Roof surface polygons are completely flat geometries, which when combined form the spatial shape of entire roof structures.
-The detection of roof surface polygons is formulated as an \textit{instance segmentation} problem, a task which produces high-fidelity targets.
-Three-dimensional representations of roof structures can for example be used for urban planning purposes.
-Another application, which incidentally prompted my interest in this topic, is the use of roof surface geometries to estimate the potential energy production of roof-mounted solar panel installations.
-
-The topic of this master's thesis is a natural extension of much of the work already presented in my specialization project.
-A sequential two-step method has been developed in order to detect roof surface polygons,
-\begin{enumerate}[noitemsep]
-  \item Determine which pixels that contain roof structures (semantic segmentation).
-  \item Assign a specific roof surface to each \enquote{roof pixel} (instance segmentation).
-\end{enumerate}
-The first step is essentially a minor reformulation of the task already solved in my specialization project.
-For this reason, much of the theory, general methods, and specific source code from my specialization project has been incorporated into this work.
-
-\subsection*{Research questions}
-
-Geographic data, such as building outlines and roof surfaces, are formatted in an unsuitable way for direct machine learning, and must therefore be purposefully transformed and pre-processed.
-The development of a data pipeline for geographic data is the first topic of research in this thesis.
-%
-\begin{description}
-  \item[RQ1] How can geographic data representations be transformed into suitable formats for machine learning?
-\end{description}
-%
-After having developed such a pipeline, the focus will be to develop an instance segmentation model for identifying roof surfaces with \emph{raster} data from this pipeline.
-The use of aerial photography and LiDAR data from the Norwegian municipality of Trondheim will be investigated, as well as the combination of these two data sources.
-%
-\begin{description}
-  \item[RQ2] How can aerial photography and/or LiDAR data be used in order to infer accurate roof surface instance segmentation maps?
-\end{description}
-%
-The resulting instance segmentation map, which represents rasterized roof surfaces in two dimensions, should be \emph{vectorized}.
-That is, the machine learning model's raster predictions should be converted to three-dimensional vector polygons, a data format which is more usable for the most common applications of roof surface geometries.
-%
-\begin{description}
-  \item[RQ3] How can three-dimensional roof surface \emph{polygons} be produced from predicted instance segmentation \emph{raster} maps.
-\end{description}
-%
-Answering this last research question will require the development of additional post-processing methods.
-
-\subsection*{Thesis disposition}
-
-We will start by providing an introduction to the world of \textit{Geographic Information Systems} (GIS); the field which concerns itself with representing geographic data, in \cref{sec:data}.
-We will also describe how to pre-process such geographic data in order to produce rasters which are suitable for training accurate machine learning models.
-An overview of the problem domain of image segmentation and the methods currently being applied in the field will be provided in \cref{sec:modeling}, a chapter which will also describe the specific model architectures which consume and produce the data formats described in the previous chapter.
-The post-processing required in order to produce vectorized surface polygons from predicted rasters will be described in \cref{chap:post-processing}.
-Finally, the training procedure and experimental results will be presented and discussed in \cref{sec:experiments}.
-
-The chapter describing geospatial data structures and how they are pre-\linebreak{}processed (\cref{sec:data}) has been placed \emph{before} the chapter about model architectures and techniques related to image segmentation (\cref{sec:modeling}), since the choice of model architecture is highly dependent on how the ground truth target rasters have been constructed.
-In order to provide some additional context before describing the pre-processing of our geospatial datasets, we start by giving a formal overview of the problem domains involved in this thesis.
-This upcoming section should strictly belong to \cref{sec:modeling}, but the information is still considered essential in order to understand what motivates the decisions made during the pre-processing of the original raw geospatial data.
-
-\section*{Problem description}%
+\subsection*{Problem description}%
 \label{sec:segmentation-description}
 \input{chapters/introduction/problem-description.tex}
+
+\clearpage
+\section{Thesis disposition}
+\input{chapters/introduction/disposition.tex}

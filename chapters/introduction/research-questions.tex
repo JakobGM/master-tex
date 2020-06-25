@@ -1,0 +1,26 @@
+Geographic data, such as building outlines and roof surfaces, are formatted in an unsuitable way for direct machine learning, and must therefore be purposefully transformed and pre-processed.
+The development of a data pipeline for geographic data is the first topic of research in this thesis.
+%
+\begin{description}
+  \item[RQ1] How can geographic data representations be transformed into suitable formats for machine learning?
+\end{description}
+%
+After having developed such a pipeline, the focus will be to develop an instance segmentation model for identifying roof surfaces with \emph{raster} data from this pipeline.
+The use of aerial photography and LiDAR data from the Norwegian municipality of Trondheim will be investigated, as well as the combination of these two data sources.
+%
+\begin{description}
+  \item[RQ2] How can aerial photography and/or LiDAR data be used in order to infer accurate roof surface instance segmentation maps?
+\end{description}
+%
+The resulting instance segmentation map, which represents rasterized roof surfaces in two dimensions, should be \emph{vectorized}.
+That is, the machine learning model's raster predictions should be converted to three-dimensional vector polygons, a data format which is more usable for the most common applications of roof surface geometries.
+%
+\begin{description}
+  \item[RQ3] How can three-dimensional roof surface \emph{polygons} be produced from predicted instance segmentation \emph{raster} maps.
+\end{description}
+%
+Answering this last research question will require the development of additional post-processing methods.
+
+The chapter describing geospatial data structures and how they are pre-\linebreak{}processed (\cref{sec:data}) has been placed \emph{before} the chapter about model architectures and techniques related to image segmentation (\cref{sec:modeling}), since the choice of model architecture is highly dependent on how the ground truth target rasters have been constructed.
+In order to provide some additional context before describing the pre-processing of our geospatial datasets, we start by giving a formal overview of the problem domains involved in this thesis.
+This upcoming section should strictly belong to \cref{sec:modeling}, but the information is still considered essential in order to understand what motivates the decisions made during the pre-processing of the original raw geospatial data.
