@@ -1,0 +1,6 @@
+\chapter*{Abstract}
+
+In this master's thesis, we present an end-to-end machine learning pipeline for inferring the location, orientation, and elevation of roof surfaces from remote sensing data (digital surface models and/or aerial photography).
+We show that by making a minor modification to the output layer of the U-Net architecture it is able to predict rasterized surface normal vectors with great accuracy.
+By the application of clustering techniques, such as DBSCAN and k-NN, the predicted normal vectors can be used in order to partition semantic roof segmentation maps, producing corresponding instance segmentation maps as a result.
+A final vectorization step can be applied in order to produce three-dimensional vector polygons representing each roof surface.
