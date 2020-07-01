@@ -28,9 +28,10 @@ Both decision rules are shown in \cref{fig:pixel-containment}.
   \label{fig:pixel-containment}
 \end{figure}
 
+\clearpage
 An alternative is to average the two masks, resulting in mask values of $0.5$ where the two decision rules disagree.
 Approximately \SI{9.2}{\percent} of mask pixels of value $1$ are situated along the boundary of a discretized mask polygon (\SI{1.7}{\percent} of \textit{all} pixels regardless of value) and may therefore be affected by this decision.
-We have opted for decision rule A.
+We have opted for decision rule B, as it has been observed to preserve symmetries and seams to a larger degree than decision rule A.
 The distribution of the mask class balance across all produced tiles is shown in \cref{fig:mask-class-balance}.
 
 \begin{figure}[H]

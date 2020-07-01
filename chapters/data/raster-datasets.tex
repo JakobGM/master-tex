@@ -3,7 +3,7 @@ The real image resolution is \SIrange{0.04}{0.15}{\meter}, but is provided with 
 The reported accuracy is \SI{\pm 0.35}{\meter}~\cite{trondheim_ortophoto_2017}, although the exact type of this accuracy is not specified.
 An exemplified region is visualized in \cref{fig:rgb-example}.
 
-\begin{figure}[H]
+\begin{figure}[hbt]
   \centering
   \includegraphics[width=0.75\linewidth]{data/rgb-example}
   \appcaption{%
@@ -19,7 +19,7 @@ Proper orthophotos are expensive to manufacture and are therefore seldomly avail
 Aerial photography which has not been properly \enquote{ortho-rectified} may impede location-based inference as there exists no exact one-to-one mapping between image pixels and geographic coordinates.
 This problem is best understood by an example, as shown in \cref{fig:non-orthophoto-example}.
 
-\begin{figure}[H]
+\begin{figure}[hbt]
   \centering
   \begin{tikzpicture}
     \node[anchor=south west,inner sep=0] (image) at (0,0) {\includegraphics[width=0.75\linewidth]{data/non-orthophoto-example}};
@@ -44,13 +44,13 @@ This problem is best understood by an example, as shown in \cref{fig:non-orthoph
 
 As can be seen in \cref{fig:non-orthophoto-example}, the \enquote{Ortofoto Trondheim 2017} dataset clearly shows one side of a building due to the perspective of the plane capturing the image.
 An ideal orthophoto would capture all vertical building walls as single, straight lines, no matter the perspective.
-The effect of this \enquote{parallax error} on segmentation predictions will be investigated in \cref{sec:experiments}\todo{Should we have a specific RGB experiment and reference to it here?}.
+The effect of this \enquote{parallax error} on semantic segmentation predictions has been investigated in our previous work~\cite{specialization-project}, the conclusion being that it does \emph{not} impede predictive accuracy to a major degree.
 
 The LiDAR dataset used is \enquote{Høydedata Trondheim 5pkt 2017}\footnote{Product specification for \enquote{Høydedata Trondheim 5pkt 2017} can be found here:\\ \url{https://kartkatalog.geonorge.no/metadata/bec4616f-9a62-4ecc-95b0-c0a4c29401dc}.} from \date{2017-10-10} and requires \SI{25}{\giga\byte} of storage space.
 The resolution is \SI{0.2}{\meter} and has a reported standard deviation of \SI{0.02}{\meter}~\cite{trondheim_lidar_2017}.
 LiDAR visualized as a grayscale image over the same region as in \cref{fig:rgb-example} is presented in \cref{fig:lidar-example}.
 
-\begin{figure}[H]
+\begin{figure}[hbt]
   \centering
   \includegraphics[width=0.7125\linewidth]{data/lidar-example}
   \caption[Visualization of LiDAR data from Trondheim.]{%
@@ -64,7 +64,7 @@ The LiDAR dataset is partially incomplete due to measurement errors, and certain
 \cref{tab:lidar-point-density} shows the frequency of such \texttt{nodata} values in the dataset.
 The table has been produced by moving a rolling window of size $\SI{10}{\meter} \times \SI{10}{\meter}$ over the entire coverage area and calculating the proportion of pixels with valid values within each non-overlapping window.
 
-\begin{table}[htb]
+\begin{table}[hbt]
   \centering
   \begin{tabular}{cc}
     \toprule

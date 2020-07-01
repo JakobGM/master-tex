@@ -1,15 +1,22 @@
-The \enquote{Matrikkelen - Eiendomskart Teig}\footnote{Product specification for \enquote{Matrikkelen - Eiendomskart Teig} can be found here:\\\url{https://kartkatalog.geonorge.no/metadata/74340c24-1c8a-4454-b813-bfe498e80f16}.} data set contains all cadastral plots in Trondheim, the use of which will be explained in \cref{sec:tiling-algorithm}.
-The \enquote{FKB-bygning}\footnote{Product specification for \enquote{FKB-bygning} can be found here:\\\url{https://kartkatalog.geonorge.no/metadata/8b4304ea-4fb0-479c-a24d-fa225e2c6e97}.} data set contains all registered building outlines in Trondheim.
+The \enquote{Matrikkelen - Eiendomskart Teig}\footnote{Product specification for \enquote{Matrikkelen - Eiendomskart Teig} can be found here:\\\url{https://kartkatalog.geonorge.no/metadata/74340c24-1c8a-4454-b813-bfe498e80f16}.} dataset contains all cadastral plots in Trondheim, the use of which will be explained in \cref{sec:tiling-algorithm}.
+The \enquote{FKB-bygning}\footnote{Product specification for \enquote{FKB-bygning} can be found here:\\\url{https://kartkatalog.geonorge.no/metadata/8b4304ea-4fb0-479c-a24d-fa225e2c6e97}.} dataset contains all registered building outlines in Trondheim.
 The building outlines will be used to construct binary classification masks as outlined in \cref{sec:masking-algorithm}.
-Both data sets are illustrated in \cref{fig:vector-data-example}.
+Additionally, the \enquote{FKB-bygning} dataset includes a complete collection of descriptive building lines, such as ridge lines, verge lines, and so on.
+This dataset is of no direct use to us, but Norkart has constructed an algorithm for merging these lines in order to construct three-dimensional roof surface polygons.
+This polygonized dataset has been kindly provided to us by Norkart, and will be used as outlined in \cref{sec:surface-rasterization}.
+These four datasets are illustrated in \cref{fig:vector-data-example}.
 
-\begin{figure}[htb]
-  \includegraphics[trim={5cm 0 5cm 0},clip, width=0.49\linewidth]{data/teig-example}
-  \includegraphics[trim={5cm 0 5cm 0},clip, width=0.49\linewidth]{data/building-example}
+\begin{figure}[H]
+  \includegraphics[trim={5cm 0 5cm 0},clip, width=0.4\linewidth]{data/teig-example}
+  \includegraphics[trim={5cm 0 5cm 0},clip, width=0.4\linewidth]{data/building-example}
+  \vspace{5em}
+  \includegraphics[width=0.4\linewidth]{ortofoto_linjesegmenter.png}
+  \includegraphics[width=0.4\linewidth]{ortofoto_polygons.png}
   \appcaption{%
     Illustration of vector datasets.
   }{%
-    Cadastral plots are shown on the left while building outlines are shown on the right.
+    Cadastral plots are shown on the top left while building outlines are shown on the top right.
+    Descriptive building lines are shown on the bottom left, such as ridge lines shown in \textcolor{red}{red}, while the polygonized roof surfaces produced by Norkart are shown on the bottom right.
     \copyright{Kartverket}.
   }%
   \label{fig:vector-data-example}
