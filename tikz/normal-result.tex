@@ -1,0 +1,20 @@
+\newcommand{\normalresult}[3]{
+\begin{tikzpicture}[
+  node distance=-0.5em,
+]
+\def\scaler{0.5}
+  \node[](lidar) at (0, 0) {\includegraphics[scale=\scaler]{tile-data/#2-#3/lidar.pdf}};
+  \node[below=of lidar](rgb) {\includegraphics[scale=\scaler]{tile-data/#2-#3/rgb.pdf}};
+  \node[right=of lidar](predictednormals) {\includegraphics[scale=\scaler]{tile-data/#2-#3/#1/predicted_normals.pdf}};
+  \node[below=of predictednormals](truesegmentedpredictednormals) {\includegraphics[scale=\scaler]{tile-data/#2-#3/#1/true_segmented_predicted_normals.pdf}};
+  \node[right=of predictednormals](truenormals) {\includegraphics[scale=\scaler]{tile-data/#2-#3/true_normals.pdf}};
+  \node[below=of truenormals, xshift=1.3em, yshift=0.155em](cosine) {\includegraphics[scale=0.52]{tile-data/#2-#3/#1/cosine_similarity.pdf}};
+
+  \node[above=-0.25em of lidar.north] {$\lidarraster$};
+  \node[above=-0.25em of predictednormals.north] {$\prednormraster$};
+  \node[above=-0.25em of truenormals.north] {$\normraster$};
+  \node[below=-0.25em of rgb.south] {$\rgbraster$};
+  \node[below=-0.25em of truesegmentedpredictednormals.south] {$\segraster \odot \prednormraster$};
+  \node[below=-0.25em of cosine.south] {$\mathcal{L}$};
+\end{tikzpicture}
+}
