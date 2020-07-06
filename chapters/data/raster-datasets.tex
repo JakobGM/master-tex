@@ -1,5 +1,5 @@
 We will use the \enquote{Ortofoto Trondheim 2017}\footnote{Product specification for \enquote{Ortofoto Trondheim 2017} can be found here:\\ \url{https://kartkatalog.geonorge.no/metadata/cd105955-6507-416f-86d2-6d95c1b74278}.} aerial photography dataset from 2017 which requires \SI{161}{\giga\byte} of storage space.
-The real image resolution is \SIrange{0.04}{0.15}{\meter}, but is provided with an upsampled resolution of \SI{0.1}{\meter} for consistency.
+The real image resolution is \SIrange{0.04}{0.15}{\meter}, but is provided with an resampled resolution of \SI{0.1}{\meter} for consistency, that is, each pixel is of size $\SI{0.1}{\meter} \times \SI{0.1}{\meter}$.
 The reported accuracy is \SI{\pm 0.35}{\meter}~\cite{trondheim_ortophoto_2017}, although the exact type of this accuracy is not specified.
 An exemplified region is visualized in \cref{fig:rgb-example}.
 
@@ -47,39 +47,15 @@ An ideal orthophoto would capture all vertical building walls as single, straigh
 The effect of this \enquote{parallax error} on semantic segmentation predictions has been investigated in our previous work~\cite{specialization-project}, the conclusion being that it does \emph{not} impede predictive accuracy to a major degree.
 
 The LiDAR dataset used is \enquote{Høydedata Trondheim 5pkt 2017}\footnote{Product specification for \enquote{Høydedata Trondheim 5pkt 2017} can be found here:\\ \url{https://kartkatalog.geonorge.no/metadata/bec4616f-9a62-4ecc-95b0-c0a4c29401dc}.} from \date{2017-10-10} and requires \SI{25}{\giga\byte} of storage space.
-The resolution is \SI{0.2}{\meter} and has a reported standard deviation of \SI{0.02}{\meter}~\cite{trondheim_lidar_2017}.
+The pixel size is $\SI{0.25}{\meter} \times \SI{0.25}{\meter}$ and the LiDAR measurements have a reported standard deviation of \SI{0.02}{\meter}~\cite{trondheim_lidar_2017}.
 LiDAR visualized as a grayscale image over the same region as in \cref{fig:rgb-example} is presented in \cref{fig:lidar-example}.
 
 \begin{figure}[hbt]
   \centering
-  \includegraphics[width=0.7125\linewidth]{data/lidar-example}
+  \includegraphics[width=0.75\linewidth]{data/lidar-example}
   \caption[Visualization of LiDAR data from Trondheim.]{%
     Visualization of the \enquote{Høydedata Trondheim 5pkt 2017} LiDAR dataset.
     \copyright{Kartverket}.
   }%
   \label{fig:lidar-example}
 \end{figure}
-
-The LiDAR dataset is partially incomplete due to measurement errors, and certain pixels are therefore filled in with \texttt{nodata} placeholder values as explained in \cref{sec:data-types}.
-\cref{tab:lidar-point-density} shows the frequency of such \texttt{nodata} values in the dataset.
-The table has been produced by moving a rolling window of size $\SI{10}{\meter} \times \SI{10}{\meter}$ over the entire coverage area and calculating the proportion of pixels with valid values within each non-overlapping window.
-
-\begin{table}[hbt]
-  \centering
-  \begin{tabular}{cc}
-    \toprule
-    {Point density (\si{\per\meter\squared})} & {Proportion (\%)} \\
-    \midrule
-    $> 100\%$ & 97.7 \\
-    \SIrange{85}{100}{\percent} & 1.2 \\
-    \SIrange{60}{85}{\percent} & 1.1 \\
-    \bottomrule
-  \end{tabular}
-  \caption[Control of point cloud LiDAR density.]{%
-    Control of point cloud density for the Trondheim 2017 LiDAR dataset.
-    The densities are calculated within rolling windows of size $\SI{10}{\meter} \times \SI{10}{\meter}$~\cite{trondheim_lidar_2017}.
-  }%
-  \label{tab:lidar-point-density}
-\end{table}
-
-% \SI{70.77}{\percent} of all pixels are valid, probably due to lower resolution than the actual resolution.  Elevation data is in domain $(-9.390, 569.050)$.

@@ -129,7 +129,7 @@ Given a distance metric $d$, we can construct the predictor as
     \beta_0 + \hat{\beta}_x x + \hat{\beta}_y y
   \right),
 \end{align*}
-where ${[x, y]}^T \defeq \pixtogeo{i}{j}$ and $H_{i,j}$ is the LiDAR measurement at pixel location $(i,j)$.
+where ${[x, y]}^T \defeq \pixtogeo{i}{j}$ and $\lidarraster_{i,j}$ is the LiDAR measurement at pixel location $(i,j)$.
 If we specify the square distance metric $d(x, y) = (x - y)^2$, then we have an ordinary least squares regression with just one regression parameter.
 Due to the nature of LiDAR measurement errors, the absolute distance $d(x, y) = |x - y|$ has been shown to produce more robust estimators for $\beta_0$.
 

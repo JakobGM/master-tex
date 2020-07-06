@@ -33,7 +33,7 @@ For GIS rasters specifically we must additionally provide the spatial extent of 
   \item The pixel step size, $\vec{\Delta} = {[\Delta_x, \Delta_y]}^T$, for example ${[\SI{0.25}{\meter}, \SI{-0.25}{\meter}]}^T$.
 \end{itemize}
 
-The pixel value $\inputraster_{i, j, c}$ therefore represents a rectangle of width $\Delta_x$ and height $\Delta_y$ centered at the spatial coordinate $\vec{r}_0 + \vec{\Delta} \cdot [i, j]$ interpreted in the given coordinate system.
+The pixel value $\inputraster_{i, j, c}$ therefore represents a rectangle of width $\Delta_x$ and height $\Delta_y$ centered at the spatial coordinate $\vec{r}_0 + [\Delta_y i, \Delta_x j]$ interpreted in the given coordinate system.
 
 Missing data in remote sensing rasters is specified by filling in a predefined \texttt{nodata} placeholder value.
 For RGB data this is often set to $0$, resulting in a black pixel.

@@ -67,13 +67,13 @@ The distributions of the bounding box widths ($w$), heights ($h$), and maximal d
 As can be seen in \cref{fig:bbox-stats}, the distributions of $h$ and $w$ are quite similar, as expected.
 A square $1:1$ aspect ratio is therefore suitable for the normalized bounding box size.
 Specifically, a $\SI{64}{\meter} \times \SI{64}{\meter}$ bounding box will be of sufficient size to contain $\approx \SI{85}{\percent}$ of all cadastre plots in a single tile.
-With a LiDAR resolution of $\SI{0.2}{\meter}$, this results in a final image resolution of $\SI{256}{\pixel} \times \SI{256}{\pixel}$.
+With a LiDAR resolution of $\SI{0.25}{\meter}$, this results in a final image resolution of $\SI{256}{\pixel} \times \SI{256}{\pixel}$.
 This resolution has the added benefit of being a common resolution for CNNs.
 
 How should the bounding boxes be normalized to to $\SI{256}{\pixel} \times \SI{256}{\pixel}$?
 A common technique is to resize the original image by use of methods such as bilinear interpolation or Lanczos resampling.
 While this is tolerable for normal photographs, where each pixel has a variable surface area mapping, it is an especially lossy transformation for remote sensing data.
-In the Trondheim 2017 LiDAR data set, for instance, each pixel represents a $\SI{0.2}{\meter} \times \SI{0.2}{\meter}$ real world area.
+In the Trondheim 2017 LiDAR data set, for instance, each pixel represents a $\SI{0.25}{\meter} \times \SI{0.25}{\meter}$ real world area.
 If the highly variable extent of each bounding box is scaled to $\SI{256}{\pixel} \times \SI{256}{\pixel}$, the real world area of each pixel will differ greatly between cadastral plots.
 Resized images will also become distorted whenever the original aspect ratio is not $1:1$.
 
@@ -101,11 +101,12 @@ This is demonstrated in \cref{fig:bbox-growing}.
   \label{fig:bbox-growing}
 \end{figure}
 
-The resulting bounding box can now be divided into $w^*h^* / 64^2$ tiled images of resolution $\SI{256}{\pixel} \times \SI{256}{\pixel}$, every pixel representing a $\SI{0.2}{\meter} \times \SI{0.2}{\meter}$ surface area, and no spatial information has been lost in the process.
+The resulting bounding box can now be divided into $w^*h^* / 64^2$ tiled images of resolution $\SI{256}{\pixel} \times \SI{256}{\pixel}$, every pixel representing a $\SI{0.25}{\meter} \times \SI{0.25}{\meter}$ surface area, and no spatial information has been lost in the process.
 Each tile's geographic extent is uniquely defined by the coordinate of the upper left corner (\textit{tile origin}), since the tile dimensions are identical.
 An affine transformation from the UTM zone into the tile's discretized coordinate system can be constructed from the tile origin.
 
-The additional area, $B(\vec{c}, w, h) \setminus B(\vec{c}, w^*, h^*)$, is filled with real raster data and respective target masks, and therefore may cause expanded bounding boxes to partially overlap.
+The additional area, $B(\vec{c}, w, h) \setminus B(\vec{c}, w^*, h^*)$\footnote{Given geographic regions $A$ and $B$, the region $A \setminus B$ is defined as the region covered by $A$ but \emph{not} by $B$.}, is filled with real raster data and respective target masks, and therefore may cause expanded bounding boxes to partially overlap.
 This will result in certain cadastral plots to share features, and must therefore be carefully dealt with in order to prevent data leakage across training, validation, and test splits.
 Another approach is to fill in the additional area with zero-values, effectively preventing all data leakage between cadastral plots.
 A disadvantage with this approach is that all models are now required to learn to ignore this additional, fake data, and this could result in reduced predictive performance and/or longer training times.
+\clearpage
