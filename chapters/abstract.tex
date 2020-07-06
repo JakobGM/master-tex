@@ -3,5 +3,5 @@
 In this master's thesis, we present an end-to-end machine learning pipeline for inferring the location, orientation, and elevation of flat roof surfaces from remote sensing data (digital surface models and/or aerial photography).
 We show that by making a minor modification to the output layer of the U-Net CNN architecture it is able to predict rasterized surface normal vectors with great accuracy.
 By clustering predicted normal vectors, using DBSCAN and $k$-NN, it is possible to partition semantic roof segmentation maps into corresponding roof surface instance segmentation maps.
-A single multitask CNN architecture which predicts both semantic segmentation masks and rasterized normal vectors is shown to be as performant as a pair of respective single-task networks.
+A single multitask CNN network which predicts both semantic segmentation masks and rasterized normal vectors is shown to be as performant as a pair of respective single-task networks.
 Finally, an optional vectorization procedure which produces three-dimensional vector polygons from roof surface instance segmentation maps is presented.

@@ -1,3 +1,7 @@
 \chapter*{Sammendrag}
 
-TODO: Skriv norsk sammendrag.
+I denne masteroppgaven presenterer vi en ende-til-ende maskinlæringsprosedyre for å identifisere beliggenheten, orientering og høyden til takoverflater ved hjelp av fjernmålinger (digitale overflatemodeller og/eller flyfoto).
+Vi viser at ved å gjøre små endringer på utputtlaget til U-Net CNN-arkitekturen evner den å predikere rastrerte overflatenormalvektorer med stor nøyaktighet.
+Ved å anvende klyngeanalyse i form av DBSCAN og $k$-NN på de predikerte normalvektorene, så er det mulig å partisjonere semantiske taksegmenteringer til å bli tilsvarende forekomstsegmenteringer hvor hver forekomst representerer en individuell takflate.
+Et CNN-nettverk som predikerer både semantiske segmenteringer samt rastrerte normalvektorer har blitt vist til å være like virkningsfull som et par med respektive nettverk som utfører disse to oppgavene uavhengig av hverandre.
+En valgfri vektoriseringsprosedyre som produserer tredimensjonale vektorpolygoner fra forekomstsegmenteringer er avslutningsvis presentert.
