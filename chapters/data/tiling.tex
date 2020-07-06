@@ -1,7 +1,7 @@
 The data sets provided to us are in a state unsuitable for direct use by machine learning frameworks.
 For this reason we need to develop a preprocessing pipeline that transforms the data into a more customary format.
 The data preprocessing should be generalizable to different regions, data formats, data types (vector vs.\ raster), coordinate systems, and so on.
-The goal is to implement a modelling pipeline that can be applied to other geographic regions in the future.
+The goal is to implement a modeling pipeline that can be applied to other geographic regions in the future.
 
 Our data sets are defined over a single, contiguous geographic area, and we must therefore define a \textit{sample space} which allows us to split the data into training-, validation-, and test-sets.
 The collection of all cadastral plots in a given region is a suitable sample space since cadastral plots are non-overlapping regions of relatively small size and have a high probability of containing one or more buildings.
