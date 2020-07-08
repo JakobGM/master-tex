@@ -4,9 +4,9 @@ An alternative interpretation of the dropout procedure is that it is a computati
 This technique has been empirically shown to significantly increase the test performance in several different settings.
 
 Although originally intended for use in feedforward neural networks, dropout has been extensively applied in CNN architectures as well~\cite{dropout-cnn}.
-Since there are no nodes to be omitted in fully convolutional layers, the dropout procedure needs to be adapted in order to be applicable in a CNN setting.
+Since there are no \enquote{nodes} to be omitted in fully convolutional layers, the dropout procedure needs to be adapted in order to be applicable in a CNN setting.
 One approach is to introduce a randomly located square mask (\textit{cutout}) in the input image~\cite{dropout-cutout}.
-\textit{Stochastic depth dropout} randomly selects entire layers to be dropped, replacing them with identity functions instead~\cite{dropout-stochastic-depth}.
+Alternatively, \textit{stochastic depth dropout} randomly selects entire layers to be dropped, replacing them with identity functions instead~\cite{dropout-stochastic-depth}.
 Dropout can also be integrated into max pooling layers, ignoring values at random during the search for the maximum value in the receptive field~\cite{max-pooling-dropout}.
 This has become known as \textit{max-pooling dropout} and is illustrated in \cref{fig:max-pooling-dropout}.
 

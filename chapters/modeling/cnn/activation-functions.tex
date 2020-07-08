@@ -5,19 +5,35 @@ These activation functions were originally inspired by the neuroscientific under
 The \textit{logistic sigmoid} function, with its deep roots in probability theory, has been a popular choice of activation function for neural networks since the inception of the field~\cite{rosenblatt-perceptron-1958}, and is defined by
 %
 \begin{equation*}
-  \sigma(x) = \frac{1}{1 + e^{-x}} = \frac{e^x}{e^x + 1}.
+  \sigma(x)
+  \defeq
+  \frac{1}{1 + e^{-x}} = \frac{e^x}{e^x + 1}.
   \tag{Sigmoid activation function}
 \end{equation*}
 %
 Observe that $\lim_{x \to -\infty} \sigma(x) = 0$ and $\lim_{x \to +\infty} \sigma(x) = 1$, and that its derivative is positive over the entire real number line. This makes it a bounded, differentiable, monotonic function, and is therefore suitable for mapping the weighted output of an artificial neuron in the domain $(-\infty, \infty)$ into the range $(0, 1)$.
 This makes it especially suitable for the final layer in neural networks intended for predicting binary 0/1-responses.
+A closely related activation function, with many of the same properties except that it maps into the range $(-1, 1)$, is the \textit{hyperbolic tangent} (tanh) function defined by
+%
+\begin{equation*}
+  \mathrm{TanH}(x)
+  \defeq
+  \frac{
+    e^x - e^{-x}
+  }{
+    e^x + e^{-x}
+  }.
+  \tag{Tanh activation function}
+\end{equation*}
 
 Although the sigmoid activation function has strong biological~\cite{rosenblatt-perceptron-1958} and theoretical~\cite{uat-sigmoid} underpinnings, it often suffers from the phenomenon of \textit{vanishing gradients} for network architectures consisting of three or more layers, which in turn severely inhibits training.
 As an alternative to the sigmoid activation function, the \textit{rectified linear unit} (ReLU) was introduced in a paper~\cite{relu-original-paper} by \citeauthor{relu-original-paper} in year \citeyear{relu-original-paper}.
 It is defined as
 %
 \begin{equation*}
-  \mathrm{ReLU}(x) = x^+ = \max(0, x).
+  \mathrm{ReLU}(x)
+  \defeq
+  x^+ = \max(0, x).
   \tag{ReLU activation function}
 \end{equation*}
 %

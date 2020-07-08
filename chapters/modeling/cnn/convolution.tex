@@ -70,14 +70,14 @@ The kernel weights determine the type of features being extracted from the given
 \end{align*}\end{footnotesize}
 
 It is important to notice that kernel convolution has the additional effect of reducing the dimensionality of the input image.
-Firstly, pixels along the image border are partially ignored since the receptive field can not be properly centered on these pixel.
+Firstly, pixels along the image border are partially ignored since the receptive field can not be properly centered on such pixels.
 Secondly, a horizontal stride of $W_s > 1$ or a vertical stride of $H_s > 1$ will cause additional dimensional reduction.
 For an image of size $H \times W$ and a kernel of size $H_k \times W_k$, the input image is reduced to size
 %
 \begin{equation*}
   \floor{(H - H_k + H_s) / H_s}
   \times
-  \floor{(W - W_k + W_s) / W_s}.
+  \floor{(W - W_k + W_s) / W_s},
 \end{equation*}
 %
 as shown by~\cite{dive-into-deep-learning}.

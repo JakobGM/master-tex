@@ -23,7 +23,7 @@ This type of normalization alone may not be optimal in all cases, though, and is
 Assume a set of pooled layer activations $\vec{a}$ to be symmetrically distributed, and assume the subsequent convolution layer to preserve this symmetry.
 After standardizing the output, 50\% of the values are expected to be negative, and all of these values will be truncated to $0$ if ReLU is the activation function of choice.
 This informational loss may be suboptimal for the given network layer and must be accounted for.
-That is to say, $\E{a} =  0$ and $\Var{a}$ may be an unsuitable domain for the given activation function.
+That is to say, $\E{a} =  0$ and $\Var{a} = 1$ may be an unsuitable domain for the given activation function.
 For this reason, we introduce two additional trainable parameters for each feature dimension, $\gamma^{(k)}$ and $\beta^{(k)}$, and apply a second normalization step
 
 \begin{equation*}
