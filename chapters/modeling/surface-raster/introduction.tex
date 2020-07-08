@@ -1,0 +1,11 @@
+The previous section described the deep learning approach for predicting \emph{semantic} segmentation masks.
+In our specific case, these semantic segmentation masks denote which pixels contain roof structures, and which do not.
+Such semantic segmentation masks are not sufficient for achieving our stated goal of reconstructing three-dimensional roof surface geometries from remote sensing data.
+In order to achieve this goal we must predict \emph{instance} segmentation masks instead, that is, not only determining if a given pixel contains a roof structure, but also determining which specific flat roof surface the pixel is part of.
+This instance segmentation mask can be subsequently post-processed (as outlined in \cref{chap:post-processing}) in order to produce three-dimensional vector polygons representing flat roof surfaces.
+
+In the upcoming \cref{chap:post-processing} - \enquote{\nameref{chap:post-processing}}, we will present a procedure for partitioning semantic segmentation maps into instance segmentation maps by clustering normal vectors.
+This section will describe the prediction of these normal vectors.
+Since this is a relatively novel approach to predicting instance segmentation masks, there exists relatively little existing work in the academic literature which is directly applicable.
+We will, however, present some existing work which is tangentially relevant to our task at hand in \cref{sec:normal-vector-literature}.
+A U-Net derived CNN architecture for predicting rasterized surface normal vectors is presented in \cref{sec:normal-model}.
