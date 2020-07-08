@@ -1,13 +1,14 @@
-ESRI, in cooperation with Miami-Dade County and Nvidia, constructed a pipeline for the reconstruction of three-dimensional building models from aerial LiDAR data~\cite{esri-reconstruction}.
+ESRI, in cooperation with Miami-Dade County and Nvidia, constructed a machine learning pipeline for the reconstruction of three-dimensional building models from aerial LiDAR data~\cite{esri-reconstruction}.
 The project used human-annotated building outline polygons in conjunction with a roof type classification label assigned to each polygon; either \textit{flat}, \textit{gable}, \textit{hip}, \textit{shed}, \textit{dome}, \textit{vault}, or \textit{mansard}.
-This is a costly procedure, as the average human annotator managed to annotate about 70 roof segments per hour.
+This was a costly procedure as the average human annotator only managed to annotate about 70 roof segments per hour.
 Another drawback is that the ensuing model is restricted to reconstructing polygons of one of the seven pre-defined classifications.
 The digital surface model (DSM) was normalized by subtracting the digital terrain model (DTM), producing a raster which indicates the height above ground level, a so-called \textit{normalized digital surface model} (nDSM).
-These normalized heights where converted into an 8-bit unsigned integer raster channel, and two additional 8-bit channels where constructed from the normalized $x$- and $y$-gradient from Sobel–Feldman operator applied upon the normalized height values.
-The resulting three-channel raster images where fed into a Mask R-CNN architecture with minor modifications, requiring training for several weeks before attaining a plaining plateau while allocating approximately $\num{18200}$ samples to the training set.
-Proprietary ArcGis geoprocessing tools where finally applied in order to convert the classified instance masks into three-dimensional vector polygons.
+These normalized heights were converted into an 8-bit unsigned integer raster channel, and two additional 8-bit channels where constructed from the normalized $x$- and $y$-gradient from Sobel–Feldman operator applied upon the nDSM.
+The resulting three-channel raster images were fed into a Mask R-CNN architecture with minor modifications, requiring training for several weeks on \num{18200} training samples before reaching convergence.
+Proprietary ArcGis geoprocessing tools were finally applied in order to convert the classified instance masks into three-dimensional vector polygons.
 
 \citeauthor{surface-normal-estimation} presents a robust and efficient CNN architecture for predicting surface normals from RGB images in~\cite{surface-normal-estimation}, but under the strong assumption of a \enquote{Manhattan world}, that is, each normal vector can only point in one of exactly three directions (the $x$-, $y$-, $z$-direction).
+This results in a three-class pixelwise classification model rather than a continuous normal vector regression model.
 
 The inference of surface normal vectors is closely related to the field of \textit{depth estimation}.
 \citeauthor{geonet} proposes the \textbf{GeoNet} architecture in~\cite{geonet} for predicting joint depth and surface normal vector rasters, utilizing a least square solution of the surface normal using the predicted depths, and improves upon this normal prediction with a residual module.

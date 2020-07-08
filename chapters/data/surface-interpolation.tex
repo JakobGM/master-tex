@@ -501,7 +501,8 @@ In other terms, the \textit{polygon shadow subset} $\mathcal{P}(x, y)$ consists 
 The \textit{applicable polygon} is the single polygon which ends up being hit by direct sunlight at the given geographic point, thus casting a shadow upon all other polygons in the polygon shadow subset.
 The bird's view decision rule has been illustrated in \cref{fig:ray-tracing}, and \cref{fig:dormer-2D} is an example of a two-dimensional instance segmentation map generated with this rule from the three-dimensional roof structure shown in \cref{fig:dormer-3D}.
 We can now update the definition of surface elevation raster $Z$ and the normal vector raster $N$, taking this new decision rule into account,
-\begin{align*}
+\begin{gather}
+\begin{aligned}
   N_{i,j} &= \begin{cases}
     \normalplanar{P\left(x, y\right)}, &\text{if $|\mathcal{P}(x,y)| \geq 1$}.\\
     \vec{0} \defeq {[0, 0, 0]}^T, &\text{otherwise.}
@@ -511,7 +512,9 @@ We can now update the definition of surface elevation raster $Z$ and the normal 
     \begin{bmatrix}1, x, y\end{bmatrix} \planar{P(x, y)}, &\text{if } |\mathcal{P}(x,y)| \geq 1.\\
     -\infty, &\text{otherwise}.
   \end{cases}
-\end{align*}
+\end{aligned}
+\label{eq:ground-truth-rasters}
+\end{gather}
 
 We will construct a computational procedure which is able to rasterize a given polygon $P \in \mathcal{P}$ relative to a given bounding box $B \in \mathcal{B}$.
 Denote this procedure as $\texttt{Rasterize}(P,~B)$, and say that this procedure returns three rasters: a surface elevation raster $Z_p$, a surface normal raster $N_p$, and a two-dimensional segmentation mask $S_p$.

@@ -1,0 +1,154 @@
+In \cref{eq:ground-truth-rasters} on \cpageref{eq:ground-truth-rasters} we defined the \emph{normal vector} raster, which we will provide again here in a somewhat simplified form:
+%
+\begin{equation*}
+  \normraster_{i, j}
+  =
+  \begin{cases}
+    \vec{n}_{i,j} = {\left[ n_{i,j,x},~n_{i,j,y},~n_{i,j,z} \right]}^T, &\text{if polygon exists at } \pixtogeo{i}{j},\\
+    \vec{0} = {\left[0, ~0, ~0\right]}^T, &\text{otherwise.}
+  \end{cases}
+\end{equation*}
+%
+We now intend to construct a model, which we will denote as $\normmodel$, which targets this ground truth raster.
+Denote the parametrization of this model as $\segmodelparam$, such that for a given input raster $\inputraster$, the model produces a prediction $\prednormraster$ according to $\prednormraster \defeq \normmodel(\inputraster; \normmodelparam)$.
+
+Now an important point, we intend to construct $\normmodel$ such that it is able to accurately predict $\normraster_{i,j}$ whenever there exists a polygon at $\pixtogeo{i}{j}$, but not necessarily otherwise.
+With other words, $\normmodel$ will not be required to predict zero-vectors for pixel locations where no polygons are located.
+The simplification is made possible by having a separate semantic segmentation model, $\segmodel$, which can be used in order to insert zero-vectors at those pixel locations where the predicted semantic segmentation map, $\predsegraster \defeq \segmodel(\inputraster; \segmodelparam)$, predicts there to be no roof surface.
+This process is described in detail in \cref{sec:connected-region-labeling}.
+With this simplification in mind, we can now construct a loss function which completely disregards the behaviour of $\normmodel$ for pixel locations where there exists no ground truth normal vectors.
+Such a loss function is the \textit{cosine similarity} defined according to
+%
+\begin{align*}
+  \mathcal{L}_{\mathrm{norm}}\left(
+    \prednormraster; \normraster
+  \right)
+  &=
+  \frac{1}{HW}
+  \sum_{i = 1}^{H}
+  \sum_{j = 1}^{W}
+  1 - \normraster_{i,j}^T~\prednormraster_{i,j}
+  \\
+  &=
+  1 -
+  \frac{1}{HW}
+  \sum_{i = 1}^{H}
+  \sum_{j = 1}^{W}
+    \normraster_{i,j,x} \prednormraster_{i,j,x}
+  + \normraster_{i,j,y} \prednormraster_{i,j,y}
+  + \normraster_{i,j,z} \prednormraster_{i,j,z}
+\end{align*}
+%
+Notice that for pixel locations where $\normraster_{i,j} = \vec{0}$, each component in the predicted normal vector $\prednormraster_{i,j}$ becomes multiplied by zero when taking the dot product $\normraster_{i,j}^T \prednormraster_{i,j}$.
+These terms are therefore completely disregarded by the loss function, and the model is allowed to predict completely garbage data for such pixel locations.
+How such garbage data is ignored by the loss function is demonstrated in \cref{fig:cosine-similarity-example}.
+%
+\begin{figure}[H]
+  \centering
+  % \resizebox{0.68\textwidth}{!}{\includegraphics{cosine-similarity.tikz}}
+  \includegraphics{cosine-similarity.tikz}
+  \appcaption{%
+    Demonstration of pixel-wise cosine similarity loss.
+  }{%
+    The left most tile shows a normal vector raster prediction, $\prednormraster$, while the ground truth is shown in the middle tile, $\normraster$.
+    The pixel wise cosine similarity, before being averaged, is illustrated in the right-most tile.
+  }%
+  \label{fig:cosine-similarity-example}
+\end{figure}
+\noindent
+An implementation of this loss function written in python using Tensorflow v2.1 is provided in \cref{code:cosine-similarity}.
+%
+\begin{listing}[H]
+  \caption{%
+    Cosine similarity loss function implemented in Tensorflow v2.1.
+  }%
+  \label{code:cosine-similarity}
+  \begin{pythoncode}
+  @tf.function
+  def cosine_similarity(
+      y_true: tf.Tensor,
+      y_pred: tf.Tensor,
+  ):
+      dot_products = tf.math.reduce_sum(y_true * y_pred, axis=-1)
+      similarites = 1 - dot_products
+      average_similarities = tf.math.reduce_mean(similarites, axis=(-1, -2))
+      return tf.math.reduce_sum(average_similarities, axis=0)
+  \end{pythoncode}
+\end{listing}
+
+Notice that the following must hold for the ground truth normal vector $\vec{n}_{i,j}$:
+\begin{align*}
+  \norm{\vec{n}_{i,j}}_2 = \sqrt{n_{i,j,x}^2 + n_{i,j,y}^2 + n_{i,j,z}^2} \equiv 1, \\
+  \implies -1 \leq n_{i,j,d} \leq 1, \qquad &\text{for } d \in \{x, y, z\}.
+\end{align*}
+
+%
+A model targeting such normal vectors should take this into account, that is $\prednormraster \in [-1, 1]^{H \times W \times 3}$.
+%
+In addition, by construction, we have:
+%
+\begin{align*}
+  n_{i,j,z} \geq 0.
+\end{align*}
+
+Denote a semantic segmentation model for segmenting roof structures as $\segmodel$.
+
+\begin{listing}[H]
+  \caption{%
+    TODO.
+  }%
+  \label{code:tanh-layer}
+  \begin{pythoncode}
+  import tensorflow as tf
+  ...
+  ...
+  surface_vectors = tf.keras.layers.Conv2D(
+      filters=3,
+      kernel_size=(1, 1),
+      activation=tf.keras.activations.tanh,
+      name="surface_vectors"
+  )(final_decoder)
+  \end{pythoncode}
+\end{listing}
+
+\begin{equation*}
+  \mathrm{L2Normalize}(\vec{x})
+  \defeq
+  \frac{1}{\norm{\vec{x}}_2} \cdot \vec{x}
+  =
+  \frac{1}{\sqrt{x_1^2 + x_2^2 + x_3^2}} \cdot \vec{x}
+  ,\quad \vec{x} \in \mathbb{R}^3
+\end{equation*}
+
+\begin{listing}[H]
+  \caption{%
+    TODO.
+  }%
+  \label{code:l2-normalization}
+  \begin{pythoncode}
+  class NormalVectorization(tf.keras.layers.Layer):
+    def __init__(self, *args, **kwargs):
+        kwargs["trainable"] = False
+        kwargs["dynamic"] = False
+        super(NormalVectorization, self).__init__(*args, **kwargs)
+
+    def call(self, inputs: tf.Tensor):
+        return tf.math.l2_normalize(
+            x=inputs,
+            axis=-1,
+            epsilon=1e-12,
+        )
+  \end{pythoncode}
+\end{listing}
+
+\begin{listing}[H]
+  \caption{%
+    TODO.
+  }%
+  \label{code:l2-normalization-use}
+  \begin{pythoncode}
+  normal_surface_vectors = NormalVectorization(
+      name="surface_normal_vectors"
+  )(surface_vectors)
+  \end{pythoncode}
+\end{listing}

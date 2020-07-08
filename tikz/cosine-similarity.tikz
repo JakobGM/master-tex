@@ -1,0 +1,12 @@
+\begin{tikzpicture}
+  % Graphics scaling
+  \def\gs{0.5}
+  \node[](prednormraster) at (0, 0) {\includegraphics[scale=\gs]{tile-data/130-0/surface_normals_3/predicted_normals.pdf}};
+  \node[above=0 of prednormraster.north] {$\prednormraster$};
+
+  \node[right=of prednormraster](normraster) {\includegraphics[scale=\gs]{tile-data/130-0/true_normals.pdf}};
+  \node[above=0 of normraster.north] {$\normraster$};
+
+  \node[right=of normraster](cosine) {\includegraphics[scale=\gs]{tile-data/130-0/surface_normals_3/cosine_similarity.pdf}};
+  \node[above=0 of cosine.north, xshift=-1em] {$\mathcal{L}_{\mathrm{norm}}(\prednormraster; \normraster)$};
+\end{tikzpicture}
