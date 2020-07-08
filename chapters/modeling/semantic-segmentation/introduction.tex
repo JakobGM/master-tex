@@ -1,4 +1,6 @@
-\todo{Make this introduction make sense after not only being about metrics, losses, and optimization.}
+Now that we have explained the generic building blocks of CNNs, we will go into more specific details related to \emph{semantic image segmentation}.
+The current state-of-the-art, including the model architecture which we will use, will be discussed, but we will start by describing popular segmentation \emph{metrics} and \emph{losses}.
+
 Metrics and losses are of central importance when training and evaluating machine learning models.
 Denote the parametrization of a given machine learning model, $\hat{f}$, as $\vec{\theta}$, the input features as $X$, and the corresponding \textit{ground truth} labels as $Y$.
 In order to evaluate the performance of a given model parametrization, we must formulate a cost- or performance-\textit{metric}, $P(\hat{f}(X; \theta); Y)$, which we intend to respectively minimize or maximize.

@@ -20,7 +20,7 @@ In order to describe segmentation metrics, it is useful to define the following 
     }
   }
 \end{center}
-
+%
 False positives (FP) are often knows as \textit{type I errors} in statistics, and false negatives (FN) as \textit{Type II errors}.
 The greater the values of TP and TN, the better, and the smaller the values of FP and FN, the better.
 A visual representation of these classifications is given in \cref{fig:confusions}.
@@ -40,18 +40,20 @@ A visual representation of these classifications is given in \cref{fig:confusion
 The simplest metric for semantic segmentation is the \textit{pixel accuracy} metric.
 This metric simply reports the percentage of pixels that were correctly classified.
 More formally, it can be defined as:
-
+%
 \begin{equation*}
-    \textbf{accuracy} = \frac{TP + TN}{TP + TN + FP + FN} = \frac{TP + TN}{P + N}
+    \textbf{accuracy}
+    \defeq
+    \frac{TP + TN}{TP + TN + FP + FN} = \frac{TP + TN}{P + N}
 \end{equation*}
-
+%
 The problem with the pixel-wise accuracy metric is that it does not take class imbalances into account.
 Consider a problem where 95\% of all pixels are considered to be of class $0$, and the remaining 5\% of class $1$.
 If we construct a model which predicts $0$ regardless of the feature inputs provided to the model, the model will achieve a 95\% accuracy score.
 This makes pixel-wise accuracy scores hard to interpret when you do not know the class balance of the respective dataset and the accuracy grouped by class.
 This is why it is often replaced by other metrics which take imbalances into account.
 A pair of such metrics are \textit{sensitivity} and \textit{specificity}, formally defined as:
-
+%
 \begin{small}
 \begin{align*}
     \textbf{sensitivity}
@@ -71,6 +73,6 @@ A pair of such metrics are \textit{sensitivity} and \textit{specificity}, formal
     \frac{TN}{N}
 \end{align*}
 \end{small}
-
+%
 The \textit{sensitivity} is therefore a measure of how good a given model prediction is able to identify positives as a relative, fractional value.
 Likewise, the \textit{specificity} is a measure of how good a given model prediction is able to identify negatives.

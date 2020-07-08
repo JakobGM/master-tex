@@ -2,19 +2,19 @@ So far we have only discussed metrics which are discrete, non-differentiable fun
 As discussed earlier, we need to introduce a differentiable surrogate loss function which can be optimized.
 The key \enquote{trick} is to define a loss function over the continuous probability domain before it is discretized to the classification domain by thresholding.
 In order to formulate proper loss functions, we will start by establishing some notation.
-Denote the ground truth binary classification mask as $Y \in \mathbb{B}^{H \times W}$ and the corresponding features as $X \in \mathbb{R}^{H \times W \times C}$.
-Assume a model $\hat{f}$ parametrized according to $\vec{\theta}$ which provides a probability estimate for $Y$, the probability estimate denoted as $P = \hat{f}(X; \vec{\theta}) \in [0, 1]^{H \times W}$.
-For notational convenience we will use a linear index in order to denote single matrix elements, for instance $P_i \in [0, 1]$ for $i = 1, \ldots, HW$.
+Denote the ground truth binary classification mask as $\segraster \in \mathbb{B}^{H \times W}$ and the corresponding features as $\inputraster \in \mathbb{R}^{H \times W \times C}$.
+Assume a model $\hat{f}$ parametrized according to $\vec{\theta}$ which provides a probability estimate for $\segraster$, the probability estimate denoted as $\predsegraster = \hat{f}(X; \vec{\theta}) \in [0, 1]^{H \times W}$.
+For notational convenience we will use a linear index in order to denote single matrix elements, for instance $\predsegraster_i \in [0, 1]$ for $i = 1, \ldots, HW$.
 
 The most common loss function for binary classification tasks is the \textit{binary cross entropy} (BCE) loss function defined as
 %
 \begin{equation}
-  \mathcal{L}_{\mathrm{BCE}}(P; Y)
+  \mathcal{L}_{\mathrm{BCE}}(\predsegraster; \segraster)
   =
   - \sum\limits_{i = 1}^{HW}
-  Y_i \log{(P_i)}
+  \segraster_i \log{(\predsegraster_i)}
   +
-  (1 - Y_i) \log{(1 - P_i)}.
+  (1 - \segraster_i) \log{(1 - \predsegraster_i)}.
   \label{eq:binary-cross-entropy}
 \end{equation}
 %
@@ -26,44 +26,44 @@ The solution is to introduce differentiable approximations of these discrete seg
 Such an approximation for the IoU metric is the \textit{soft Jaccard loss} also known as the \textit{Jaccard distance}~\cite{jaccard-loss-with-equation}, defined by
 %
 \begin{equation}
-  \mathcal{L}_{\mathrm{SJL}}(P; Y)
+  \mathcal{L}_{\mathrm{SJL}}(\predsegraster; \segraster)
   =
   1
   -
   \frac{%
     \sum\limits_{i = 1}^{HW}
-    P_i Y_i
+    \predsegraster_i \segraster_i
   }{%
     \sum\limits_{i = 1}^{HW} \left(
-      P_i
+      \predsegraster_i
       +
-      Y_i
+      \segraster_i
       -
-      P_i Y_i
+      \predsegraster_i \segraster_i
     \right)
   }
   \approx
-  1 - \mathrm{IoU}
+  1 - \mathrm{IoU}.
   \label{eq:soft-jaccard-loss}
 \end{equation}
 %
-Notice that if $P_i$ is restricted to only take values in $\{0, 1\}$ then $\mathcal{L}_{\mathrm{SJL}}$ becomes equal to $1 - \mathrm{IoU}$.
+Notice that if $\predsegraster_i$ is restricted to only take values in $\{0, 1\}$ then $\mathcal{L}_{\mathrm{SJL}}$ becomes equal to $1 - \mathrm{IoU}$.
 Other variants exists, and it is also common to add a smoothing factor by adding a value $\delta$ to both the numerator and denominator and multiplying the entire loss with the same value.
 A similar differentiable approximation of the dice coefficient, called \textit{soft dice loss}, has also been derived~\cite{original-soft-dice-loss}.
 
 \begin{equation}
-  \mathcal{L}_{\mathrm{SDL}}(P; Y)
+  \mathcal{L}_{\mathrm{SDL}}(\predsegraster; \segraster)
   =
   \frac{%
     2 \sum\limits_{i = 1}^{HW}
-    P_i Y_i
+    \predsegraster_i \segraster_i
   }{%
-    \sum\limits_{i = 1}^{HW} P_i^2
+    \sum\limits_{i = 1}^{HW} \predsegraster_i^2
     +
-    \sum\limits_{i = 1}^{HW}  Y_i^2
+    \sum\limits_{i = 1}^{HW}  \segraster_i^2
   }
   \approx
-  1 - F_1
+  1 - F_1.
   \label{eq:soft-dice-loss}
 \end{equation}
 
