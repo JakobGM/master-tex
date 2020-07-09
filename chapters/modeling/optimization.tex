@@ -1,5 +1,5 @@
 So far we have only mentioned that we must define a loss function to be optimized for a given neural network, but we have not mentioned exactly how this optimization is performed.
-Deep learning optimization is a huge field of research, and for the sake of brevity we will glance over a lot of detail and focus on the techniques applied in our models presented in \cref{sec:experiments}.
+Deep learning optimization is a huge field of research, and for the sake of brevity we will glance over a lot of details.
 
 For \textit{supervised} machine learning we start with a labeled data set, $\mathcal{D}$, containing $n$ observations:
 %
@@ -25,7 +25,7 @@ At training step $s$ the network parametrization $\vec{\theta}$ is updated accor
     -
     \alpha \nabla_{\theta}
       \sum_{X_i, Y_i \in \mathcal{D}_{\mathrm{train}}}
-      \mathcal{L}(\hat{f}(X_i; \vec{\theta}^{(s)}); Y_i)
+      \mathcal{L}\left(\hat{f}\left(X_i; \vec{\theta}^{(s)}\right); Y_i\right)
   ,
 \end{align*}
 %
@@ -33,7 +33,7 @@ where $\alpha$ is the learning rate.
 Efficient calculation of the gradient $\nabla_{\vec{\theta}}$ for nonlinear networks of arbitrary connectivity is enabled by a method called \textit{backpropagation}~\cite{backpropagation}.
 For each training step, the input data is passed forward through the neural network in order to calculate new predictions.
 Errors are then subsequently propagated backwards through the network in order to efficiently calculate the partial derivatives of the loss function with respect to each parameter $\theta_i$.
-The initial parametrization, $\vec{\theta}^{(0)}$, is not simply filled with zeroes or random values as that can cause certain problems.
+The initial parametrization, $\vec{\theta}^{(0)}$, is not simply filled with zeroes or uniformly random values as that can cause certain problems.
 We will initialize the weights with the \textit{He normal} method devised by \citeauthor{he-normal} which draws values from a truncated normal distribution.
 More details can be found in the original paper~\cite{he-normal}.
 
@@ -51,5 +51,3 @@ The test split, in contrast to the training and validation splits, is completely
 The \textit{Adam optimizer} published in 2015~\cite{adam-optimizer} has become a popular gradient-based optimization algorithm for machine learning problems.
 The algorithm has relatively low computational and memory requirements, copes well with large data sets and parameter spaces, and is relatively well-behaved when faced with noisy and sparse gradients.
 This is the optimization algorithm we will use for our model training experiments, the results being presented in \cref{sec:experiments}.
-
-\subsection{Multitask learning}

@@ -1,0 +1,27 @@
+So far we have only discussed the construction and optimization of machine learning models with one single task at hand.
+Now we pose the question, if we construct a \emph{single} model, $\multitaskmodel$, which is able to produce predictions for \emph{two} different tasks A and B simultaneously, how should the model be trained?
+Assume that $\multitaskmodel$ is parametrized according to $\multitaskmodelparam$, and that the model produces two distinct predictions $\widehat{Y}_A$ and $\widehat{Y}_B$ for any given input $\inputraster$, that is, $(\widehat{Y}_A,~\widehat{Y}_B) \defeq \multitaskmodel(X; \multitaskmodelparam)$.
+Finally, assume that the model targets the ground truths $Y_A$ and $Y_B$.
+The task of solving two different tasks with a single model parametrization is an problem instance of \textit{multitask learning} (MTL)~\cite{multitask-learning}.
+
+A natural assumption would be that any \textit{multitask model} $\multitaskmodel$ will perform strictly worse than the combination of two independently trained single-task models $\singletaskmodelA$ and $\singletaskmodelB$, especially if the three models have the same parametric complexity: $\norm{\multitaskmodelparam} = \norm{\singletaskmodelAparam} = \norm{\singletaskmodelBparam}$.
+The multitask model $\multitaskmodel$ does after all solve two different tasks simultaneously, while the single-task models $\singletaskmodelA$ and $\singletaskmodelB$ can focus on just one single task at a time.
+In practice, however, multitask models are often observed outperforming respective sets of single-task models~\cite[Section 2]{multitask-learning}.
+The reason for this enhanced predictive power of multitask models is explained by \citeauthor{multitask-learning}:
+\begin{quotation}
+  \enquote{MTL improves generalization by leveraging the domain-specific information contained in the training signals of \textit{related} tasks. It does this by training tasks in parallel while using a shared representation. In effect, the training signals for the extra tasks serve as an inductive bias.}~\cite[p.~41]{multitask-learning}
+\end{quotation}
+
+Assume that there exists well-defined loss functions for each task \emph{independently}, $\mathcal{L}_A(\widehat{Y}_A; Y_A)$ and $\mathcal{L}_B(\widehat{Y}_B; Y_B)$.
+One way to perform multitask learning is to construct a linear combination of these two loss functions,
+\begin{equation*}
+  \mathcal{L}_{A,B}\left(\widehat{Y}_A, \widehat{Y}_B; Y_A, Y_B\right)
+  =
+  \alpha \cdot \mathcal{L}_A(\widehat{Y}_A; Y_A)
+  +
+  (1 - \alpha) \cdot \mathcal{L}_B(\widehat{Y}_B; Y_B),
+  \quad \alpha \in (0, 1)
+\end{equation*}
+and then finding a suitable value for $\multitaskmodelparam$ by optimizing $\mathcal{L}_{A,B}$ over $Y_A$ and $Y_B$ in conjunction.
+We will in fact use this approach in order to construct a multitask model for predicting semantic segmentation masks \emph{and} surface normal vectors simultaneously.
+The results of this will be presented in \cref{sec:multitask-experiments}.
