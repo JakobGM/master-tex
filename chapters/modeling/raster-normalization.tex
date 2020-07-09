@@ -6,7 +6,7 @@ How to normalize input data depends on distribution of the feature space, which 
 A given RGB pixel is an unsigned 8-bit integer and therefore takes values in a bounded, integer domain
 %
 \begin{equation*}
-  I_{i,j,c} \in \{0, 1, \ldots, 255\}, \text{ for } c \in \{r, g, b\}.
+  \rgbraster_{i,j,c} \in \{0, 1, \ldots, 255\}, \text{ for } c \in \{\textcolor{red}{r}, \textcolor{green}{g}, \textcolor{blue}{b}\}.
 \end{equation*}
 %
 The distribution of each color channel over the entire coverage area of the Trondheim aerial photography data set is shown in \cref{fig:rgb-density}, and aggregate statistics for each channel are listed in \cref{tab:rgb-statistics}.
@@ -54,8 +54,8 @@ This is in essence a lossless transformation, since the normalization function $
 
 \subsection{LiDAR rasters}
 
-The \enquote{$z$ channel} represents elevation data from the respective digital surface model.
-Elevation measurements are represented by 32-bit, single-precision floating point numbers, and can theoretically take values in the domain $I_{i,j,z} \in (\SI{-3.4e38}{\meter},\allowbreak\SI{3.4e8}{\meter})$.
+The LiDAR raster $\lidarraster$ represents elevation data from the respective digital surface model.
+Elevation measurements are represented by 32-bit, single-precision floating point numbers, and can theoretically take values in the domain $\lidarraster_{i,j} \in (\SI{-3.4e38}{\meter},\allowbreak\SI{3.4e8}{\meter})$.
 In practice, the measurements are bounded by the regional extrema, $(\SI{-433}{\meter},~\SI{8848}{\meter})$ for dry land globally, and $(\SI{-9}{\meter},~\SI{569}{\meter})$ for the Trondheim region.
 The distribution of $z$ channel values for the Trondheim region is shown in \cref{fig:elevation-density}, and aggregate statistics are listed in \cref{tab:elevation-statistics}.
 
@@ -96,28 +96,28 @@ The distribution of $z$ channel values for the Trondheim region is shown in \cre
   \end{floatrow}
 \end{figure}
 
-A normalization technique analogue to the RGB min-max scaling for elevation tile number $k$, denoted as $Z^{(k)}$, would therefore be
+A normalization technique analogue to the RGB min-max scaling for elevation tile number $k$, denoted as $\lidarraster^{(k)}$, would therefore be
 \begin{align*}
-  \hat{Z}_{i,j}^{(k)}
+  \hat{\lidarraster}_{i,j}^{(k)}
   &=
   \frac{%
-    Z_{i,j}^{(k)} - \underset{t \in \mathrm{TRD}}{\min}~Z^{(t)}
+    \lidarraster_{i,j}^{(k)} - \underset{t \in \mathrm{TRD}}{\min}~\lidarraster^{(t)}
   }{%
-    \underset{t \in \mathrm{TRD}}{\max}~Z^{(t)} - \underset{t \in \mathrm{TRD}}{\min}~Z^{(t)}
+    \underset{t \in \mathrm{TRD}}{\max}~\lidarraster^{(t)} - \underset{t \in \mathrm{TRD}}{\min}~\lidarraster^{(t)}
   }
   \tag{Global min-max normalization}
   \\
   &=
   \frac{%
-    Z_{i,j}^{(k)} + \SI{9}{\meter}
+    \lidarraster_{i,j}^{(k)} + \SI{9}{\meter}
   }{%
     \SI{578}{\meter}
   },%
 \end{align*}
-
+%
 where $\mathrm{TRD}$ is the index set of all tiles belonging to the Trondheim region.
-The normalized raster elevation values in $\hat{Z}^{(k)}$ are guaranteed to be bounded to the interval $[0, 1]$, as with the RGB raster.
-In order to evaluate if this will properly normalize the $z$ raster channel across tiles, we plot the \enquote{tile-by-tile} $z$ channel statistics in \cref{fig:elevation-spread}.
+The normalized raster elevation values in $\hat{\lidarraster}^{(k)}$ are guaranteed to be bounded to the interval $[0, 1]$, as with the RGB raster.
+In order to evaluate if this will properly normalize the LiDAR rasters across geographic tiles, we plot the \enquote{tile-by-tile} elevation statistics in \cref{fig:elevation-spread}.
 
 \begin{figure}[H]
   \centering
@@ -137,22 +137,22 @@ We can therefore conclude that global min-max scaling is not suitable for the el
 A proposed solution to this problem is to scale each tile independently to the domain $[0, 1]$, what we will refer to as \enquote{local min-max normalization}.
 %
 \begin{align*}
-  \hat{Z}_{i,j}^{(k)}
+  \hat{\lidarraster}_{i,j}^{(k)}
   &=
   \frac{%
-    Z_{i,j}^{(k)} - \min~Z^{(k)}
+    \lidarraster_{i,j}^{(k)} - \min~\lidarraster^{(k)}
   }{%
-    \max~Z^{(k)} - \min~Z^{(k)}
+    \max~\lidarraster^{(k)} - \min~\lidarraster^{(k)}
   }%
   \tag{Local min-max normalization} % chktex 35
   \\
   &=
   \frac{%
-    Z_{i,j}^{(k)} - \beta
+    \lidarraster_{i,j}^{(k)} - \beta
   }{%
     \alpha - \beta
   },%
-  &\text{where }\alpha \defeq \max~Z^{(k)},~\beta \defeq \min~Z^{(k)}.
+  &\text{where }\alpha \defeq \max~\lidarraster^{(k)},~\beta \defeq \min~\lidarraster^{(k)}.
 \end{align*}
 
 The scaling factor $\alpha - \beta$ is constructed such that the normalized tile minimum becomes 0 and maximum becomes 1 for all tiles.
@@ -164,12 +164,12 @@ Filling in $0$ values for all \texttt{nodata} indices has been shown to work wel
 The \enquote{\texttt{nodata}-aware} min-max normalization algorithm used for preprocessing elevation input data is given in \cref{alg:local-min-max-scaling}.
 
 \begin{algorithm}{Nodata-aware local min-max normalization}{alg:local-min-max-scaling}
-  \item Calculate the valid index set defined by $\mathcal{V} = \{(i, j): Z_{i,j} \neq \texttt{nodata}\}$.
-  \item Calculate $\alpha = \underset{(i,j) \in \mathcal{V}}{\max} Z_{i,j}$ and $\beta = \underset{(i,j) \in \mathcal{V}}{\min} Z_{i,j}$.
+  \item Calculate the valid index set defined by $\mathcal{V} = \{(i, j): \lidarraster_{i,j} \neq \texttt{nodata}\}$.
+  \item Calculate $\alpha = \underset{(i,j) \in \mathcal{V}}{\max} \lidarraster_{i,j}$ and $\beta = \underset{(i,j) \in \mathcal{V}}{\min} \lidarraster_{i,j}$.
   \item Construct normalized raster defined by
     \begin{equation*}
-        \hat{Z}_{i,j} = \begin{cases}
-          \frac{Z_{i,j} - \beta}{\alpha - \beta}, & \text{if } (i,j) \in \mathcal{V}, \\
+        \hat{\lidarraster}_{i,j} = \begin{cases}
+          \frac{\lidarraster_{i,j} - \beta}{\alpha - \beta}, & \text{if } (i,j) \in \mathcal{V}, \\
           0, & \text{otherwise.}
         \end{cases}
     \end{equation*}
@@ -184,12 +184,12 @@ The translation $\beta$ is kept as-is since there is no reason to distinguish be
 This \enquote{metric normalization} is therefore defined as:
 
 \begin{equation*}
-  \hat{Z}_{i,j}^{(k)}
+  \hat{\lidarraster}_{i,j}^{(k)}
   =
-  f\left(Z_{i,j}^{(k)}\right)
+  f\left(\lidarraster_{i,j}^{(k)}\right)
   =
   \frac{%
-    Z_{i,j}^{(k)} - \min~Z^{(k)}
+    \lidarraster_{i,j}^{(k)} - \min~\lidarraster^{(k)}
   }{%
     \gamma
   },%
@@ -202,16 +202,13 @@ Elevation values in the $z$ channel now have a consistent physical interpretatio
 The modified metric normalization method is provided in \cref{alg:metric-normalization}.
 
 \begin{algorithm}{Nodata-aware metric normalization}{alg:metric-normalization}
-  \item Calculate the valid index set defined by $\mathcal{V} = \{(i, j): Z_{i,j} \neq \texttt{nodata}\}$.
-  \item Calculate $\beta = \underset{(i,j) \in \mathcal{V}}{\min} Z_{i,j}$ and define a global scaler $\gamma > 0$.
+  \item Calculate the valid index set defined by $\mathcal{V} = \{(i, j): \lidarraster_{i,j} \neq \texttt{nodata}\}$.
+  \item Calculate $\beta = \underset{(i,j) \in \mathcal{V}}{\min} \lidarraster_{i,j}$ and define a global scaler $\gamma > 0$.
   \item Construct normalized raster defined by
     \begin{equation*}
-        \hat{Z}_{i,j,z} = \begin{cases}
-          \frac{Z_{i,j} - \beta}{\gamma}, & \text{if } (i,j) \in \mathcal{V}, \\
+        \hat{\lidarraster}_{i,j,z} = \begin{cases}
+          \frac{\lidarraster_{i,j} - \beta}{\gamma}, & \text{if } (i,j) \in \mathcal{V}, \\
           0, & \text{otherwise.}
         \end{cases}
     \end{equation*}
 \end{algorithm}
-
-A comparison of these two normalization methods, \cref{alg:local-min-max-scaling} and \cref{alg:metric-normalization} that is, will be provided in \cref{sec:normalization-experiment}.\todo{Will this still be true?}
-
