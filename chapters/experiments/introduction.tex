@@ -1,0 +1,8 @@
+This section will investigate the inference of flat roof surfaces using the raster data produced by the pipeline outlined in \cref{sec:data}.
+The U-Net model architecture presented in \cref{sec:unet} is used for semantic segmentation, while the slightly modified U-Net architecture presented in \cref{sec:normal-model} will be used for predicting surface normal vectors.
+We start by describing the general experimental setup in \cref{sec:experimental-setup}.
+A comparative investigation into the suitability of the different raster data types (aerial photography and/or LiDAR DSMs) is presented in \cref{sec:features}.
+
+% In~\secref{sec:technique-experiments} we investigate if techniques intended to combat overfitting and increase training speed actually have their intended effect; specifically batch normalization, dropout, and data augmentation.
+% The LiDAR raster normalization methods presented in \algref{alg:local-min-max-scaling} and \algref{alg:metric-normalization} are implemented and compared in~\secref{sec:normalization-experiment}.
+% Finally, \secref{sec:loss-experiment} compares the empirical efficiency of different surrogate loss functions.

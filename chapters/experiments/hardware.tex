@@ -1,0 +1,34 @@
+All numerical experiments have been performed by a desktop class computer with the following relevant technical specifications:
+
+\begin{itemize}[nosep]
+  \item \textbf{Processor:} \textit{AMD Ryzen 9 3900X}. \\
+    12 cores / 24 threads, \SI{3.8}{\giga\hertz} base clock / \SI{4.6}{\giga\hertz} boost clock.
+  \item \textbf{Graphics card:} \textit{MSI GeForce 2070 Super}. \\
+    \SI{8}{\giga\byte} GDDR6 VRAM, \SI{1605}{\mega\hertz} clock speed, \SI{9.062}{\tera\flops} 32-bit performance.
+  \item \textbf{Memory:} \textit{Corsair Vengeance LPX DDR4 \SI{3200}{\mega\hertz} 32GB}.
+  \item \textbf{Storage:} \textit{Intel 660p 1TB M.2 SSD}. \\
+    Up to \SI{1800}{\mega\byte\per\second} read and write speed.
+\end{itemize}
+
+\begin{wrapfigure}[9]{r}{.4\textwidth}
+  \vspace{-0.75\baselineskip}
+  \fbox{\begin{minipage}{\dimexpr\linewidth-2\fboxrule-2\fboxsep}
+    \begin{flushleft}
+      \small
+      \begin{center}\textbf{Model performance}\end{center}
+      \begin{itemize}[nosep,leftmargin=*]
+        \item \SI{218}{\milli\second} per training step (batch 16) \\
+          $\implies$ \SI{14}{\milli\second} per sample.
+        \item \SI{11}{\minute} per training epoch \\
+          $\implies \approx \SI{16.5}{\hour}$ per experiment.
+        \item \SI{8}{\milli\second} per prediction (batch 1) \\
+          $\implies$ 125 predictions per second.
+      \end{itemize}
+    \end{flushleft}
+  \end{minipage}}
+\end{wrapfigure}
+
+With a batch size of 16, each training step requires \SI{218}{\milli\second} of computation, resulting in approximately \SI{14}{\milli\second} per geographic tile.
+When including the streaming of data from disk, updating weights based \num{2563} training batches of size 16, validating the model on \num{549} additional validation batches, and executing various Keras callbacks, each epoch lasts for 11 minutes from end to end.
+Most experiments have been trained for 90 epochs, hence requiring altogether 16 and a half hours of training.
+The final models are able to produce 125 predictions of size $\SI{256}{\pixel} \times \SI{256}{\pixel}$ per second.

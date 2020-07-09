@@ -1,0 +1,7 @@
+The source code written in order to produce and present the results in this paper is openly available at \url{https://github.com/JakobGM/project-thesis}.
+The majority of the source code is written in Python as it arguably has the best software ecosystem for both GIS \emph{and} deep learning workflows.
+This work would not have been possible if not for the vast array of high quality open source software available.
+The Geospatial Data Abstraction Library (GDAL) \cite{dep:gdal} has been extensively used in order to process GIS data, and the python wrappers for GDAL, Rasterio \cite{dep:rasterio} for raster data and Fiona \cite{dep:fiona} for vector data, are central building blocks of the data processing pipeline.
+% Further, Numpy \cite{dep:numpy}, Shapely \cite{dep:shapely}, scikit-learn \cite{dep:sklearn} / scikit-image \cite{dep:sklearn}, and GeoPandas \cite{dep:geopandas} have been used in order to shape the data into a final format suitable for machine learning purposes.
+The machine learning framework of choice has been the new 2.0 release of TensorFlow \cite{dep:tensorflow}, most of the modelling code having been written with the declarative Keras API.
+This is not an exhaustive list of all dependencies, but a complete list of software dependencies and a reproducible Docker \cite{dep:docker} image is provided with the source code for this project.

@@ -1,0 +1,25 @@
+\begin{wrapfigure}[9]{r}{.39\textwidth}
+  \fbox{\begin{minipage}{\dimexpr\linewidth-2\fboxrule-2\fboxsep}
+    \begin{flushleft}
+      \small
+      \begin{center}\textbf{Training summary}\end{center}
+      \begin{itemize}[nosep,leftmargin=*]
+        \item \num{58559} geographic tiles: \\
+          $\SI{256}{\pixel} \times \SI{256}{\pixel} = \SI{64}{\meter} \times \SI{64}{\meter}$.
+        \item \numtraintiles / \numvalidationtiles / \numtesttiles \\
+          training / validation / test.
+        \item Random shuffling.
+        \item Adam optimizer.
+        \item Validation loss early stopping.
+      \end{itemize}
+    \end{flushleft}
+  \end{minipage}}
+\end{wrapfigure}
+
+The Trondheim dataset produces \numtiles geographic tiles after being processed, each tile including aerial photography (RGB) data, elevation data (LiDAR elevation), and ground truth masks for building footprints.
+This sample space is split into a customary 70\% / 15\% / 15\% training--validation--testing split.
+The training data is randomly shuffled and augmented at the beginning of each epoch in order to reduce overfitting.
+The data augmentation consists of a random application of horizontal and/or vertical flipping in addition to a rotation by a random integer multiple of 90 degrees.
+The training data is subsequently grouped into batches of size 16 before applying the Adam optimizer.
+Training is continued until observed convergence by the use of the IoU evaluation of the validation split.
+The weights corresponding to the epoch yielding the best validation metric is used as the final model parametrization.
