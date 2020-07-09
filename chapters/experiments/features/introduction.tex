@@ -1,0 +1,6 @@
+The two types of available remote sensing data is LiDAR elevation data and aerial photography, the latter simply referred to as \textit{RGB} data from now on.
+We will investigate to what degree these features are useful for predicting building outline segmentation masks.
+Of special interest is how these two feature types compare to each other when it comes to the predictive accuracy.
+Both feature types provide birds-view perspectives, and building outline segmentation is therefore essentially equivalent to roof surface detection.
+We hypothesize that models based on LiDAR will fare better than RGB models due to the importance of the flatness and relative height of roof surfaces, a more characteristic property than the specific visual appearance of roof surface textures.
+A model using \textit{both} features types combined will also be constructed and trained, and we will compare the accuracy of this model to the two models using the respective feature types in isolation.
