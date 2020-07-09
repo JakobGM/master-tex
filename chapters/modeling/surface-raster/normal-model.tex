@@ -11,13 +11,129 @@ In \cref{eq:ground-truth-rasters} on \cpageref{eq:ground-truth-rasters} we defin
 %
 We now intend to construct a model, which we will denote as $\normmodel$, which targets this ground truth raster.
 Denote the parametrization of this model as $\segmodelparam$, such that for a given input raster $\inputraster$, the model produces a prediction $\prednormraster$ according to $\prednormraster \defeq \normmodel(\inputraster; \normmodelparam)$.
+Additionally, assume that we have a semantic segmentation model, $\segmodel$, parametrized according to $\segmodelparam$, which produces a semantic segmentation map over the same geographic area, $\predsegraster \defeq \segmodel(\inputraster; \segmodelparam)$.
 
-Now an important point, we intend to construct $\normmodel$ such that it is able to accurately predict $\normraster_{i,j}$ whenever there exists a polygon at $\pixtogeo{i}{j}$, but not necessarily otherwise.
+We intend to construct $\normmodel$ such that it is able to accurately predict $\normraster_{i,j}$ whenever there exists a polygon at $\pixtogeo{i}{j}$, but not necessarily otherwise.
 With other words, $\normmodel$ will not be required to predict zero-vectors for pixel locations where no polygons are located.
-The simplification is made possible by having a separate semantic segmentation model, $\segmodel$, which can be used in order to insert zero-vectors at those pixel locations where the predicted semantic segmentation map, $\predsegraster \defeq \segmodel(\inputraster; \segmodelparam)$, predicts there to be no roof surface.
-This process is described in detail in \cref{sec:connected-region-labeling}.
-With this simplification in mind, we can now construct a loss function which completely disregards the behaviour of $\normmodel$ for pixel locations where there exists no ground truth normal vectors.
-Such a loss function is the \textit{cosine similarity} defined according to
+This will drastically reduce the task-complexity of $\normmodel$ as it is no longer required to semantically segment the input raster \emph{in addition to} predicting surface normal vectors.
+The simplification is made possible by ignoring the normal vector predictions $\prednormraster_{i,j}$ whenever $\predsegraster_{i,j} < \texttt{TOL}$, for some model confidence threshold \texttt{TOL} (we will use $\texttt{TOL} = 0.5$).
+This process is described in much more detail in \cref{sec:connected-region-labeling}.
+
+Notice that the following must hold for any ground truth normal vector $\vec{n}_{i,j}$ by construction:
+\begin{align*}
+  \norm{\vec{n}_{i,j}}_2 = \sqrt{n_{i,j,x}^2 + n_{i,j,y}^2 + n_{i,j,z}^2} \equiv 1, \\
+  \implies -1 \leq n_{i,j,d} \leq 1, \qquad &\text{for } d \in \{x, y, z\}.
+\end{align*}
+%
+A three-channeled CNN layer which uses the tanh activation function will produce a raster belonging to the domain $\left[-1, 1\right]^{H \times W \times 3}$.
+An implementation of such a layer is provided in \cref{code:tanh-layer}.
+\begin{listing}[H]
+  \appcaption{%
+    Keras layer producing raster values of absolute magnitude less than or equal to 1.
+  }{%
+    Python code using the Tensorflow v2.1 library.
+    The variable \texttt{fanal\_decoder} is the last decoder output of U-Net of size $256 \times 256 \times 64$.
+  }%
+  \label{code:tanh-layer}
+  \begin{pythoncode}
+  import tensorflow as tf
+  ...
+  ...
+  surface_vectors = tf.keras.layers.Conv2D(
+      filters=3,
+      kernel_size=(1, 1),
+      activation=tf.keras.activations.tanh,
+      name="surface_vectors"
+  )(final_decoder)
+  \end{pythoncode}
+\end{listing}
+\noindent
+The three-channeled tanh output layer now produces a three-dimensional vector for each pixel $(i,j)$, thus the model has $H \times W \times 3$ degrees of freedom in its output layer.
+We can now utilize the fact that $\norm{\vec{n}_{i,j}}_2 \equiv 1$ in order to reduce the degrees of freedom of each predicted vector from three to two.
+This is performed by \enquote{forcing} the model output into the correct domain by applying a $\ell_2$-normalization on each predicted vector.
+The $\ell_2$-normalization procedure is formally defined as:
+%
+\begin{equation*}
+  \mathrm{L2Normalize}(\vec{x})
+  \defeq
+  \frac{1}{\norm{\vec{x}}_2} \cdot \vec{x}
+  =
+  \frac{1}{\sqrt{x_1^2 + x_2^2 + x_3^2}} \cdot \vec{x}
+  ,\quad \vec{x} \in \mathbb{R}^3
+\end{equation*}
+%
+The ensuing $\ell_2$-normalized model is no longer required to produce vectors of correct \emph{magnitude}, only vectors of correct \emph{direction}.
+An implementation of $\mathrm{L2Normalize}$ in the form of a Keras modeling layer is provided in \cref{code:l2-normalization}.
+\begin{listing}[H]
+  \appcaption{%
+    A Keras modeling layer implementing $\ell_2$-normalization.
+  }{%
+    Python code using the Tensorflow v2.1 library.
+  }%
+  \label{code:l2-normalization}
+  \begin{pythoncode}
+  class NormalVectorization(tf.keras.layers.Layer):
+    def __init__(self, *args, **kwargs):
+        kwargs["trainable"] = False
+        kwargs["dynamic"] = False
+        super(NormalVectorization, self).__init__(*args, **kwargs)
+
+    def call(self, inputs: tf.Tensor):
+        return tf.math.l2_normalize(
+            x=inputs,
+            axis=-1,
+            epsilon=1e-12,
+        )
+  \end{pythoncode}
+\end{listing}
+\noindent
+This Keras layer can now be applied to the three-channeled tanh output layer as demonstrated in \cref{code:l2-normalization-use}.
+%
+\begin{listing}[H]
+  \caption{%
+    Example usage of the custom \texttt{NormalVectorization} Keras layer.
+  }%
+  \label{code:l2-normalization-use}
+  \begin{pythoncode}
+  normal_surface_vectors = NormalVectorization(
+      name="surface_normal_vectors"
+  )(surface_vectors)
+  \end{pythoncode}
+\end{listing}
+
+Now it remains to construct a loss function for this $\ell_2$-normalized vector model $\normmodel$ which does \emph{not} penalize \enquote{bad} behaviour at pixel locations $(i,j)$ where $\normraster_{i,j} = \vec{0}$.
+Start by noticing that since $\norm{\prednormraster_{i,j}} \equiv 1$ and $\norm{\normraster_{i,j}}_2 \in \{0,1\}$, we have
+%
+\begin{equation*}
+  \normraster_{i,j}^T~\prednormraster_{i,j}
+  =
+  \norm{\normraster_{i,j}}_2
+  \norm{\prednormraster_{i,j}}_2
+  \cos\left(\theta\right)
+  =
+  \begin{cases}
+    \cos\left(\theta\right), &\text{if }\norm{\normraster_{i,j}}_2 = 1,\\
+    0, &\text{if } \norm{\normraster_{i,j}}_2 = 0.\\
+  \end{cases},
+\end{equation*}
+%
+where $\normraster_{i,j}^T~\prednormraster_{i,j}$ is the vector dot product between $\normraster_{i,j}$ and $\prednormraster_{i,j}$, and $\theta$ is the angle formed between these two normal vectors.
+We intend to minimize $\theta$, and thus indirectly maximize $\cos(\theta)$, which inspires the \textit{cosine similarity} loss function defined by
+%
+\begin{equation*}
+  \mathcal{L}_{\cos}\left(\prednormraster_{i,j}; \normraster_{i,j}\right)
+  =
+  1 - \normraster_{i,j}^T~\prednormraster_{i,j}
+  =
+  \begin{cases}
+    1 - \cos\left(\theta\right), &\text{if }\norm{\normraster_{i,j}}_2 = 1,\\
+    1, &\text{if } \norm{\normraster_{i,j}}_2 = 0.\\
+  \end{cases}.
+\end{equation*}
+%
+Notice how the cosine similarity loss is constantly equal to 1 whenever $\norm{\normraster_{i,j}}_2 = 0$, thus having zero-derivative no matter the input.
+The behaviour of the normal vector model $\normmodel$ is therefore completely ignored at such pixel locations during training, just as intended.
+When generalizing this loss function for an entire surface normal raster, we construct the \textit{pixel-averaged cosine similarity} loss defined as
 %
 \begin{align*}
   \mathcal{L}_{\mathrm{norm}}\left(
@@ -45,8 +161,7 @@ How such garbage data is ignored by the loss function is demonstrated in \cref{f
 %
 \begin{figure}[H]
   \centering
-  % \resizebox{0.68\textwidth}{!}{\includegraphics{cosine-similarity.tikz}}
-  \includegraphics{cosine-similarity.tikz}
+  \resizebox{\textwidth}{!}{\includegraphics{cosine-similarity.tikz}}
   \appcaption{%
     Demonstration of pixel-wise cosine similarity loss.
   }{%
@@ -76,79 +191,5 @@ An implementation of this loss function written in python using Tensorflow v2.1 
   \end{pythoncode}
 \end{listing}
 
-Notice that the following must hold for the ground truth normal vector $\vec{n}_{i,j}$:
-\begin{align*}
-  \norm{\vec{n}_{i,j}}_2 = \sqrt{n_{i,j,x}^2 + n_{i,j,y}^2 + n_{i,j,z}^2} \equiv 1, \\
-  \implies -1 \leq n_{i,j,d} \leq 1, \qquad &\text{for } d \in \{x, y, z\}.
-\end{align*}
-
-%
-A model targeting such normal vectors should take this into account, that is $\prednormraster \in [-1, 1]^{H \times W \times 3}$.
-%
-In addition, by construction, we have:
-%
-\begin{align*}
-  n_{i,j,z} \geq 0.
-\end{align*}
-
-Denote a semantic segmentation model for segmenting roof structures as $\segmodel$.
-
-\begin{listing}[H]
-  \caption{%
-    TODO.
-  }%
-  \label{code:tanh-layer}
-  \begin{pythoncode}
-  import tensorflow as tf
-  ...
-  ...
-  surface_vectors = tf.keras.layers.Conv2D(
-      filters=3,
-      kernel_size=(1, 1),
-      activation=tf.keras.activations.tanh,
-      name="surface_vectors"
-  )(final_decoder)
-  \end{pythoncode}
-\end{listing}
-
-\begin{equation*}
-  \mathrm{L2Normalize}(\vec{x})
-  \defeq
-  \frac{1}{\norm{\vec{x}}_2} \cdot \vec{x}
-  =
-  \frac{1}{\sqrt{x_1^2 + x_2^2 + x_3^2}} \cdot \vec{x}
-  ,\quad \vec{x} \in \mathbb{R}^3
-\end{equation*}
-
-\begin{listing}[H]
-  \caption{%
-    TODO.
-  }%
-  \label{code:l2-normalization}
-  \begin{pythoncode}
-  class NormalVectorization(tf.keras.layers.Layer):
-    def __init__(self, *args, **kwargs):
-        kwargs["trainable"] = False
-        kwargs["dynamic"] = False
-        super(NormalVectorization, self).__init__(*args, **kwargs)
-
-    def call(self, inputs: tf.Tensor):
-        return tf.math.l2_normalize(
-            x=inputs,
-            axis=-1,
-            epsilon=1e-12,
-        )
-  \end{pythoncode}
-\end{listing}
-
-\begin{listing}[H]
-  \caption{%
-    TODO.
-  }%
-  \label{code:l2-normalization-use}
-  \begin{pythoncode}
-  normal_surface_vectors = NormalVectorization(
-      name="surface_normal_vectors"
-  )(surface_vectors)
-  \end{pythoncode}
-\end{listing}
+To summarize, our model for targeting normal vector rasters is constructed by taking the well-known U-Net semantic segmentation CNN architecture and replacing the single-channeled sigmoid output layer with a $\ell_2$-normalized three-channeled tanh output layer.
+This CNN architecture is trained by minimizing the average cosine similarity between the predicted normal vectors and the ground truth normal vectors, ignoring all pixels where no proper ground truth normal vectors are defined.
