@@ -16,10 +16,8 @@
   \end{minipage}}
 \end{wrapfigure}
 
-The Trondheim dataset produces \numtiles geographic tiles after being processed, each tile including aerial photography (RGB) data, elevation data (LiDAR elevation), and ground truth masks for building footprints.
+The Trondheim dataset produces \numtiles geographic tiles after being processed, each tile including aerial photography (RGB) data, elevation data (LiDAR elevation), ground truth semantic roof segmentation masks and surface normal vector rasters.
 This sample space is split into a customary 70\% / 15\% / 15\% training--validation--testing split.
-The training data is randomly shuffled and augmented at the beginning of each epoch in order to reduce overfitting.
-The data augmentation consists of a random application of horizontal and/or vertical flipping in addition to a rotation by a random integer multiple of 90 degrees.
-The training data is subsequently grouped into batches of size 16 before applying the Adam optimizer.
-Training is continued until observed convergence by the use of the IoU evaluation of the validation split.
-The weights corresponding to the epoch yielding the best validation metric is used as the final model parametrization.
+The training data is randomly shuffled and subsequently grouped into batches of size 16 before applying the Adam optimizer.
+Training is continued until observed convergence by the use of the loss evaluated over the validation split.
+The weights corresponding to the epoch yielding the best validation loss is used as the final model parametrization.
