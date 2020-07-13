@@ -1,18 +1,44 @@
+A model using only RGB data is trained, and the training procedure is summarized in \cref{fig:rgb-training} side-by-side the LiDAR-only model for comparison purposes.
+%
 \begin{figure}[H]
   \includegraphics[width=0.75\textwidth]{img/training/normals_with_only_lidar+normals_with_only_rgb-train+validation-loss.pdf}
-  \caption{TODO}
+  \appcaption{%
+    Training procedure for surface normal vector models using \emph{either} LiDAR or RGB as input.
+  }{%
+    The training epochs are given along the horizontal axis, while the end-of-epoch cosine similarity loss evaluations are given along the vertical axis.
+    The LiDAR-only model is shown in \textcolor{blue}{blue}, while the RGB-only model is shown in \textcolor{orange}{orange}.
+    The training split loss is shown with dashed lines, while the validation split is shown with solid lines.
+    The best validation loss epochs are annotated with solid circles, with specific validation loss values provided in the figure legend.
+  }%
+  \label{fig:rgb-training}
 \end{figure}
-
+\noindent
+From \cref{fig:rgb-training} it is immediately obvious that a RGB-only model performs worse than a LiDAR-only model, as hypothesized.
+In order to confirm this, the instance-averaged cosine similarity distribution over the test set is yet again plotted in \cref{fig:rgb-test-distribution}, this time for the RGB-only model instead.
+%
 \begin{figure}[H]
   \includegraphics[width=0.75\textwidth]{img/evaluation/normals_with_only_rgb/instance-averaged-cosine-similarities.pdf}
-  \caption{TODO}
+  \appcaption{%
+    Distribution of instance-averaged cosine similarities of the RGB-only surface normal model over the test split.
+  }{%
+    See \cref{fig:lidar-test-distribution} for detailed figure description.
+  }%
+  \label{fig:rgb-test-distribution}
 \end{figure}
+%
+As can be seen in \cref{fig:rgb-test-distribution} the mean instance-averaged cosine similarity evaluated over the test set increases from \num{0.00294} to \num{0.00402}, and the median increases from \num{0.00043} to \num{0.00078}.
+The RGB-only surface normal vector model can therefore be concluded to be strictly worse than the LiDAR-only equivalent model.
 
+Yet again we plot the median test prediction of the RGB-only model in \cref{fig:rgb-median-prediction} as a representative prediction.
+%
 \begin{figure}[H]
   \normalresult{normals_with_only_rgb}{4641}{0}
-  \caption{%
-    TODO.
-    Median prediction.
-    Mask fraction \num{0.114014}, 18 instances, loss = \num{0.886085}, average cosine similarity = \num{0.000867788}, standard deviation = \num{0.00410062}.
-  }
+  \appcaption{%
+    Median test prediction for RGB-only normal vector model.
+  }{%
+    The LiDAR DSM input, $\lidarraster$, has not been used by the model, but is provided for better visual insight.
+    See \cref{fig:lidar-median-prediction} for detailed figure description.
+    % Mask fraction \num{0.114014}, 18 instances, loss = \num{0.886085}, average cosine similarity = \num{0.000867788}, standard deviation = \num{0.00410062}.
+  }%
+  \label{fig:rgb-median-prediction}
 \end{figure}

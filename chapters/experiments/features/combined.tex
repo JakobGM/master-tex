@@ -1,18 +1,44 @@
+We now construct a model which uses both LiDAR and RGB data in combination in order to produce predictions.
+The training procedure of the combined data model is shown in \cref{fig:combined-training}, and the training procedures of the two single-input models have been included for comparison.
+%
 \begin{figure}[H]
   \includegraphics[width=0.75\textwidth]{img/training/normals_with_lidar_and_rgb+normals_with_only_lidar+normals_with_only_rgb-train+validation-loss.pdf}
-  \caption{TODO}
+  \appcaption{%
+    Training procedure for surface normal vector models using LiDAR and/or RGB as input.
+  }{%
+    The training epochs are given along the horizontal axis, while the end-of-epoch cosine similarity loss evaluations are given along the vertical axis.
+    The LiDAR-only model is shown in \textcolor{blue}{blue}, the RGB-only model in \textcolor{orange}{orange}, and finally the combined input model in \textcolor{green}{green}.
+    The training split loss is shown with dashed lines, while the validation split is shown with solid lines.
+    The best validation loss epochs are annotated with solid circles, with specific validation loss values provided in the figure legend.
+  }%
+  \label{fig:combined-training}
 \end{figure}
-
+\noindent
+\Cref{fig:combined-training} does not show any immediately obvious in predictive performance between the LiDAR-only model and the combined input model.
+The distribution of the instance-averaged cosine similarities over the test set have been plotted in \cref{fig:combined-test-distribution}.
+%
 \begin{figure}[H]
   \includegraphics[width=0.75\textwidth]{img/evaluation/normals_with_lidar_and_rgb/instance-averaged-cosine-similarities.pdf}
-  \caption{TODO}
+  \appcaption{%
+    Distribution of instance-averaged cosine similarities of the combined input surface normal model over the test split.
+  }{%
+    See \cref{fig:lidar-test-distribution} for detailed figure description.
+  }%
+  \label{fig:combined-test-distribution}
 \end{figure}
+%
+Compared to the LiDAR-only model, the combined input model has decreased the mean instance-averaged cosine similarity from \num{0.00294} to \num{0.00265}, and negligible increased the median from \num{0.00043} to \num{0.00044}.
+With other words, the combined input model has not increased the predictive performance as much as the LiDAR-only model improved upon the RGB-only model, but it still has somewhat better test performance.
 
+The median test prediction of the combined input model is provided in \cref{fig:combined-median-prediction}.
+%
 \begin{figure}[H]
   \normalresult{normals_with_lidar_and_rgb}{38644}{0}
-  \caption{%
-    TODO.
-    Median prediction.
-    Mask fraction \num{0.0882721}, 21 instances, loss = \num{0.911767}, average cosine similarity = \num{0.000442978}, standard deviation = \num{0.00205065}.
-  }
+  \appcaption{%
+    Median test prediction for the combined input normal vector model.
+  }{%
+    See \cref{fig:lidar-median-prediction} for detailed figure description.
+    % Mask fraction \num{0.0882721}, 21 instances, loss = \num{0.911767}, average cosine similarity = \num{0.000442978}, standard deviation = \num{0.00205065}.
+  }%
+  \label{fig:combined-median-prediction}
 \end{figure}

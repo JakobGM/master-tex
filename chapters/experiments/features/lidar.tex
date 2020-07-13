@@ -1,18 +1,55 @@
+We start by training a model based solely on LiDAR data normalized according to \cref{alg:metric-normalization}.
+The training procedure is presented in \cref{fig:lidar-training}.
+%
 \begin{figure}[H]
   \includegraphics[width=0.75\textwidth]{img/training/normals_with_only_lidar-train+validation-loss.pdf}
-  \caption{TODO}
+  \appcaption{%
+    Training procedure of LiDAR-only U-Net-derived architecture for predicting surface normals over 100 training epochs.
+  }{%
+    The training epochs are given along the horizontal axis, while the end-of-epoch cosine similarity loss evaluations are given along the vertical axis.
+    Validation split loss is shown as a \textcolor{blue}{blue} solid line, while the training split loss is shown as a \textcolor{blue}{blue} dashed line.
+    The epoch yielding the best validation loss is annotated as a solid \textcolor{blue}{blue} circle, in this case the 99th epoch with a validation loss of \num{13.1353}.
+  }%
+  \label{fig:lidar-training}
 \end{figure}
+\noindent
+Notice how \cref{fig:lidar-training} shows that the model has a validation loss which is consistently lower than the training loss.
+The \textit{tile-averaged}, \textit{batch-summed} cosine similarity loss used during training is highly data-dependent, portraying great variance across tiles, and consequently the data splits, as shown in this figure.
+We can therefore not necessarily conclude that the model performs better on the validation split than the training split.
+
+\Cref{fig:lidar-test-distribution} shows the distribution of the \textit{instance-averaged cosine similarities} over the test split.
+The instance-averaged cosine similarity for a given instance is defined as the average cosine similarity between the predicted normal vectors (over the respective ground truth \emph{instance} mask) and the ground truth normal vector of the given surface instance.
 
 \begin{figure}[H]
   \includegraphics[width=0.75\textwidth]{img/evaluation/normals_with_only_lidar/instance-averaged-cosine-similarities.pdf}
-  \caption{TODO}
+  \appcaption{%
+    Distribution of instance-averaged cosine similarities of the LiDAR-only surface normal model over the test split.
+  }{%
+    The instance-average cosine similarity is given along the horizontal axis, while the frequency of each instance-averaged cosine similarity is given along the log-scaled vertical axis.
+    The mean of the instance-averaged cosine similarities is shown as an solid \textcolor{orange}{orange} line, while the median is annotated as a solid \textcolor{green}{green} line.
+    The interquartile range is annotated as dashed \textcolor{green}{green} lines.
+    Specific statistical values are provided in the figure legend.
+  }%
+  \label{fig:lidar-test-distribution}
 \end{figure}
+
+The median-performing prediction with respect to the average cosine similarity is presented in \cref{fig:lidar-median-prediction} as a representative model prediction.
+That is, half of the model predictions over the test set perform \emph{worse} than the prediction presented in \cref{fig:lidar-median-prediction}, while the other half perform \emph{better}.
 
 \begin{figure}[H]
   \normalresult{normals_with_only_lidar}{12858}{2}
-  \caption{%
-    TODO.
-    Median prediction.
-    Mask fraction \num{0.113434}, 30 instances, loss = \num{0.11378}, average cosine similarity = \num{0.000452751}, standard deviation = \num{0.00208622}.
-  }
+  \appcaption{%
+    Median test prediction for LiDAR-only normal vector model.
+  }{%
+    Each image tile represents the following: \vspace{0.5em}\\
+    $\lidarraster$ (upper left) -- LiDAR DSM raster. \\
+    $\rgbraster$ (lower left) -- Aerial RGB photography. \\
+    $\prednormraster$ (upper middle) -- Predicted surface normal vector raster. \\
+    $\segraster \odot \prednormraster$ (lower middle) -- Segmented predicted surface normal vector raster using the ground truth semantic segmentation mask. \\
+    $\normraster$ (upper right) -- Ground truth surface normal vector raster. \\
+    $\mathcal{L}$ (lower right) -- Pixel-wise cosine similarity. \vspace{0.5em}\\
+    The aerial RGB photography input, $I$, has not been used by the model, but is provided for better visual insight.
+    % Mask fraction \num{0.113434}, 30 instances, loss = \num{0.11378}, average cosine similarity = \num{0.000452751}, standard deviation = \num{0.00208622}.
+  }%
+  \label{fig:lidar-median-prediction}
 \end{figure}
