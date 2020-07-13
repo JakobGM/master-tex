@@ -1,1 +1,16 @@
-TODO: Write summary for specialization project.
+The research questions posed in this thesis is a strict superset of the problems solved in my previous specialization project~\cite{specialization-project}, a project which solely focuses on the semantic segmentation of roof structures from remote sensing data.
+We will therefore provide a brief summary of the conclusions made in~\cite{specialization-project} before continuing onto the experiments which are new to this thesis.
+We refer to the original paper\footnote{Original specialization project PDF files can be found at: \url{https://jakobgm.com/pdf/ntnu_reports/9-project-thesis.pdf}} for a more detailed presentation and analysis of these results.
+%
+\begin{itemize}
+  \item LiDAR raster data is far more suitable for the prediction of semantic roof segmentation masks than aerial RGB photography.
+  \item A model which consumes both LiDAR \emph{and} RGB photography has a small, but not negligible, performance advantage over a model which only uses LiDAR.
+  \item Regularization techniques such as batch normalization and dropout have been shown to significantly improve the resulting test performance of the trained networks, while data augmentation had an insignificant effect.
+  \item When it comes to the normalization of LiDAR input rasters, \cref{alg:metric-normalization} -- \enquote{\texttt{Nodata-aware metric normalization}} was shown to perform slightly better than \cref{alg:local-min-max-scaling} -- \enquote{\texttt{Nodata-aware local min-max normalization}}.
+  \item While semantic segmentation models trained with binary cross-entropy loss (BCEL) showed a purely quantitative advantage on almost all test metrics compared to alternative losses, the soft variant losses still showed a greater degree of \enquote{common sense}.
+  The soft loss models also showed a greater propensity for ignoring wrong ground truth data during training.
+\end{itemize}
+%
+Based on these results, we will train all models with both dropout and batch normalization.
+LiDAR input raster data will be normalized according to \cref{alg:metric-normalization} -- \enquote{\texttt{Nodata-aware metric normalization}} with parametrization $\gamma = 30$.
+The semantic segmentation loss function that will be used is the soft Jaccard loss as presented in \cref{eq:soft-jaccard-loss}.
