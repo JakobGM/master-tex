@@ -65,6 +65,14 @@
 \newcommand{\instraster}[0]{L}
 \newcommand{\predinstraster}[0]{\widehat{L}}
 
+% Loss functions
+\newcommand{\mtloss}[0]{\mathcal{L}_{\mathrm{MT}}}
+\newcommand{\mtlossf}[0]{\mtloss\left(\predsegraster, \prednormraster; \segraster, \normraster\right)}
+\newcommand{\segloss}[0]{\mathcal{L}_{\mathrm{SJL}}}
+\newcommand{\seglossf}[0]{\segloss\left(\predsegraster; \segraster\right)}
+\newcommand{\normloss}[0]{\mathcal{L}_{\mathrm{norm}}}
+\newcommand{\normlossf}[0]{\normloss\left( \prednormraster; \normraster \right)}
+
 % The first argument becomes the short caption, while the second argument appended to the first becomes the long one
 \newcommand{\appcaption}[2]{\caption[#1]{#1 #2}}
 

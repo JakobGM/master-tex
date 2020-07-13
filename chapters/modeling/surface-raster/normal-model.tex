@@ -135,7 +135,7 @@ Notice how the cosine similarity loss is constantly equal to 1 whenever $\norm{\
 The behaviour of the normal vector model $\normmodel$ is therefore completely ignored at such pixel locations during training, just as intended.
 When generalizing this loss function for an entire surface normal raster, we construct the \textit{pixel-averaged cosine similarity} loss defined as
 %
-\begin{align*}
+\begin{gather}\begin{aligned}
   \mathcal{L}_{\mathrm{norm}}\left(
     \prednormraster; \normraster
   \right)
@@ -153,7 +153,8 @@ When generalizing this loss function for an entire surface normal raster, we con
     \normraster_{i,j,x} \prednormraster_{i,j,x}
   + \normraster_{i,j,y} \prednormraster_{i,j,y}
   + \normraster_{i,j,z} \prednormraster_{i,j,z}
-\end{align*}
+  \label{eq:cosine-loss}
+\end{aligned}\end{gather}
 %
 Notice that for pixel locations where $\normraster_{i,j} = \vec{0}$, each component in the predicted normal vector $\prednormraster_{i,j}$ becomes multiplied by zero when taking the dot product $\normraster_{i,j}^T \prednormraster_{i,j}$.
 These terms are therefore completely disregarded by the loss function, and the model is allowed to predict completely garbage data for such pixel locations.
