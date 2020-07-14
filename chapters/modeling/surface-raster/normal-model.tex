@@ -63,7 +63,7 @@ The $\ell_2$-normalization procedure is formally defined as:
 \end{equation*}
 %
 The ensuing $\ell_2$-normalized model is no longer required to produce vectors of correct \emph{magnitude}, only vectors of correct \emph{direction}.
-An implementation of $\mathrm{L2Normalize}$ in the form of a Keras modeling layer is provided in \cref{code:l2-normalization}.
+An implementation of $\mathrm{L2Normalize}$ in the form of a Keras modeling layer, and an example application of this Keras layer to the three-channeled output layer, is provided in \cref{code:l2-normalization}.
 \begin{listing}[H]
   \appcaption{%
     A Keras modeling layer implementing $\ell_2$-normalization.
@@ -84,23 +84,14 @@ An implementation of $\mathrm{L2Normalize}$ in the form of a Keras modeling laye
             axis=-1,
             epsilon=1e-12,
         )
-  \end{pythoncode}
-\end{listing}
-\noindent
-This Keras layer can now be applied to the three-channeled tanh output layer as demonstrated in \cref{code:l2-normalization-use}.
-%
-\begin{listing}[H]
-  \caption{%
-    Example usage of the custom \texttt{NormalVectorization} Keras layer.
-  }%
-  \label{code:l2-normalization-use}
-  \begin{pythoncode}
+  ...
+  ...
   normal_surface_vectors = NormalVectorization(
       name="surface_normal_vectors"
   )(surface_vectors)
   \end{pythoncode}
 \end{listing}
-
+\noindent
 Now it remains to construct a loss function for this $\ell_2$-normalized vector model $\normmodel$ which does \emph{not} penalize \enquote{bad} behaviour at pixel locations $(i,j)$ where $\normraster_{i,j} = \vec{0}$.
 Start by noticing that since $\norm{\prednormraster_{i,j}} \equiv 1$ and $\norm{\normraster_{i,j}}_2 \in \{0,1\}$, we have
 %
