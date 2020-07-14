@@ -1,6 +1,6 @@
 We now intend to train a multitask learning (MTL) model which simultaneously predicts semantic roof segmentation masks \emph{and} surface normal vector rasters.
 The main difficulty lies in constructing a proper loss function which can be optimized such that \emph{both} tasks are solved simultaneously to a satisfactory degree.
-We define a conceptually simple multitask loss function, $\mtloss$, which is a simply a linear combination of the soft Jaccard loss, as defined in \cref{eq:soft-jaccard-loss}, and the pixel-averaged cosine similarity loss, as defined in \cref{eq:cosine-loss},
+We will use a conceptually simple multitask loss function, denoted as $\mtloss$, which is a simply a linear combination of the soft Jaccard loss, $\segloss$ as defined in \cref{eq:soft-jaccard-loss}, and the pixel-averaged cosine similarity loss, $\normloss$ as defined in \cref{eq:cosine-loss},
 \begin{align*}
   \mtlossf
   &\defeq
@@ -29,25 +29,32 @@ We define a conceptually simple multitask loss function, $\mtloss$, which is a s
 \end{align*}
 %
 where $0 \leq \alpha \leq 1$ determines the weighting of the linear combination.
-Now, the main challenge is to select a suitable value for $\alpha$; too small and the semantic segmentation task is neglected during training, and likewise for the surface normal vector prediction if it is set too close to 1.
-In order to find the most suitable value for $\alpha$ we train several models with different $\alpha$-values for 20 epochs, and evaluate the resulting models, i.e.\ perform a hyperparameter search for $\alpha$.
-We will specifically test the following linear weightings: $\alpha \in \{0,\allowbreak 10^{-8},\allowbreak 10^{-7},\allowbreak 10^{-6},\allowbreak 10^{-5},\allowbreak 10^{-4},\allowbreak 10^{-3},\allowbreak 10^{-2},\allowbreak 10^{-1},\allowbreak 0.5,\allowbreak 1\}$.
-Here $\alpha = 0$ implies a single-task model which only predicts surface normal vectors, and $\alpha = 0$ implies a single-task model which only predicts semantic roof segmentation maps.
+Now, the main challenge is to select a suitable value for the hyperparameter $\alpha$; too small and the semantic segmentation task is neglected in favor of predicting surface normal vectors during training, and vice versa if $\alpha$ is set too close to 1.
+In order to find the most suitable value for $\alpha$, we train the same model architecture several times from scratch for 20 epochs, but with different parametrizations of $\alpha$.
+The resulting models are then evaluated in order to determine which $\alpha$ value that should be used for a full 100 epochs of training.
+We will specifically perform a hyperparameter search over the following loss weightings: $\alpha \in \{0,\allowbreak 10^{-8},\allowbreak 10^{-7},\allowbreak 10^{-6},\allowbreak 10^{-5},\allowbreak 10^{-4},\allowbreak 10^{-3},\allowbreak 10^{-2},\allowbreak 10^{-1},\allowbreak 0.5,\allowbreak 1\}$.
+Here $\alpha = 0$ implies using a single-task surface normal vector architecture, trained solely with the pixel-averaged cosine similarity loss function, $\normloss$.
+Likewise, $\alpha = 1$ implies using a single-task semantic segmentation architecture trained with the soft Jaccard loss function, $\segloss$.
+These two single-task models are included for comparison purposes.
 
-The end-of-epoch value decomposition of the multitask loss function, $\mtloss$, into the two \emph{unweighted} linear components, $\segloss$ and $\normloss$, is presented in \cref{fig:alpha-train-losses,fig:alpha-validation-losses}.
-As can be seen in these figures, both tasks of the multitask network are affected by the chosen value for $\alpha$.
-The general training and validation loss trends are as expected; the greater the value for $\alpha$, the better the network performs at producing semantic roof segmentation masks, and likewise with small values for $\alpha$ producing accurate surface normal vector rasters.
-But there seems to be a saturation effect when $\alpha$ approaches 0 and 1, yielding diminishing returns in the respective task efficiencies.
-Is it possible to choose a value for $\alpha$ which yields optimal model performance in both tasks?
-\begin{figure}
+The end-of-epoch value decompositions of the multitask loss function, $\mtloss$, into the two \emph{unweighted} linear components, $\segloss$ and $\normloss$, are presented in \cref{fig:alpha-train-losses,fig:alpha-validation-losses}.
+As can be observed from these figures, both of the tasks of the multitask network are affected by specific value selected for $\alpha$.
+The general training and validation loss trends are as expected; the greater the value for $\alpha$, the better the network performs at producing semantic roof segmentation masks, and likewise for small values for $\alpha$ resulting in more accurate surface normal vector rasters.
+More interestingly, however, is that there seems to be a \enquote{saturation effect} when $\alpha$ approaches 0 and 1, yielding diminishing performance increases in the respective task efficiencies.
+Is it possible to choose a value for $\alpha$ which yields optimal model performance in both tasks simultaneously?
+\begin{figure}[H]
+  \centering
   \begin{subfigure}[t]{\textwidth}
+    \centering
     \includegraphics[width=0.9\linewidth]{multitask-alpha-train.pdf}
     \caption{%
       End-of-epoch \emph{training} loss decomposition for different values of $\alpha$ over 20 training epochs.
     }
     \label{fig:alpha-train-losses}
   \end{subfigure}
+  \par\bigskip % force a bit of vertical whitespace
   \begin{subfigure}[t]{\textwidth}
+    \centering
     \includegraphics[width=0.9\linewidth]{multitask-alpha-validation.pdf}
     \caption{%
       End-of-epoch \emph{validation} loss decomposition for different values of $\alpha$ over 20 training epochs.
@@ -56,19 +63,19 @@ Is it possible to choose a value for $\alpha$ which yields optimal model perform
   \end{subfigure}
   \caption[End-of-epoch multitask loss decomposition for different values of $\alpha$ over 20 training epochs.]{%
     The training epochs are given along the horizontal axis, while the end-of-epoch loss values are given along the vertical axis.
-    The top plot shows the \emph{unweighted} soft Jaccard loss, $\segloss$, while the bottom plot shows the \emph{unweighted} batch-summed, pixel-averaged cosine similarity loss, $\normloss$.
+    The top plots show the \emph{unweighted} soft Jaccard loss, $\segloss$, while the bottom plots show the \emph{unweighted} batch-summed, pixel-averaged cosine similarity loss, $\normloss$.
     The value for $\alpha$ used during training is indicated by the color of the line as described in the right-hand color legend.
+    The single-task network losses are shown with dashed lines.
   }
 \end{figure}
 
-\Cref{fig:best-epoch} presents the best end-of-epoch loss values across \textit{all} 20 training epochs for each loss component and data split.
-As can be observed from this figure, $\alpha = 10^{-5}$ can be considered an uncompromising choice, as the resulting model performs as good as, or even better than, all other models on \emph{both} tasks.
-For this reason, going forwards we will exclusively parametrize the multitask loss function with $\alpha = 10^{-5}$.
-%
-\begin{figure}
+\Cref{fig:best-epoch} presents the \emph{best} end-of-epoch loss component values across \textit{all} 20 training epochs for all values of $\alpha$.
+Both loss components ($\segloss$ and $\normloss$) and both data splits (training and validation) are shown.
+\begin{figure}[H]
+  \centering
   \includegraphics[width=\linewidth]{best-alphas.pdf}
   \appcaption{%
-    Best loss value across all 20 training epochs for each value of $\alpha$.
+    Best loss component value across all 20 training epochs for each value of $\alpha$.
   }{%
     The value of $\alpha$ is provided along the log-scaled horizontal axis, while the best loss values are provided along the vertical axis.
     The top row shows the soft Jaccard loss, $\segloss$, while the bottom row shows the pixel-averages cosine similarity loss, $\normloss$.
@@ -76,41 +83,124 @@ For this reason, going forwards we will exclusively parametrize the multitask lo
   }%
   \label{fig:best-epoch}
 \end{figure}
+\noindent
+We can conclude from \cref{fig:best-epoch} that $\alpha = 10^{-5}$ is the obvious choice since the resulting model uncompromisingly performs at least as well as \emph{all} other models on \emph{both} tasks simultaneously.
+For this reason, going forwards, we will exclusively parametrize the multitask loss function with $\alpha = 10^{-5}$.
 
-\begin{figure}
+\clearpage\noindent
+We now train a multitask model for 100 full epochs, using the multitask loss function $\mtloss$ with $\alpha = 10^{-5}$.
+The full training procedure is provided in \cref{fig:multitask-training}.
+%
+\begin{figure}[H]
+  \centering
   \includegraphics[width=0.66\linewidth]{training/multitask-train+validation-loss.pdf}
   \appcaption{%
     Training procedure of combined input, U-Net-derived multitask architecture ($\alpha = 10^{-5}$) for predicting semantic segmentation masks \emph{and} surface normals over 100 training epochs.
   }{%
     The training epochs are given along the horizontal axis, while the end-of-epoch multitask loss evaluations, $\mtloss$, are given along the vertical axis.
-    Validation split loss is shown as a \textcolor{blue}{blue} solid line, while the training split loss is shown as a \textcolor{blue}{blue} dashed line.
+    The validation split loss is shown as a \textcolor{blue}{blue} solid line, while the training split loss is shown as a \textcolor{blue}{blue} dashed line.
     The epoch yielding the best validation loss is annotated as a solid \textcolor{blue}{blue} circle, in this case a validation loss of \num{13.1363}.
   }%
   \label{fig:multitask-training}
 \end{figure}
-
+\noindent
+As can be seen in \cref{fig:multitask-training}, the validation loss shows a large degree of variance from epoch to epoch.
+In order to investigate the behaviour of the loss function over each training epoch, we plot the decomposition of $\mtloss$ into $\segloss$ and $\normloss$ in \cref{fig:full-multitask-training}.
+For comparison purposes we include the losses of the respective single-task architectures as well.
+As can be seen in \cref{fig:full-multitask-training}, the multitask network portrays a greater degree of instability in its validation loss compared to the respective single-task networks, especially for the pixel-averaged cosine similarity loss.
+Although the multitask network portrays a greater degree of instability during training, it still manages to converge to a general performance level which is comparable to the respective single-task models.
+For the semantic segmentation task, specifically, the multitask network even performs \emph{better} than the respective single-task roof segmentation model.
+It can also be observed that the semantic segmentation loss generally converges slower than the surface normal vector loss.
+%
 \begin{figure}
-  \includegraphics[width=0.75\linewidth]{training/multitask+normals_with_lidar_and_rgb-train+validation-surface_normal_loss.pdf}
-  \caption{Multitask vs single-task surface normal network (training + validation split).}
+  \centering
+  \begin{subfigure}{\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{training/multitask+normals_with_lidar_and_rgb-train+validation-surface_normal_loss.pdf}
+    \caption{Batch-summed, pixel-averaged cosine similarity loss component, $\normloss$, for both the multitask network ($\alpha = 10^{-5}$) and single-task surface normal vector network.}
+  \end{subfigure}
+  \par\bigskip % force a bit of vertical whitespace
+  \begin{subfigure}{\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{training/multitask+segmentation_with_lidar_and_rgb-train+validation-surface_segmentation_loss.pdf}
+    \caption{Soft Jaccard loss component, $\segloss$, for both the multitask network ($\alpha = 10^{-5}$) and single-task semantic roof surface segmentation network.}
+  \end{subfigure}
+  \appcaption{%
+    End-of-epoch loss components of multitask network compared to respective single-task losses.
+  }{%
+    The multitask network losses are annotated in \textcolor{blue}{blue}, while the respective single-task network losses are annotated in \textcolor{orange}{orange}.
+    Training losses are shown as dashed lines, while validation losses are shown as solid lines.
+    The best validation losses across all 100 epochs are annotated as solid circles.
+  }
+  \label{fig:full-multitask-training}
 \end{figure}
 
-\begin{figure}
-  \includegraphics[width=0.75\linewidth]{training/multitask+segmentation_with_lidar_and_rgb-train+validation-surface_segmentation_loss.pdf}
-  \caption{Multitask vs single-task surface segmentation network (training + validation split).}
-\end{figure}
-
+The end-of-epoch model parametrization which yields the best loss value when evaluated over the validation split is chosen as the final model parametrization.
+\Cref{fig:multitask-test-distribution} shows the distribution of the instance-averaged cosine similarities (IACS) over the test split for prediction produced by this final model parametrization.
+Compared to the single-task surface normal vector model, the multitask model has \emph{increased} the mean test IACS from \num{0.00265} to \num{0.00284}, while negligible decreased the median from \num{0.00043} to \num{0.00042}.
+Based on these results, we consider the multitask model to be approximately equally accurate at predicting surface normal rasters than the respective single-task network.
+%
 \begin{figure}
   \includegraphics[width=0.75\textwidth]{img/evaluation/multitask/instance-averaged-cosine-similarities.pdf}
-  \caption{TODO}
+  \appcaption{%
+    Distribution of instance-averaged cosine similarities of the surface normal vector rasters produced by the multitask network over the test split.
+  }{%
+    See \cref{fig:lidar-test-distribution} for detailed figure description.
+  }%
+  \label{fig:multitask-test-distribution}
 \end{figure}
 
+Now that we have concluded that the multitask model performs accurately on the task of predicting surface normal vector rasters, we investigate the predictive accuracy of the multitask model when it comes to the semantic roof segmentation task.
+The distribution of the test IoU evaluations for the multitask model is provided in \cref{fig:multitask-iou-distribution}, while the test IoU distribution of a respective single-task semantic roof segmentation model is provided in \cref{fig:single-task-iou-distribution} for comparison purposes.
+As can be seen in \cref{fig:iou-distribution}, the multitask model increases the mean test IoU from \num{0.934} to \num{0.939}, and the median test IoU from \num{0.908} to \num{0.914}, compared to the single-task model.
+The number of test outliers, that is $\mathrm{IoU} \leq 0.8$, also decreases from \SI{6}{\percent} to \SI{5}{\percent}.
+With other words, we can conclude that a multitask model which produces both semantic roof surface segmentation maps \emph{and} surface normal vector rasters simultaneously ends up performing better than respective single-task models for predicting solely semantic roof surface segmentation maps.
+%
 \begin{figure}
-  \includegraphics[width=0.75\textwidth]{img/iou_distribution/segmentation_with_lidar_and_rgb.pdf}
-  \includegraphics[width=0.75\textwidth]{img/iou_distribution/multitask.pdf}
-  \caption{TODO}
+  \centering
+  \begin{subfigure}{\linewidth}
+    \centering
+    \includegraphics[width=0.75\textwidth]{img/iou_distribution/segmentation_with_lidar_and_rgb.pdf}
+    \caption{%
+      Test IoU distribution for single-task semantic roof surface segmentation model.
+    }%
+    \label{fig:single-task-iou-distribution}
+  \end{subfigure}
+  \par\bigskip % force a bit of vertical whitespace
+  \begin{subfigure}{\linewidth}
+    \centering
+    \includegraphics[width=0.75\textwidth]{img/iou_distribution/multitask.pdf}
+    \caption{%
+      Test IoU distribution for semantic segmentation masks produced by multitask learning model.
+    }%
+    \label{fig:multitask-iou-distribution}
+  \end{subfigure}
+  \appcaption{%
+    Distribution of IoU evaluations of the combined-input models (single-task and multitask) over tiles from the test set.
+  }{%
+    The left tail of the distribution ($\mathrm{IoU} \leq 0.8$) of the IoU data has been cropped and included into the left-most bin colored in \textcolor{red}{red}.
+    The interquartile range (IQR) is annotated in \textcolor{orange}{orange} and the mean in \textcolor{green}{green}.
+  }%
+  \label{fig:iou-distribution}
 \end{figure}
 
+While it has been established that the multitask model outperforms the respective single-task segmentation model \emph{in aggregate}, it is still of interest to compare these two models on a more case-by-case basis.
+The two models are compared tile-by-tile in the IoU scatter plot presented in \cref{fig:iou-correlation}.
+If the models would have been indistinguishable w.r.t.\ predictive performance then the scatter points would be entirely situated along the diagonal black lines in \cref{fig:iou-correlation}, which is clearly not the case here due to the multitask model outperforming the single-task model.
+While the multitask model is on average better than the single-task model, single-task still outperforms multitask in about \SI{40.4}{\percent} of the test cases.
+This may be partly caused by the randomness introduced into the training procedure, and thus the final model parametrization, but we also consider it as a true indication of the multitask model's increased ability to generalize to the test set.
+%
 \begin{figure}
+  \centering
   \includegraphics[width=\textwidth]{img/metric_correlation/multitask+segmentation_with_lidar_and_rgb+iou.pdf}
-  \caption{TODO}
+  \appcaption{%
+    Scatter plot showing the correlation between the IoU evaluation metric performance of two surface segmentation models, single-task vs.\ multitask.
+  }{%
+    Each \textcolor{blue}{blue} scatter point $(x_i, y_i)$ corresponds to a given tile, $i$, where the $x$-coordinate is the IoU metric of the multitask model prediction and the $y$-coordinate is the IoU metric of the single-task model prediction for that given tile.
+    Tiles belonging to the train split are shown in the left half while the tiles belonging to the test split are shown in the right.
+    The horizontal dashed lines in \textcolor{orange}{orange} indicate the \emph{mean} IoU metric of the single-task model for the respective splits, while the vertical dashed lines in \textcolor{green}{green} indicate the \emph{mean} IoU for the multitask model.
+    Diagonal \textcolor{black}{black} lines indicates $x = y$, and the arrows with accompanying percentages indicate the fraction of points above and below this line.
+    Scatter points located \emph{above} the black diagonal line indicate tiles where the single-task model performs better than the multitask model, while scatter points located \emph{below} the diagonal represent tiles where the multitask model performs better than the single-task model.
+  }%
+  \label{fig:iou-correlation}
 \end{figure}
