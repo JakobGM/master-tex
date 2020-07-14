@@ -4,7 +4,7 @@ Assume that $\multitaskmodel$ is parametrized according to $\multitaskmodelparam
 Finally, assume that the model targets the ground truths $Y_A$ and $Y_B$.
 The task of solving two different tasks with a single model parametrization is an problem instance of \textit{multitask learning} (MTL)~\cite{multitask-learning}.
 
-A natural assumption would be that any \textit{multitask model} $\multitaskmodel$ will perform strictly worse than the combination of two independently trained single-task models $\singletaskmodelA$ and $\singletaskmodelB$, especially if the three models have the same parametric complexity: $\norm{\multitaskmodelparam} = \norm{\singletaskmodelAparam} = \norm{\singletaskmodelBparam}$.
+You might think that any \textit{multitask model} $\multitaskmodel$ will perform strictly worse than the combination of two independently trained single-task models $\singletaskmodelA$ and $\singletaskmodelB$, especially if the three models have the same parametric complexity: $\norm{\multitaskmodelparam} = \norm{\singletaskmodelAparam} = \norm{\singletaskmodelBparam}$.
 The multitask model $\multitaskmodel$ does after all solve two different tasks simultaneously, while the single-task models $\singletaskmodelA$ and $\singletaskmodelB$ can focus on just one single task at a time.
 In practice, however, multitask models are often observed outperforming respective sets of single-task models~\cite[Section 2]{multitask-learning}.
 The reason for this enhanced predictive power of multitask models is explained by \citeauthor{multitask-learning}:
