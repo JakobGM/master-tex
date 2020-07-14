@@ -42,10 +42,12 @@ Three-dimensional representations of roof structures can for example be used for
 Another application, which incidentally prompted my interest in this topic, is the use of roof surface geometries to estimate the potential energy production of roof-mounted solar panel installations.
 
 The topic of this master's thesis is a natural extension of much of the work already presented in my specialization project.
-A sequential two-step method has been developed in order to detect roof surface polygons,
+A sequential four-step method has been developed in order to detect roof surface polygons,
 \begin{enumerate}[noitemsep]
   \item Determine which pixels that contain roof structures (semantic segmentation).
   \item Assign a specific roof surface to each \enquote{roof pixel} (instance segmentation).
+  \item Fit a 2D polygon for each roof surface instance (polygon segmentation).
+  \item Reconstruct the 3D orientation and elevation of each roof surface polygon (surface segmentation).
 \end{enumerate}
 The first step is essentially a minor reformulation of the task already solved in my specialization project.
 For this reason, much of the theory, general methods, and specific source code from my specialization project has been incorporated into this work.
