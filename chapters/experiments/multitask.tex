@@ -1,6 +1,6 @@
-We now intend to construct and train a multitask learning (MTL) model which simultaneously predicts semantic roof segmentation masks \emph{and} surface normal vector rasters.
-The main issue is constructing a proper loss function which can be optimized such that \emph{both} tasks are solved simultaneously to a satisfactory degree.
-We construct a simple multitask loss function, $\mtloss$, which is a simply a linear combination of the soft Jaccard loss, as defined in \cref{eq:soft-jaccard-loss}, and the pixel-averaged cosine similarity loss, as defined in \cref{eq:cosine-loss}, yielding the following multitask loss function,
+We now intend to train a multitask learning (MTL) model which simultaneously predicts semantic roof segmentation masks \emph{and} surface normal vector rasters.
+The main difficulty lies in constructing a proper loss function which can be optimized such that \emph{both} tasks are solved simultaneously to a satisfactory degree.
+We define a conceptually simple multitask loss function, $\mtloss$, which is a simply a linear combination of the soft Jaccard loss, as defined in \cref{eq:soft-jaccard-loss}, and the pixel-averaged cosine similarity loss, as defined in \cref{eq:cosine-loss},
 \begin{align*}
   \mtlossf
   &\defeq
@@ -28,36 +28,43 @@ We construct a simple multitask loss function, $\mtloss$, which is a simply a li
   \right).
 \end{align*}
 %
-where $\alpha \in [0, 1]$ determines the weighting of the linear combination.
-The main challenge is now to select a suitable value for $\alpha$, too small and the semantic segmentation task is neglected during optimization, and too close to 1 and the optimization ends up neglecting the task of predicting surface normal vectors.
-In order to find a suitable value for $\alpha$, we train several different models for 20 epochs and evaluate the resulting models, i.e.\ perform a hyperparameter search for $\alpha$.
-We will specifically train models with the following weightings: $\alpha \in \{0, 10^{-8}, 10^{-7}, 10^{-6}, 10^{-5}, 10^{-4}, 10^{-3}, 10^{-2}, 10^{-1}, 0.5, 1\}$.
+where $0 \leq \alpha \leq 1$ determines the weighting of the linear combination.
+Now, the main challenge is to select a suitable value for $\alpha$; too small and the semantic segmentation task is neglected during training, and likewise for the surface normal vector prediction if it is set too close to 1.
+In order to find the most suitable value for $\alpha$ we train several models with different $\alpha$-values for 20 epochs, and evaluate the resulting models, i.e.\ perform a hyperparameter search for $\alpha$.
+We will specifically test the following linear weightings: $\alpha \in \{0,\allowbreak 10^{-8},\allowbreak 10^{-7},\allowbreak 10^{-6},\allowbreak 10^{-5},\allowbreak 10^{-4},\allowbreak 10^{-3},\allowbreak 10^{-2},\allowbreak 10^{-1},\allowbreak 0.5,\allowbreak 1\}$.
 Here $\alpha = 0$ implies a single-task model which only predicts surface normal vectors, and $\alpha = 0$ implies a single-task model which only predicts semantic roof segmentation maps.
 
-The value decomposition of the multitask loss function, $\mtloss$, into the two linear components, $\segloss$ and $\normloss$, evaluated on the training split during 20 epochs of training is presented in \cref{fig:alpha-train-losses}.
-Likewise, the value decomposition of the multitask loss function evaluated over the validation split is presented in \cref{fig:alpha-validation-losses}.
+The end-of-epoch value decomposition of the multitask loss function, $\mtloss$, into the two \emph{unweighted} linear components, $\segloss$ and $\normloss$, is presented in \cref{fig:alpha-train-losses,fig:alpha-validation-losses}.
+As can be seen in these figures, both tasks of the multitask network are affected by the chosen value for $\alpha$.
+The general training and validation loss trends are as expected; the greater the value for $\alpha$, the better the network performs at producing semantic roof segmentation masks, and likewise with small values for $\alpha$ producing accurate surface normal vector rasters.
+But there seems to be a saturation effect when $\alpha$ approaches 0 and 1, yielding diminishing returns in the respective task efficiencies.
+Is it possible to choose a value for $\alpha$ which yields optimal model performance in both tasks?
 \begin{figure}
-  \includegraphics[width=\linewidth]{multitask-alpha-train.pdf}
-  \appcaption{%
-    End-of-epoch \emph{training} loss decomposition for different values of $\alpha$ over 20 training epochs.
-  }{%
+  \begin{subfigure}[t]{\textwidth}
+    \includegraphics[width=0.9\linewidth]{multitask-alpha-train.pdf}
+    \caption{%
+      End-of-epoch \emph{training} loss decomposition for different values of $\alpha$ over 20 training epochs.
+    }
+    \label{fig:alpha-train-losses}
+  \end{subfigure}
+  \begin{subfigure}[t]{\textwidth}
+    \includegraphics[width=0.9\linewidth]{multitask-alpha-validation.pdf}
+    \caption{%
+      End-of-epoch \emph{validation} loss decomposition for different values of $\alpha$ over 20 training epochs.
+    }
+    \label{fig:alpha-validation-losses}
+  \end{subfigure}
+  \caption[End-of-epoch multitask loss decomposition for different values of $\alpha$ over 20 training epochs.]{%
     The training epochs are given along the horizontal axis, while the end-of-epoch loss values are given along the vertical axis.
-    The top plot shows the soft Jaccard loss, $\segloss$, while the bottom plot shows the batch-summed, pixel-averaged cosine similarity loss, $\normloss$.
+    The top plot shows the \emph{unweighted} soft Jaccard loss, $\segloss$, while the bottom plot shows the \emph{unweighted} batch-summed, pixel-averaged cosine similarity loss, $\normloss$.
     The value for $\alpha$ used during training is indicated by the color of the line as described in the right-hand color legend.
-  }%
-  \label{fig:alpha-train-losses}
-\end{figure}
-%
-\begin{figure}
-  \includegraphics[width=\linewidth]{multitask-alpha-validation.pdf}
-  \appcaption{%
-    End-of-epoch \emph{validation} loss decomposition for different values of $\alpha$ over 20 training epochs.
-  }{%
-    Detailed figure description is provided in \cref{fig:alpha-train-losses}.
-  }%
-  \label{fig:alpha-validation-losses}
+  }
 \end{figure}
 
+\Cref{fig:best-epoch} presents the best end-of-epoch loss values across \textit{all} 20 training epochs for each loss component and data split.
+As can be observed from this figure, $\alpha = 10^{-5}$ can be considered an uncompromising choice, as the resulting model performs as good as, or even better than, all other models on \emph{both} tasks.
+For this reason, going forwards we will exclusively parametrize the multitask loss function with $\alpha = 10^{-5}$.
+%
 \begin{figure}
   \includegraphics[width=\linewidth]{best-alphas.pdf}
   \appcaption{%
@@ -66,11 +73,12 @@ Likewise, the value decomposition of the multitask loss function evaluated over 
     The value of $\alpha$ is provided along the log-scaled horizontal axis, while the best loss values are provided along the vertical axis.
     The top row shows the soft Jaccard loss, $\segloss$, while the bottom row shows the pixel-averages cosine similarity loss, $\normloss$.
     The left column is evaluated on the train split, while the right column is evaluated on the validation split.
-  }
+  }%
+  \label{fig:best-epoch}
 \end{figure}
 
 \begin{figure}
-  \includegraphics[width=\linewidth]{training/multitask-train+validation-loss.pdf}
+  \includegraphics[width=0.66\linewidth]{training/multitask-train+validation-loss.pdf}
   \appcaption{%
     Training procedure of combined input, U-Net-derived multitask architecture ($\alpha = 10^{-5}$) for predicting semantic segmentation masks \emph{and} surface normals over 100 training epochs.
   }{%
@@ -82,12 +90,12 @@ Likewise, the value decomposition of the multitask loss function evaluated over 
 \end{figure}
 
 \begin{figure}
-  \includegraphics[width=\linewidth]{training/multitask+normals_with_lidar_and_rgb-train+validation-surface_normal_loss.pdf}
+  \includegraphics[width=0.75\linewidth]{training/multitask+normals_with_lidar_and_rgb-train+validation-surface_normal_loss.pdf}
   \caption{Multitask vs single-task surface normal network (training + validation split).}
 \end{figure}
 
 \begin{figure}
-  \includegraphics[width=\linewidth]{training/multitask+segmentation_with_lidar_and_rgb-train+validation-surface_segmentation_loss.pdf}
+  \includegraphics[width=0.75\linewidth]{training/multitask+segmentation_with_lidar_and_rgb-train+validation-surface_segmentation_loss.pdf}
   \caption{Multitask vs single-task surface segmentation network (training + validation split).}
 \end{figure}
 
