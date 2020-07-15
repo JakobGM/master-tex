@@ -1,4 +1,5 @@
 We now intend to train a multitask learning (MTL) model which simultaneously predicts semantic roof segmentation masks \emph{and} surface normal vector rasters.
+Both types of remote sensing data, LiDAR and aerial RGB photography, will be used by the multitask model.
 The main difficulty lies in constructing a proper loss function which can be optimized such that \emph{both} tasks are solved simultaneously to a satisfactory degree.
 We will use a conceptually simple multitask loss function, denoted as $\mtloss$, which is a simply a linear combination of the soft Jaccard loss, $\segloss$ as defined in \cref{eq:soft-jaccard-loss}, and the pixel-averaged cosine similarity loss, $\normloss$ as defined in \cref{eq:cosine-loss},
 \begin{align*}
@@ -38,7 +39,7 @@ Likewise, $\alpha = 1$ implies using a single-task semantic segmentation archite
 These two single-task models are included for comparison purposes.
 
 The end-of-epoch value decompositions of the multitask loss function, $\mtloss$, into the two \emph{unweighted} linear components, $\segloss$ and $\normloss$, are presented in \cref{fig:alpha-train-losses,fig:alpha-validation-losses}.
-As can be observed from these figures, both of the tasks of the multitask network are affected by specific value selected for $\alpha$.
+As can be observed from these figures, both loss components are affected by the specific value of $\alpha$ when it comes to optimization.
 The general training and validation loss trends are as expected; the greater the value for $\alpha$, the better the network performs at producing semantic roof segmentation masks, and likewise for small values for $\alpha$ resulting in more accurate surface normal vector rasters.
 More interestingly, however, is that there seems to be a \enquote{saturation effect} when $\alpha$ approaches 0 and 1, yielding diminishing performance increases in the respective task efficiencies.
 Is it possible to choose a value for $\alpha$ which yields optimal model performance in both tasks simultaneously?
@@ -70,7 +71,7 @@ Is it possible to choose a value for $\alpha$ which yields optimal model perform
 \end{figure}
 
 \Cref{fig:best-epoch} presents the \emph{best} end-of-epoch loss component values across \textit{all} 20 training epochs for all values of $\alpha$.
-Both loss components ($\segloss$ and $\normloss$) and both data splits (training and validation) are shown.
+Both loss components ($\segloss$ and $\normloss$) and both data splits (training and validation) are included.
 \begin{figure}[H]
   \centering
   \includegraphics[width=\linewidth]{best-alphas.pdf}
@@ -136,9 +137,9 @@ It can also be observed that the semantic segmentation loss generally converges 
 \end{figure}
 
 The end-of-epoch model parametrization which yields the best loss value when evaluated over the validation split is chosen as the final model parametrization.
-\Cref{fig:multitask-test-distribution} shows the distribution of the instance-averaged cosine similarities (IACS) over the test split for prediction produced by this final model parametrization.
+\Cref{fig:multitask-test-distribution} shows the distribution of the instance-averaged cosine similarities (IACS) over the test split.
 Compared to the single-task surface normal vector model, the multitask model has \emph{increased} the mean test IACS from \num{0.00265} to \num{0.00284}, while negligible decreased the median from \num{0.00043} to \num{0.00042}.
-Based on these results, we consider the multitask model to be approximately equally accurate at predicting surface normal rasters than the respective single-task network.
+Based on these results, we consider the multitask model to be approximately equally accurate as the respective single-task model.
 %
 \begin{figure}
   \includegraphics[width=0.75\textwidth]{img/evaluation/multitask/instance-averaged-cosine-similarities.pdf}
@@ -150,11 +151,12 @@ Based on these results, we consider the multitask model to be approximately equa
   \label{fig:multitask-test-distribution}
 \end{figure}
 
-Now that we have concluded that the multitask model performs accurately on the task of predicting surface normal vector rasters, we investigate the predictive accuracy of the multitask model when it comes to the semantic roof segmentation task.
+\newpage
+Now that we have concluded that the multitask model performs accurately on the task of predicting surface normal vector rasters, we investigate the predictive accuracy of the multitask model when it comes to semantic roof segmentation.
 The distribution of the test IoU evaluations for the multitask model is provided in \cref{fig:multitask-iou-distribution}, while the test IoU distribution of a respective single-task semantic roof segmentation model is provided in \cref{fig:single-task-iou-distribution} for comparison purposes.
 As can be seen in \cref{fig:iou-distribution}, the multitask model increases the mean test IoU from \num{0.934} to \num{0.939}, and the median test IoU from \num{0.908} to \num{0.914}, compared to the single-task model.
-The number of test outliers, that is $\mathrm{IoU} \leq 0.8$, also decreases from \SI{6}{\percent} to \SI{5}{\percent}.
-With other words, we can conclude that a multitask model which produces both semantic roof surface segmentation maps \emph{and} surface normal vector rasters simultaneously ends up performing better than respective single-task models for predicting solely semantic roof surface segmentation maps.
+The number of test performance outliers, that is $\mathrm{IoU} \leq 0.8$, also decreases from \SI{6}{\percent} to \SI{5}{\percent}.
+With other words, we can conclude that a multitask model which produces both semantic roof surface segmentation maps \emph{and} surface normal vector rasters simultaneously ends up performing better than the set of respective single-task models.
 %
 \begin{figure}
   \centering
@@ -184,11 +186,11 @@ With other words, we can conclude that a multitask model which produces both sem
   \label{fig:iou-distribution}
 \end{figure}
 
-While it has been established that the multitask model outperforms the respective single-task segmentation model \emph{in aggregate}, it is still of interest to compare these two models on a more case-by-case basis.
+While it has been established that the multitask model outperforms the single-task segmentation model \emph{in aggregate}, it is still of interest to compare these two models on a more case-by-case basis.
 The two models are compared tile-by-tile in the IoU scatter plot presented in \cref{fig:iou-correlation}.
-If the models would have been indistinguishable w.r.t.\ predictive performance then the scatter points would be entirely situated along the diagonal black lines in \cref{fig:iou-correlation}, which is clearly not the case here due to the multitask model outperforming the single-task model.
+If the models would have been indistinguishable w.r.t.\ predictive performance, then the scatter points would be entirely situated along the diagonal black lines in \cref{fig:iou-correlation}, which is clearly not the case here due to the multitask model outperforming the single-task model.
 While the multitask model is on average better than the single-task model, single-task still outperforms multitask in about \SI{40.4}{\percent} of the test cases.
-This may be partly caused by the randomness introduced into the training procedure, and thus the final model parametrization, but we also consider it as a true indication of the multitask model's increased ability to generalize to the test set.
+This may be partly caused by the randomness introduced into the training procedure, and thus the final model parametrization.
 %
 \begin{figure}
   \centering
@@ -197,7 +199,7 @@ This may be partly caused by the randomness introduced into the training procedu
     Scatter plot showing the correlation between the IoU evaluation metric performance of two surface segmentation models, single-task vs.\ multitask.
   }{%
     Each \textcolor{blue}{blue} scatter point $(x_i, y_i)$ corresponds to a given tile, $i$, where the $x$-coordinate is the IoU metric of the multitask model prediction and the $y$-coordinate is the IoU metric of the single-task model prediction for that given tile.
-    Tiles belonging to the train split are shown in the left half while the tiles belonging to the test split are shown in the right.
+    Tiles belonging to the train split are shown in the left half, while the tiles belonging to the test split are shown in the right.
     The horizontal dashed lines in \textcolor{orange}{orange} indicate the \emph{mean} IoU metric of the single-task model for the respective splits, while the vertical dashed lines in \textcolor{green}{green} indicate the \emph{mean} IoU for the multitask model.
     Diagonal \textcolor{black}{black} lines indicates $x = y$, and the arrows with accompanying percentages indicate the fraction of points above and below this line.
     Scatter points located \emph{above} the black diagonal line indicate tiles where the single-task model performs better than the multitask model, while scatter points located \emph{below} the diagonal represent tiles where the multitask model performs better than the single-task model.
