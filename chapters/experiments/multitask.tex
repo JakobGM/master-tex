@@ -206,3 +206,22 @@ This may be partly caused by the randomness introduced into the training procedu
   }%
   \label{fig:iou-correlation}
 \end{figure}
+
+\newpage
+The median test prediction for the multitask model with respect to the cosine similarity loss component is presented in \cref{fig:multitask-median-prediction}.
+The \emph{predicted} segmentation mask is used in order to segment the predicted surface normals instead of the \emph{ground truth} segmentation mask as in earlier prediction plots.
+\begin{figure}[H]
+  \segnormalresult{multitask}{multitask}{39598}{0}
+  \appcaption{%
+    Median test prediction for multitask model with respect to the cosine similarity loss component.
+  }{%
+    Each image tile represents the following: \vspace{0.5em}\\
+    $\lidarraster$ (upper left) -- LiDAR DSM raster. \\
+    $\rgbraster$ (lower left) -- Aerial RGB photography. \\
+    $\prednormraster$ (upper middle) -- Predicted surface normal vector raster. \\
+    $\predsegnormraster$ (lower middle) -- Predicted \emph{segmented} surface normal vector raster, $\predsegraster \odot \prednormraster$. \\
+    $\normraster$ (upper right) -- Ground truth surface normal vector raster. \\
+    $\mathcal{L}$ (lower right) -- Pixel-wise cosine similarity. \vspace{0.5em}\\
+  }%
+  \label{fig:multitask-median-prediction}
+\end{figure}
