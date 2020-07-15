@@ -1,11 +1,34 @@
 \chapter*{Conclusion and Further Work}
 
+We consider there to be two main conclusions to be drawn from the experiments presented in \cref{sec:experiments}:
 \begin{itemize}
-  \item Other polygon simplification methods.
-  \item Visualizing normal vectors preserving distances.
-  \item Image augmentation using transformations of normal vectors.
-  \item Using different architectures for appending three-output channels.
-  \item Using different activation functions in output layer of normal vector.
-  \item RGB can be dropped with negligible performance costs.
-  \item Proper hyperparameter for clustering parameters.
+  \item LiDAR input data is essential in order to predict accurate surface normal vector rasters, but RGB can be used in \emph{addition} in order to marginally increase predictive performance.
+  \item A multitask model which predicts \emph{both} semantic segmentation masks \emph{and} surface normal vectors ends up being more accurate at segmentation than a respective single-task segmentation model.
+\end{itemize}
+
+We have now presented a complete end-to-end pipeline for predicting three-dimensional flat roof surface polygons.
+The pipeline can be considered to consist of four sequential components:
+%
+\begin{enumerate}
+  \item \textbf{Feature engineering} -- Construct semantic segmentation masks and surface normal rasters from ground truth roof surface GIS data.
+  \item \textbf{Prediction} -- Construct and train CNN architecture(s) for the prediction of semantic segmentation masks and surface normal rasters.
+  \item \textbf{Instance clustering} -- Use predicted surface normal rasters in order to partition the semantic segmentation masks.
+  \item \textbf{Vectorization} -- Reconstruct three-dimensional polygons from original LiDAR data in combination with the processed instance segmentation masks.
+\end{enumerate}
+%
+The first component, \enquote{feature engineering}, can be considered as the problem formulation, while the remaining three components are constructed in order to solve the problem.
+The three \enquote{solution components} are highly modular and composable, and different implementations can easily replace any of them.
+We consider this thesis a proof-of-concept of sorts, establishing a rough sketch of the types of building blocks required in order to solve the problem at hand.
+Here are some examples of how these building blocks can be improved upon in further work:
+%
+\begin{itemize}
+  \item Implement methods for performing image augmentation during training when surface normal vector rasters are involved.
+    Any rotation of the input raster data must be performed on each individual ground truth normal vector.
+  \item Investigate the application of different activation functions in the surface normal vector raster output layer.
+    Preferably utilize the fact that $\norm{\vec{n}} \equiv 1$ and $n_z \geq 0$ to a greater degree.
+  \item Implement other polygon simplification methods which uses more domain-specific knowledge.
+    Simplified polygons which share a common border \emph{before} simplification should preferably still share the same border \emph{after} simplification, for instance.
+  \item Implement metrics for evaluating the accuracy of the \enquote{instance clustering} and \enquote{vectorization} components.
+    Use these metrics in order to perform a proper hyperparameter search for any parameters used by these clustering and vectorization algorithms.
+    These metrics can also be used in order to compare different algorithms all together.
 \end{itemize}
