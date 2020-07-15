@@ -73,17 +73,17 @@ An implementation of $\mathrm{L2Normalize}$ in the form of a Keras modeling laye
   \label{code:l2-normalization}
   \begin{pythoncode}
   class NormalVectorization(tf.keras.layers.Layer):
-    def __init__(self, *args, **kwargs):
-        kwargs["trainable"] = False
-        kwargs["dynamic"] = False
-        super(NormalVectorization, self).__init__(*args, **kwargs)
+      def __init__(self, *args, **kwargs):
+          kwargs["trainable"] = False
+          kwargs["dynamic"] = False
+          super(NormalVectorization, self).__init__(*args, **kwargs)
 
-    def call(self, inputs: tf.Tensor):
-        return tf.math.l2_normalize(
-            x=inputs,
-            axis=-1,
-            epsilon=1e-12,
-        )
+      def call(self, inputs: tf.Tensor):
+          return tf.math.l2_normalize(
+              x=inputs,
+              axis=-1,
+              epsilon=1e-12,
+          )
   ...
   ...
   normal_surface_vectors = NormalVectorization(
