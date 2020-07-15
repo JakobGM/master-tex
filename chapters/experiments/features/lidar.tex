@@ -53,3 +53,20 @@ That is, half of the model predictions over the test set perform \emph{worse} th
   }%
   \label{fig:lidar-median-prediction}
 \end{figure}
+
+The result of post-processing the median test prediction is presented in \cref{fig:lidar-median-processing}.
+\begin{figure}[H]
+  \polygonresult{normals_with_only_lidar}{ground_truth}{12858}{2}
+  \appcaption{%
+    Post-processing of median test prediction for LiDAR-only model with respect to the cosine similarity loss component.
+  }{%
+    Each image tile represents the following: \vspace{0.5em}\\
+    $\predsegnormraster$ (upper left) -- Predicted segmented normal vector raster, using the ground truth segmentation mask, $\segraster \odot \prednormraster$. \\
+    $\normraster$ (upper right) -- Ground truth normal vector raster. \\
+    $\texttt{DBSCAN}\left(\predsegnormraster\right)$ (middle left) -- DBSCAN-clustered normal vectors, black indicating noisy outliers. \\
+    $\texttt{KNN}\left(\texttt{DBSCAN}\left(\predsegnormraster\right)\right)$ (middle right) -- Result of applying KNN-clustering to the DBSCAN-identified noise. \\
+    $\predpolygons$ (lower left) -- Unsimplified predicted polygons. \\
+    $\simplifiedpolygons$ (lower right) -- Simplified predicted polygons. \vspace{0.5em}\\
+  }%
+  \label{fig:lidar-median-processing}
+\end{figure}

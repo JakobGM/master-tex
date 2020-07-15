@@ -42,3 +42,14 @@ Yet again we plot the median test prediction of the RGB-only model in \cref{fig:
   }%
   \label{fig:rgb-median-prediction}
 \end{figure}
+
+The result of post-processing the median test prediction is presented in \cref{fig:rgb-median-processing}.
+\begin{figure}[H]
+  \polygonresult{normals_with_only_rgb}{ground_truth}{4641}{0}
+  \appcaption{%
+    Post-processing of median test prediction for RGB-only model with respect to the cosine similarity loss component.
+  }{%
+    See \cref{fig:lidar-median-processing} for a detailed figure description.
+  }%
+  \label{fig:rgb-median-processing}
+\end{figure}
