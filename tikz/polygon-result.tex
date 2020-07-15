@@ -1,0 +1,20 @@
+\newcommand{\polygonresult}[4]{
+\begin{tikzpicture}[
+  node distance=1.5em and -0.5em,
+]
+\def\scaler{0.7}
+  \node[](segmentednormals) at (0, 0) {\includegraphics[scale=\scaler]{tile-data/#3-#4/#1+#2/predicted_segmented_normals.pdf}};
+  \node[right=of segmentednormals](truenormals) {\includegraphics[scale=\scaler]{tile-data/#3-#4/true_normals.pdf}};
+  \node[below=of segmentednormals](dbscan) {\includegraphics[scale=\scaler]{tile-data/#3-#4/#1+#2/dbscan_instances.pdf}};
+  \node[right=of dbscan](knn) {\includegraphics[scale=\scaler]{tile-data/#3-#4/#1+#2/knn_instances.pdf}};
+  \node[below=of dbscan](predunsimplified) {\includegraphics[scale=\scaler]{tile-data/#3-#4/#1+#2/unsimplified_polygons.pdf}};
+  \node[right=of predunsimplified](predsimplified) {\includegraphics[scale=\scaler]{tile-data/#3-#4/#1+#2/simplified_polygons.pdf}};
+
+  \node[above=-0.25em of segmentednormals.north] {$\predsegnormraster$};
+  \node[above=-0.25em of truenormals.north] {$\normraster$};
+  \node[above=-0.25em of dbscan.north] {$\texttt{DBSCAN}\left(\predsegnormraster\right)$};
+  \node[above=-0.25em of knn.north] {$\texttt{KNN}\left(\texttt{DBSCAN}\left(\predsegnormraster\right)\right)$};
+  \node[above=-0.25em of predunsimplified.north] {$\predpolygons$};
+  \node[above=-0.25em of predsimplified.north] {$\simplifiedpolygons$};
+\end{tikzpicture}
+}

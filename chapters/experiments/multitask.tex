@@ -225,3 +225,20 @@ The \emph{predicted} segmentation mask is used in order to segment the predicted
   }%
   \label{fig:multitask-median-prediction}
 \end{figure}
+
+The result of post-processing the median test prediction is presented in \cref{fig:multitask-median-processing}.
+\begin{figure}[H]
+  \polygonresult{multitask}{multitask}{39598}{0}
+  \appcaption{%
+    Post-processing of median test prediction for multitask model with respect to the cosine similarity loss component.
+  }{%
+    Each image tile represents the following: \vspace{0.5em}\\
+    $\predsegnormraster$ (upper left) -- Predicted segmented normal vector raster, $\predsegraster \odot \prednormraster$. \\
+    $\normraster$ (upper right) -- Ground truth normal vector raster. \\
+    $\texttt{DBSCAN}\left(\predsegnormraster\right)$ (middle left) -- DBSCAN-clustered normal vectors, black indicating noisy outliers. \\
+    $\texttt{KNN}\left(\texttt{DBSCAN}\left(\predsegnormraster\right)\right)$ (middle right) -- Result of applying KNN-clustering to the DBSCAN-identified noise. \\
+    $\predpolygons$ (lower left) -- Unsimplified predicted polygons. \\
+    $\simplifiedpolygons$ (lower right) -- Simplified predicted polygons. \vspace{0.5em}\\
+  }%
+  \label{fig:multitask-median-processing}
+\end{figure}
