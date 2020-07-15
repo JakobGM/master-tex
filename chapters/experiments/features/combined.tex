@@ -31,8 +31,9 @@ Compared to the LiDAR-only model, the combined input model has decreased the mea
 With other words, the combined input model has not increased the predictive performance as much as the LiDAR-only model improved upon the RGB-only model, but it still has somewhat better test performance.
 
 The median test prediction of the combined input model is provided in \cref{fig:combined-median-prediction}.
+The result of post-processing the median test prediction is presented in \cref{fig:combined-median-processing}.
 %
-\begin{figure}[H]
+\begin{figure}
   \normalresult{normals_with_lidar_and_rgb}{38644}{0}
   \appcaption{%
     Median test prediction for the combined input normal vector model.
@@ -42,9 +43,7 @@ The median test prediction of the combined input model is provided in \cref{fig:
   }%
   \label{fig:combined-median-prediction}
 \end{figure}
-
-The result of post-processing the median test prediction is presented in \cref{fig:combined-median-processing}.
-\begin{figure}[H]
+\begin{figure}
   \polygonresult{normals_with_lidar_and_rgb}{ground_truth}{38644}{0}
   \appcaption{%
     Post-processing of median test prediction for combined-input model with respect to the cosine similarity loss component.

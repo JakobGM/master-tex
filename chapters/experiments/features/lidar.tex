@@ -20,7 +20,7 @@ We can therefore not necessarily conclude that the model performs better on the 
 \Cref{fig:lidar-test-distribution} shows the distribution of the \textit{instance-averaged cosine similarities} over the test split.
 The instance-averaged cosine similarity for a given instance is defined as the average cosine similarity between the predicted normal vectors (over the respective ground truth \emph{instance} mask) and the ground truth normal vector of the given surface instance.
 
-\begin{figure}[H]
+\begin{figure}
   \includegraphics[width=0.75\textwidth]{img/evaluation/normals_with_only_lidar/instance-averaged-cosine-similarities.pdf}
   \appcaption{%
     Distribution of instance-averaged cosine similarities of the LiDAR-only surface normal model over the test split.
@@ -35,8 +35,9 @@ The instance-averaged cosine similarity for a given instance is defined as the a
 
 The median-performing prediction with respect to the average cosine similarity is presented in \cref{fig:lidar-median-prediction} as a representative model prediction.
 That is, half of the model predictions over the test set perform \emph{worse} than the prediction presented in \cref{fig:lidar-median-prediction}, while the other half perform \emph{better}.
+The result of post-processing the median test prediction is presented in \cref{fig:lidar-median-processing}.
 
-\begin{figure}[H]
+\begin{figure}
   \normalresult{normals_with_only_lidar}{12858}{2}
   \appcaption{%
     Median test prediction for LiDAR-only normal vector model.
@@ -53,9 +54,7 @@ That is, half of the model predictions over the test set perform \emph{worse} th
   }%
   \label{fig:lidar-median-prediction}
 \end{figure}
-
-The result of post-processing the median test prediction is presented in \cref{fig:lidar-median-processing}.
-\begin{figure}[H]
+\begin{figure}
   \polygonresult{normals_with_only_lidar}{ground_truth}{12858}{2}
   \appcaption{%
     Post-processing of median test prediction for LiDAR-only model with respect to the cosine similarity loss component.

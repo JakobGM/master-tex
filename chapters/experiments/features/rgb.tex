@@ -16,7 +16,7 @@ A model using only RGB data is trained, and the training procedure is summarized
 From \cref{fig:rgb-training} it is immediately obvious that a RGB-only model performs worse than a LiDAR-only model, as hypothesized.
 In order to confirm this, the instance-averaged cosine similarity distribution over the test set is yet again plotted in \cref{fig:rgb-test-distribution}, this time for the RGB-only model instead.
 %
-\begin{figure}[H]
+\begin{figure}
   \includegraphics[width=0.75\textwidth]{img/evaluation/normals_with_only_rgb/instance-averaged-cosine-similarities.pdf}
   \appcaption{%
     Distribution of instance-averaged cosine similarities of the RGB-only surface normal model over the test split.
@@ -30,8 +30,9 @@ As can be seen in \cref{fig:rgb-test-distribution} the mean instance-averaged co
 The RGB-only surface normal vector model can therefore be concluded to be strictly worse than the LiDAR-only equivalent model.
 
 Yet again we plot the median test prediction of the RGB-only model in \cref{fig:rgb-median-prediction} as a representative prediction.
+The result of post-processing the median test prediction is presented in \cref{fig:rgb-median-processing}.
 %
-\begin{figure}[H]
+\begin{figure}
   \normalresult{normals_with_only_rgb}{4641}{0}
   \appcaption{%
     Median test prediction for RGB-only normal vector model.
@@ -42,9 +43,7 @@ Yet again we plot the median test prediction of the RGB-only model in \cref{fig:
   }%
   \label{fig:rgb-median-prediction}
 \end{figure}
-
-The result of post-processing the median test prediction is presented in \cref{fig:rgb-median-processing}.
-\begin{figure}[H]
+\begin{figure}
   \polygonresult{normals_with_only_rgb}{ground_truth}{4641}{0}
   \appcaption{%
     Post-processing of median test prediction for RGB-only model with respect to the cosine similarity loss component.
