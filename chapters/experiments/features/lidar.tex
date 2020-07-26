@@ -17,15 +17,15 @@ Notice how \cref{fig:lidar-training} shows that the model has a validation loss 
 The \textit{tile-averaged}, \textit{batch-summed} cosine similarity loss used during training is highly data-dependent, portraying great variance across tiles, and consequently the data splits, as shown in this figure.
 We can therefore not necessarily conclude that the model performs better on the validation split than the training split.
 
-\Cref{fig:lidar-test-distribution} shows the distribution of the \textit{instance-averaged cosine similarities} over the test split.
+\Cref{fig:lidar-test-distribution} shows the distribution of the \textit{instance-averaged cosine similarities} (IACS) over the test split.
 The instance-averaged cosine similarity for a given instance is defined as the average cosine similarity between the predicted normal vectors (over the respective ground truth \emph{instance} mask) and the ground truth normal vector of the given surface instance.
 
 \begin{figure}
   \includegraphics[width=0.75\textwidth]{img/evaluation/normals_with_only_lidar/instance-averaged-cosine-similarities.pdf}
   \appcaption{%
-    Distribution of instance-averaged cosine similarities of the LiDAR-only surface normal model over the test split.
+    Distribution of instance-averaged cosine similarities (IACS) of the LiDAR-only surface normal model over the test split.
   }{%
-    The instance-average cosine similarity is given along the horizontal axis, while the frequency of each instance-averaged cosine similarity is given along the log-scaled vertical axis.
+    The instance-average cosine similarity is given along the horizontal axis (truncated to the domain $[0, 0.005]$), while the frequency of each instance-averaged cosine similarity is given along the log-scaled vertical axis.
     The mean of the instance-averaged cosine similarities is shown as an solid \textcolor{orange}{orange} line, while the median is annotated as a solid \textcolor{green}{green} line.
     The interquartile range is annotated as dashed \textcolor{green}{green} lines.
     Specific statistical values are provided in the figure legend.
