@@ -6,7 +6,7 @@ We consider there to be two main conclusions to be drawn from the experiments pr
   \item A multitask model which predicts \emph{both} semantic segmentation masks \emph{and} surface normal vectors ends up being more accurate at segmentation than a respective single-task segmentation model.
 \end{itemize}
 
-We have now presented a complete end-to-end pipeline for predicting three-dimensional flat roof surface polygons.
+We have now presented a complete and novel end-to-end pipeline for predicting three-dimensional flat roof surface polygons.
 The pipeline can be considered to consist of four sequential components:
 %
 \begin{enumerate}
@@ -21,6 +21,7 @@ The three \enquote{solution components} are highly modular and composable, and d
 We consider this thesis a proof-of-concept of sorts, establishing a rough sketch of the types of building blocks required in order to solve the problem at hand.
 Here are some examples of how these building blocks can be improved upon in further work:
 %
+\newpage
 \begin{itemize}
   \item Implement methods for performing image augmentation during training when surface normal vector rasters are involved.
     Any rotation of the input raster data must be performed on each individual ground truth normal vector.
@@ -33,3 +34,7 @@ Here are some examples of how these building blocks can be improved upon in furt
     Use these metrics in order to perform a proper hyperparameter search for any parameters used by these clustering and vectorization algorithms.
     These metrics can also be used in order to compare different algorithms all together.
 \end{itemize}
+
+As far as we know, the prediction and subsequent post-processing of surface normal vectors is entirely new and novel machine learning task, and the applications of such surface normal vector rasters are manifold.
+Our specific pipeline utilizes these normal rasters in order to partition semantic segmentation masks and reconstruct three-dimensional surface polygons, but there exists several other real world applications.
+One such alternative application of (segmented) surface normal rasters is the calculation of solar irradiance\footnote{\textit{Solar irradiance} [\si{\watt\per\meter\squared}] is the radiant solar flux received by a surface per unit area.} for any given location covered by remote sensing data.
