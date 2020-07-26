@@ -3,8 +3,10 @@ These two models could conceivably be sub-models of a \emph{single} multi-task m
 \begin{figure}[H]
   \centering
   \includegraphics{multitask-prediction.tikz}
-  \caption{%
+  \appcaption{%
     Demonstration of unprocessed output from a surface raster machine learning pipeline.
+  }{%
+    The surface normal vector output, $\prednormraster$, is scaled and translated into the value domain $[0, 255]^{H \times W}$ and visualized as an RGB image.
   }%
   \label{fig:multitask-prediction}
 \end{figure}

@@ -45,7 +45,7 @@ The result of post-processing the median test prediction is presented in \cref{f
     Each image tile represents the following: \vspace{0.5em}\\
     $\lidarraster$ (upper left) -- LiDAR DSM raster. \\
     $\rgbraster$ (lower left) -- Aerial RGB photography. \\
-    $\prednormraster$ (upper middle) -- Predicted surface normal vector raster. \\
+    $\prednormraster$ (upper middle) -- Predicted surface normal vector raster, scaled and translated into value domain $[0, 255]^{H \times W}$ in order to be visualized as an RGB image. \\
     $\segraster \odot \prednormraster$ (lower middle) -- Segmented predicted surface normal vector raster using the ground truth semantic segmentation mask. \\
     $\normraster$ (upper right) -- Ground truth surface normal vector raster. \\
     $\mathcal{L}$ (lower right) -- Pixel-wise cosine similarity. \vspace{0.5em}\\
