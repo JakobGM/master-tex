@@ -24,6 +24,7 @@ Here are some examples of how these building blocks can be improved upon in furt
 \begin{itemize}
   \item Implement methods for performing image augmentation during training when surface normal vector rasters are involved.
     Any rotation of the input raster data must be performed on each individual ground truth normal vector.
+  \item Utilize newer neural network architectures for the prediction and refinement of semantic segmentation masks and surface normal rasters, e.g.\ GANs.
   \item Investigate the application of different activation functions in the surface normal vector raster output layer.
     Preferably utilize the fact that $\norm{\vec{n}} \equiv 1$ and $n_z \geq 0$ to a greater degree.
   \item Implement other polygon simplification methods which uses more domain-specific knowledge.
